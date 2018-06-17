@@ -100,7 +100,7 @@ struct union_params : param_base
 
 //! Shape consisting of union of shapes of a single type but individual parameters
 /*!
-    The parameter defining a ShapeUnion is a structure implementing the HPMC shape interface and containing
+    The parameter defining a ShapeUnion is a structure implementing the MCM shape interface and containing
     parameter objects for its member particles in its own parameters structure
 
     The purpose of ShapeUnion is to allow an overlap check to iterate through pairs of member shapes between

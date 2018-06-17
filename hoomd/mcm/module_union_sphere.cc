@@ -2,10 +2,10 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 // Include the defined classes that are to be exported to python
-#include "IntegratorHPMC.h"
-#include "IntegratorHPMCMono.h"
-#include "IntegratorHPMCMonoImplicit.h"
-#include "IntegratorHPMCMonoImplicitNew.h"
+#include "IntegratorMCM.h"
+#include "IntegratorMCMMono.h"
+#include "IntegratorMCMMonoImplicit.h"
+#include "IntegratorMCMMonoImplicitNew.h"
 #include "ComputeFreeVolume.h"
 #include "AnalyzerSDF.h"
 
@@ -25,9 +25,9 @@
 #include "UpdaterClustersImplicit.h"
 
 #ifdef ENABLE_CUDA
-#include "IntegratorHPMCMonoGPU.h"
-#include "IntegratorHPMCMonoImplicitGPU.h"
-#include "IntegratorHPMCMonoImplicitNewGPU.h"
+#include "IntegratorMCMMonoGPU.h"
+#include "IntegratorMCMMonoImplicitGPU.h"
+#include "IntegratorMCMMonoImplicitNewGPU.h"
 #include "ComputeFreeVolumeGPU.h"
 #endif
 
@@ -40,20 +40,20 @@ using namespace mcm::detail;
 namespace mcm
 {
 
-//! Export the base HPMCMono integrators
+//! Export the base MCMMono integrators
 void export_union_sphere(py::module& m)
     {
-    export_IntegratorHPMCMono< ShapeUnion<ShapeSphere> >(m, "IntegratorHPMCMonoSphereUnion");
-    export_IntegratorHPMCMonoImplicit< ShapeUnion<ShapeSphere> >(m, "IntegratorHPMCMonoImplicitSphereUnion");
-    export_IntegratorHPMCMonoImplicitNew< ShapeUnion<ShapeSphere> >(m, "IntegratorHPMCMonoImplicitNewSphereUnion");
+    export_IntegratorMCMMono< ShapeUnion<ShapeSphere> >(m, "IntegratorMCMMonoSphereUnion");
+    export_IntegratorMCMMonoImplicit< ShapeUnion<ShapeSphere> >(m, "IntegratorMCMMonoImplicitSphereUnion");
+    export_IntegratorMCMMonoImplicitNew< ShapeUnion<ShapeSphere> >(m, "IntegratorMCMMonoImplicitNewSphereUnion");
     export_ComputeFreeVolume< ShapeUnion<ShapeSphere> >(m, "ComputeFreeVolumeSphereUnion");
     // export_AnalyzerSDF< ShapeUnion<ShapeSphere, , > >(m, "AnalyzerSDFSphereUnion");
     export_UpdaterMuVT< ShapeUnion<ShapeSphere> >(m, "UpdaterMuVTSphereUnion");
     export_UpdaterClusters< ShapeUnion<ShapeSphere> >(m, "UpdaterClustersSphereUnion");
-    export_UpdaterClustersImplicit< ShapeUnion<ShapeSphere>, IntegratorHPMCMonoImplicit<ShapeUnion<ShapeSphere> > >(m, "UpdaterClustersImplicitSphereUnion");
-    export_UpdaterClustersImplicit< ShapeUnion<ShapeSphere>, IntegratorHPMCMonoImplicitNew<ShapeUnion<ShapeSphere> > >(m, "UpdaterClustersImplicitNewSphereUnion");
-    export_UpdaterMuVTImplicit< ShapeUnion<ShapeSphere>, IntegratorHPMCMonoImplicit<ShapeUnion<ShapeSphere> > >(m, "UpdaterMuVTImplicitSphereUnion");
-    export_UpdaterMuVTImplicit< ShapeUnion<ShapeSphere>, IntegratorHPMCMonoImplicitNew<ShapeUnion<ShapeSphere> > >(m, "UpdaterMuVTImplicitNewSphereUnion");
+    export_UpdaterClustersImplicit< ShapeUnion<ShapeSphere>, IntegratorMCMMonoImplicit<ShapeUnion<ShapeSphere> > >(m, "UpdaterClustersImplicitSphereUnion");
+    export_UpdaterClustersImplicit< ShapeUnion<ShapeSphere>, IntegratorMCMMonoImplicitNew<ShapeUnion<ShapeSphere> > >(m, "UpdaterClustersImplicitNewSphereUnion");
+    export_UpdaterMuVTImplicit< ShapeUnion<ShapeSphere>, IntegratorMCMMonoImplicit<ShapeUnion<ShapeSphere> > >(m, "UpdaterMuVTImplicitSphereUnion");
+    export_UpdaterMuVTImplicit< ShapeUnion<ShapeSphere>, IntegratorMCMMonoImplicitNew<ShapeUnion<ShapeSphere> > >(m, "UpdaterMuVTImplicitNewSphereUnion");
 
     export_ExternalFieldInterface<ShapeUnion<ShapeSphere> >(m, "ExternalFieldSphereUnion");
     export_LatticeField<ShapeUnion<ShapeSphere> >(m, "ExternalFieldLatticeSphereUnion");
@@ -65,9 +65,9 @@ void export_union_sphere(py::module& m)
 
     #ifdef ENABLE_CUDA
 
-    export_IntegratorHPMCMonoGPU< ShapeUnion<ShapeSphere> >(m, "IntegratorHPMCMonoGPUSphereUnion");
-    export_IntegratorHPMCMonoImplicitGPU< ShapeUnion<ShapeSphere> >(m, "IntegratorHPMCMonoImplicitGPUSphereUnion");
-    export_IntegratorHPMCMonoImplicitNewGPU< ShapeUnion<ShapeSphere> >(m, "IntegratorHPMCMonoImplicitNewGPUSphereUnion");
+    export_IntegratorMCMMonoGPU< ShapeUnion<ShapeSphere> >(m, "IntegratorMCMMonoGPUSphereUnion");
+    export_IntegratorMCMMonoImplicitGPU< ShapeUnion<ShapeSphere> >(m, "IntegratorMCMMonoImplicitGPUSphereUnion");
+    export_IntegratorMCMMonoImplicitNewGPU< ShapeUnion<ShapeSphere> >(m, "IntegratorMCMMonoImplicitNewGPUSphereUnion");
     export_ComputeFreeVolumeGPU< ShapeUnion<ShapeSphere> >(m, "ComputeFreeVolumeGPUSphereUnion");
 
     #endif

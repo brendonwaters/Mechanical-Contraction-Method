@@ -8,7 +8,7 @@
 #include "hoomd/Compute.h"
 #include "hoomd/VectorMath.h"
 
-#include "HPMCCounters.h"   // do we need this to keep track of the statistics?
+#include "MCMCounters.h"   // do we need this to keep track of the statistics?
 
 #include "ShapeSphere.h"
 #include "ShapeConvexPolygon.h"

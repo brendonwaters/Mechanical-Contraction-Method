@@ -3,7 +3,7 @@
 
 #include "hoomd/HOOMDMath.h"
 #include "hoomd/VectorMath.h"
-#include "HPMCPrecisionSetup.h"
+#include "MCMPrecisionSetup.h"
 
 #ifndef __SPHINXOVERLAP__H__
 #define __SPHINXOVERLAP__H__
@@ -40,7 +40,7 @@ DEVICE inline OverlapReal norm2(const vec3<OverlapReal>& v)
 
     This algorithm was developed by Elizabeth R Chen and is available at this address:
     https://dl.dropboxusercontent.com/u/38305351/SPHINX_overlap.pdf
-    This version was introduced in HPMC by Khalid Ahmed with modifications.
+    This version was introduced in MCM by Khalid Ahmed with modifications.
 
     \ingroup sphinx
 */

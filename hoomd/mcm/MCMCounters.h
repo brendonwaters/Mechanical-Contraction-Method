@@ -1,8 +1,8 @@
 // Copyright (c) 2009-2018 The Regents of the University of Michigan
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
-#ifndef _HPMC_COUNTERS_H_
-#define _HPMC_COUNTERS_H_
+#ifndef _MCM_COUNTERS_H_
+#define _MCM_COUNTERS_H_
 
 
 #include "hoomd/HOOMDMath.h"
@@ -10,7 +10,7 @@
 namespace mcm
 {
 
-/*! \file IntegratorHPMCMonoGPU.cuh
+/*! \file IntegratorMCMMonoGPU.cuh
     \brief Declaration of CUDA kernels drivers
 */
 
@@ -449,4 +449,4 @@ DEVICE inline mcm_clusters_counters_t operator-(const mcm_clusters_counters_t& a
 
 } // end namespace mcm
 
-#endif // _HPMC_COUNTERS_H_
+#endif // _MCM_COUNTERS_H_

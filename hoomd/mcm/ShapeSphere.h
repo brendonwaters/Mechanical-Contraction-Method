@@ -3,7 +3,7 @@
 
 #include "hoomd/HOOMDMath.h"
 #include "hoomd/BoxDim.h"
-#include "HPMCPrecisionSetup.h"
+#include "MCMPrecisionSetup.h"
 #include "hoomd/VectorMath.h"
 #include "Moves.h"
 #include "hoomd/AABB.h"
@@ -125,7 +125,7 @@ struct param_base
 
 
 //! Sphere shape template
-/*! ShapeSphere implements IntegragorHPMC's shape protocol. It serves at the simplest example of a shape for HPMC
+/*! ShapeSphere implements IntegragorMCM's shape protocol. It serves at the simplest example of a shape for MCM
 
     The parameter defining a sphere is just a single Scalar, the sphere radius.
 

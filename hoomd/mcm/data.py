@@ -13,7 +13,7 @@ class param_dict(dict):
     R""" Manage shape parameters.
 
     The parameters for all mcm integrator shapes (:py:mod:`hoomd.mcm.integrate`) are specified using this class.
-    Parameters are specified per particle type. Every HPMC integrator has a member shape_param that can read and
+    Parameters are specified per particle type. Every MCM integrator has a member shape_param that can read and
     set parameters of the shapes.
 
     :py:class:`param_dict` can be used as a dictionary to access parameters by type. You can read individual parameters

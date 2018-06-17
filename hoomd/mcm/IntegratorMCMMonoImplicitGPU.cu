@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2018 The Regents of the University of Michigan
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
-#include "IntegratorHPMCMonoImplicitGPU.cuh"
+#include "IntegratorMCMMonoImplicitGPU.cuh"
 
 namespace mcm
 {
@@ -9,8 +9,8 @@ namespace mcm
 namespace detail
 {
 
-/*! \file IntegratorHPMCMonoImplicitGPU.cu
-    \brief Definition of CUDA kernels and drivers for IntegratorHPMCMonoImplicit
+/*! \file IntegratorMCMMonoImplicitGPU.cu
+    \brief Definition of CUDA kernels and drivers for IntegratorMCMMonoImplicit
 */
 
 //! Kernel to compute the configurational bias weights

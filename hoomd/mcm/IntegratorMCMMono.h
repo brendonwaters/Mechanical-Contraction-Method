@@ -2,11 +2,11 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 // inclusion guard
-#ifndef _INTEGRATOR_HPMC_MONO_H_
-#define _INTEGRATOR_HPMC_MONO_H_
+#ifndef _INTEGRATOR_MCM_MONO_H_
+#define _INTEGRATOR_MCM_MONO_H_
 
-/*! \file IntegratorHPMCMono.h
-    \brief Declaration of IntegratorHPMC
+/*! \file IntegratorMCMMono.h
+    \brief Declaration of IntegratorMCM
 */
 
 #include <iostream>
@@ -14,11 +14,11 @@
 #include <sstream>
 
 #include "hoomd/Integrator.h"
-#include "HPMCPrecisionSetup.h"
-#include "IntegratorHPMC.h"
+#include "MCMPrecisionSetup.h"
+#include "IntegratorMCM.h"
 #include "Moves.h"
 #include "hoomd/AABBTree.h"
-#include "GSDHPMCSchema.h"
+#include "GSDMCMSchema.h"
 #include "hoomd/Index1D.h"
 
 #include "hoomd/managed_allocator.h"
@@ -106,7 +106,7 @@ class UpdateOrder
 
 }; // end namespace detail
 
-//! HPMC on systems of mono-disperse shapes
+//! MCM on systems of mono-disperse shapes
 /*! Implement hard particle monte carlo for a single type of shape on the CPU.
 
     TODO: I need better documentation
@@ -114,7 +114,7 @@ class UpdateOrder
     \ingroup mcm_integrators
 */
 template < class Shape >
-class IntegratorHPMCMono : public IntegratorHPMC
+class IntegratorMCMMono : public IntegratorMCM
     {
     public:
         //! Param type from the shape
@@ -123,15 +123,15 @@ class IntegratorHPMCMono : public IntegratorHPMC
         typedef typename Shape::param_type param_type;
 
         //! Constructor
-        IntegratorHPMCMono(std::shared_ptr<SystemDefinition> sysdef,
+        IntegratorMCMMono(std::shared_ptr<SystemDefinition> sysdef,
                       unsigned int seed);
 
-        virtual ~IntegratorHPMCMono()
+        virtual ~IntegratorMCMMono()
             {
             if (m_aabbs != NULL)
                 free(m_aabbs);
-            m_pdata->getBoxChangeSignal().template disconnect<IntegratorHPMCMono<Shape>, &IntegratorHPMCMono<Shape>::slotBoxChanged>(this);
-            m_pdata->getParticleSortSignal().template disconnect<IntegratorHPMCMono<Shape>, &IntegratorHPMCMono<Shape>::slotSorted>(this);
+            m_pdata->getBoxChangeSignal().template disconnect<IntegratorMCMMono<Shape>, &IntegratorMCMMono<Shape>::slotBoxChanged>(this);
+            m_pdata->getParticleSortSignal().template disconnect<IntegratorMCMMono<Shape>, &IntegratorMCMMono<Shape>::slotSorted>(this);
             }
 
         virtual void printStats();
@@ -197,7 +197,7 @@ class IntegratorHPMCMono : public IntegratorHPMC
         virtual Scalar getGhostLayerWidth(unsigned int)
             {
             Scalar ghost_width = m_nominal_width + m_extra_ghost_width;
-            m_exec_conf->msg->notice(9) << "IntegratorHPMCMono: ghost layer width of " << ghost_width << std::endl;
+            m_exec_conf->msg->notice(9) << "IntegratorMCMMono: ghost layer width of " << ghost_width << std::endl;
             return ghost_width;
             }
 
@@ -210,7 +210,7 @@ class IntegratorHPMCMono : public IntegratorHPMC
             flags[comm_flag::tag] = 1;
 
             std::ostringstream o;
-            o << "IntegratorHPMCMono: Requesting communication flags for pos tag ";
+            o << "IntegratorMCMMono: Requesting communication flags for pos tag ";
             if (m_hasOrientation)
                 {
                 flags[comm_flag::orientation] = 1;
@@ -233,7 +233,7 @@ class IntegratorHPMCMono : public IntegratorHPMC
         virtual void prepRun(unsigned int timestep)
             {
             // base class method
-            IntegratorHPMC::prepRun(timestep);
+            IntegratorMCM::prepRun(timestep);
 
                 {
                 // for p in params, if Shape dummy(q_dummy, params).hasOrientation() then m_hasOrientation=true
@@ -359,9 +359,9 @@ class IntegratorHPMCMono : public IntegratorHPMC
     };
 
 template <class Shape>
-IntegratorHPMCMono<Shape>::IntegratorHPMCMono(std::shared_ptr<SystemDefinition> sysdef,
+IntegratorMCMMono<Shape>::IntegratorMCMMono(std::shared_ptr<SystemDefinition> sysdef,
                                                    unsigned int seed)
-            : IntegratorHPMC(sysdef, seed),
+            : IntegratorMCM(sysdef, seed),
               m_update_order(seed+m_exec_conf->getRank(), m_pdata->getN()),
               m_image_list_is_initialized(false),
               m_image_list_valid(false),
@@ -376,8 +376,8 @@ IntegratorHPMCMono<Shape>::IntegratorHPMCMono(std::shared_ptr<SystemDefinition> 
     m_overlaps.swap(overlaps);
 
     // Connect to the BoxChange signal
-    m_pdata->getBoxChangeSignal().template connect<IntegratorHPMCMono<Shape>, &IntegratorHPMCMono<Shape>::slotBoxChanged>(this);
-    m_pdata->getParticleSortSignal().template connect<IntegratorHPMCMono<Shape>, &IntegratorHPMCMono<Shape>::slotSorted>(this);
+    m_pdata->getBoxChangeSignal().template connect<IntegratorMCMMono<Shape>, &IntegratorMCMMono<Shape>::slotBoxChanged>(this);
+    m_pdata->getParticleSortSignal().template connect<IntegratorMCMMono<Shape>, &IntegratorMCMMono<Shape>::slotSorted>(this);
 
     m_image_list_rebuilds = 0;
     m_image_list_warning_issued = false;
@@ -390,10 +390,10 @@ IntegratorHPMCMono<Shape>::IntegratorHPMCMono(std::shared_ptr<SystemDefinition> 
 
 
 template<class Shape>
-std::vector< std::string > IntegratorHPMCMono<Shape>::getProvidedLogQuantities()
+std::vector< std::string > IntegratorMCMMono<Shape>::getProvidedLogQuantities()
     {
     // start with the integrator provided quantities
-    std::vector< std::string > result = IntegratorHPMC::getProvidedLogQuantities();
+    std::vector< std::string > result = IntegratorMCM::getProvidedLogQuantities();
     // then add ours
     if(m_patch)
         {
@@ -405,7 +405,7 @@ std::vector< std::string > IntegratorHPMCMono<Shape>::getProvidedLogQuantities()
     }
 
 template<class Shape>
-Scalar IntegratorHPMCMono<Shape>::getLogValue(const std::string& quantity, unsigned int timestep)
+Scalar IntegratorMCMMono<Shape>::getLogValue(const std::string& quantity, unsigned int timestep)
     {
     if (quantity == "mcm_patch_energy")
         {
@@ -434,14 +434,14 @@ Scalar IntegratorHPMCMono<Shape>::getLogValue(const std::string& quantity, unsig
     else
         {
         //nothing found -> pass on to integrator
-        return IntegratorHPMC::getLogValue(quantity, timestep);
+        return IntegratorMCM::getLogValue(quantity, timestep);
         }
     }
 
 template <class Shape>
-void IntegratorHPMCMono<Shape>::printStats()
+void IntegratorMCMMono<Shape>::printStats()
     {
-    IntegratorHPMC::printStats();
+    IntegratorMCM::printStats();
 
     /*unsigned int max_height = 0;
     unsigned int total_height = 0;
@@ -459,16 +459,16 @@ void IntegratorHPMCMono<Shape>::printStats()
     }
 
 template <class Shape>
-void IntegratorHPMCMono<Shape>::resetStats()
+void IntegratorMCMMono<Shape>::resetStats()
     {
-    IntegratorHPMC::resetStats();
+    IntegratorMCM::resetStats();
     }
 
 template <class Shape>
-void IntegratorHPMCMono<Shape>::slotNumTypesChange()
+void IntegratorMCMMono<Shape>::slotNumTypesChange()
     {
     // call parent class method
-    IntegratorHPMC::slotNumTypesChange();
+    IntegratorMCM::slotNumTypesChange();
 
     // re-allocate the parameter storage
     m_params.resize(m_pdata->getNTypes());
@@ -489,10 +489,10 @@ void IntegratorHPMCMono<Shape>::slotNumTypesChange()
     }
 
 template <class Shape>
-void IntegratorHPMCMono<Shape>::update(unsigned int timestep)
+void IntegratorMCMMono<Shape>::update(unsigned int timestep)
     {
-    m_exec_conf->msg->notice(10) << "HPMCMono update: " << timestep << std::endl;
-    IntegratorHPMC::update(timestep);
+    m_exec_conf->msg->notice(10) << "MCMMono update: " << timestep << std::endl;
+    IntegratorMCM::update(timestep);
 
     // get needed vars
     ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
@@ -517,7 +517,7 @@ void IntegratorHPMCMono<Shape>::update(unsigned int timestep)
     // update the image list
     updateImageList();
 
-    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "HPMC update");
+    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "MCM update");
 
     if( m_external ) // I think we need this here otherwise I don't think it will get called.
         {
@@ -886,12 +886,12 @@ void IntegratorHPMCMono<Shape>::update(unsigned int timestep)
     \returns number of overlaps if early_exit=false, 1 if early_exit=true
 */
 template <class Shape>
-unsigned int IntegratorHPMCMono<Shape>::countOverlaps(unsigned int timestep, bool early_exit)
+unsigned int IntegratorMCMMono<Shape>::countOverlaps(unsigned int timestep, bool early_exit)
     {
     unsigned int overlap_count = 0;
     unsigned int err_count = 0;
 
-    m_exec_conf->msg->notice(10) << "HPMCMono count overlaps: " << timestep << std::endl;
+    m_exec_conf->msg->notice(10) << "MCMMono count overlaps: " << timestep << std::endl;
 
     if (!m_past_first_run)
         {
@@ -904,7 +904,7 @@ unsigned int IntegratorHPMCMono<Shape>::countOverlaps(unsigned int timestep, boo
     // update the image list
     updateImageList();
 
-    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "HPMC count overlaps");
+    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "MCM count overlaps");
 
     // access particle data and system box
     ArrayHandle<Scalar4> h_postype(m_pdata->getPositions(), access_location::host, access_mode::read);
@@ -1014,7 +1014,7 @@ unsigned int IntegratorHPMCMono<Shape>::countOverlaps(unsigned int timestep, boo
     }
 
 template<class Shape>
-float IntegratorHPMCMono<Shape>::computePatchEnergy(unsigned int timestep)
+float IntegratorMCMMono<Shape>::computePatchEnergy(unsigned int timestep)
     {
     // sum up in double precision
     double energy = 0.0;
@@ -1022,7 +1022,7 @@ float IntegratorHPMCMono<Shape>::computePatchEnergy(unsigned int timestep)
     // return if nothing to do
     if (!m_patch) return energy;
 
-    m_exec_conf->msg->notice(10) << "HPMC compute patch energy: " << timestep << std::endl;
+    m_exec_conf->msg->notice(10) << "MCM compute patch energy: " << timestep << std::endl;
 
     if (!m_past_first_run)
         {
@@ -1035,7 +1035,7 @@ float IntegratorHPMCMono<Shape>::computePatchEnergy(unsigned int timestep)
     // update the image list
     updateImageList();
 
-    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "HPMC compute patch energy");
+    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "MCM compute patch energy");
 
     // access particle data and system box
     ArrayHandle<Scalar4> h_postype(m_pdata->getPositions(), access_location::host, access_mode::read);
@@ -1155,7 +1155,7 @@ float IntegratorHPMCMono<Shape>::computePatchEnergy(unsigned int timestep)
 
 
 template <class Shape>
-Scalar IntegratorHPMCMono<Shape>::getMaxCoreDiameter()
+Scalar IntegratorMCMMono<Shape>::getMaxCoreDiameter()
     {
     // for each type, create a temporary shape and return the maximum diameter
     OverlapReal maxD = OverlapReal(0.0);
@@ -1169,7 +1169,7 @@ Scalar IntegratorHPMCMono<Shape>::getMaxCoreDiameter()
     }
 
 template <class Shape>
-OverlapReal IntegratorHPMCMono<Shape>::getMinCoreDiameter()
+OverlapReal IntegratorMCMMono<Shape>::getMinCoreDiameter()
     {
     // for each type, create a temporary shape and return the minimum diameter
     OverlapReal minD = OverlapReal(0.0);
@@ -1191,14 +1191,14 @@ OverlapReal IntegratorHPMCMono<Shape>::getMinCoreDiameter()
     }
 
 template <class Shape>
-void IntegratorHPMCMono<Shape>::setParam(unsigned int typ,  const param_type& param)
+void IntegratorMCMMono<Shape>::setParam(unsigned int typ,  const param_type& param)
     {
     // validate input
     if (typ >= this->m_pdata->getNTypes())
         {
         this->m_exec_conf->msg->error() << "integrate.mode_mcm_?." << /*evaluator::getName() <<*/ ": Trying to set pair params for a non existant type! "
                   << typ << std::endl;
-        throw std::runtime_error("Error setting parameters in IntegratorHPMCMono");
+        throw std::runtime_error("Error setting parameters in IntegratorMCMMono");
         }
 
     // need to scope this because updateCellWidth will access it
@@ -1212,21 +1212,21 @@ void IntegratorHPMCMono<Shape>::setParam(unsigned int typ,  const param_type& pa
     }
 
 template <class Shape>
-void IntegratorHPMCMono<Shape>::setOverlapChecks(unsigned int typi, unsigned int typj, bool check_overlaps)
+void IntegratorMCMMono<Shape>::setOverlapChecks(unsigned int typi, unsigned int typj, bool check_overlaps)
     {
     // validate input
     if (typi >= this->m_pdata->getNTypes())
         {
         this->m_exec_conf->msg->error() << "integrate.mode_mcm_?." << /*evaluator::getName() <<*/ ": Trying to set interaction matrix for a non existant type! "
                   << typi << std::endl;
-        throw std::runtime_error("Error setting interaction matrix in IntegratorHPMCMono");
+        throw std::runtime_error("Error setting interaction matrix in IntegratorMCMMono");
         }
 
     if (typj >= this->m_pdata->getNTypes())
         {
         this->m_exec_conf->msg->error() << "integrate.mode_mcm_?." << /*evaluator::getName() <<*/ ": Trying to set interaction matrix for a non existant type! "
                   << typj << std::endl;
-        throw std::runtime_error("Error setting interaction matrix in IntegratorHPMCMono");
+        throw std::runtime_error("Error setting interaction matrix in IntegratorMCMMono");
         }
 
     // update the parameter for this type
@@ -1238,7 +1238,7 @@ void IntegratorHPMCMono<Shape>::setOverlapChecks(unsigned int typi, unsigned int
 
 //! Calculate a list of box images within interaction range of the simulation box, innermost first
 template <class Shape>
-inline const std::vector<vec3<Scalar> >& IntegratorHPMCMono<Shape>::updateImageList()
+inline const std::vector<vec3<Scalar> >& IntegratorMCMMono<Shape>::updateImageList()
     {
     // cancel if the image list is up to date
     if (m_image_list_valid)
@@ -1249,7 +1249,7 @@ inline const std::vector<vec3<Scalar> >& IntegratorHPMCMono<Shape>::updateImageL
     // range = getMaxCoreDiameter() + box_circumsphere
     // while still adding images, examine successively larger blocks of images, checking the outermost against range
 
-    if (m_prof) m_prof->push(m_exec_conf, "HPMC image list");
+    if (m_prof) m_prof->push(m_exec_conf, "MCM image list");
 
     unsigned int ndim = m_sysdef->getNDimensions();
 
@@ -1401,7 +1401,7 @@ inline const std::vector<vec3<Scalar> >& IntegratorHPMCMono<Shape>::updateImageL
     }
 
 template <class Shape>
-void IntegratorHPMCMono<Shape>::updateCellWidth()
+void IntegratorMCMMono<Shape>::updateCellWidth()
     {
     m_nominal_width = getMaxCoreDiameter();
 
@@ -1423,7 +1423,7 @@ void IntegratorHPMCMono<Shape>::updateCellWidth()
     }
 
 template <class Shape>
-void IntegratorHPMCMono<Shape>::growAABBList(unsigned int N)
+void IntegratorMCMMono<Shape>::growAABBList(unsigned int N)
     {
     if (N > m_aabbs_capacity)
         {
@@ -1441,7 +1441,7 @@ void IntegratorHPMCMono<Shape>::growAABBList(unsigned int N)
     }
 
 
-/*! Call any time an up to date AABB tree is needed. IntegratorHPMCMono internally tracks whether
+/*! Call any time an up to date AABB tree is needed. IntegratorMCMMono internally tracks whether
     the tree needs to be rebuilt or if the current tree can be used.
 
     buildAABBTree() relies on the member variable m_aabb_tree_invalid to work correctly. Any time particles
@@ -1456,7 +1456,7 @@ void IntegratorHPMCMono<Shape>::growAABBList(unsigned int N)
     \returns A reference to the tree.
 */
 template <class Shape>
-const detail::AABBTree& IntegratorHPMCMono<Shape>::buildAABBTree()
+const detail::AABBTree& IntegratorMCMMono<Shape>::buildAABBTree()
     {
     if (m_aabb_tree_invalid)
         {
@@ -1504,7 +1504,7 @@ const detail::AABBTree& IntegratorHPMCMono<Shape>::buildAABBTree()
     In MPI simulations, they may not move more than half a local box length.
 */
 template <class Shape>
-void IntegratorHPMCMono<Shape>::limitMoveDistances()
+void IntegratorMCMMono<Shape>::limitMoveDistances()
     {
     Scalar3 npd_global = m_pdata->getGlobalBox().getNearestPlaneDistance();
     Scalar min_npd = detail::min(npd_global.x, npd_global.y);
@@ -1537,7 +1537,7 @@ void IntegratorHPMCMono<Shape>::limitMoveDistances()
  * with true/false indicating the overlap status of the ith and jth particle
  */
 template <class Shape>
-std::vector<bool> IntegratorHPMCMono<Shape>::mapOverlaps()
+std::vector<bool> IntegratorMCMMono<Shape>::mapOverlaps()
     {
     #ifdef ENABLE_MPI
     if (m_pdata->getDomainDecomposition())
@@ -1551,7 +1551,7 @@ std::vector<bool> IntegratorHPMCMono<Shape>::mapOverlaps()
 
     std::vector<bool> overlap_map(N*N, false);
 
-    m_exec_conf->msg->notice(10) << "HPMC overlap mapping" << std::endl;
+    m_exec_conf->msg->notice(10) << "MCM overlap mapping" << std::endl;
 
     unsigned int err_count = 0;
 
@@ -1636,9 +1636,9 @@ std::vector<bool> IntegratorHPMCMono<Shape>::mapOverlaps()
   the overlap status of the ith and jth particle
  */
 template <class Shape>
-pybind11::list IntegratorHPMCMono<Shape>::PyMapOverlaps()
+pybind11::list IntegratorMCMMono<Shape>::PyMapOverlaps()
     {
-    std::vector<bool> v = IntegratorHPMCMono<Shape>::mapOverlaps();
+    std::vector<bool> v = IntegratorMCMMono<Shape>::mapOverlaps();
     pybind11::list overlap_map;
     // for( unsigned int i = 0; i < sizeof(v)/sizeof(v[0]); i++ )
     for (auto i: v)
@@ -1649,20 +1649,20 @@ pybind11::list IntegratorHPMCMono<Shape>::PyMapOverlaps()
     }
 
 template <class Shape>
-void IntegratorHPMCMono<Shape>::connectGSDSignal(
+void IntegratorMCMMono<Shape>::connectGSDSignal(
                                                     std::shared_ptr<GSDDumpWriter> writer,
                                                     std::string name)
     {
     typedef hoomd::detail::SharedSignalSlot<int(gsd_handle&)> SlotType;
-    auto func = std::bind(&IntegratorHPMCMono<Shape>::slotWriteGSD, this, std::placeholders::_1, name);
+    auto func = std::bind(&IntegratorMCMMono<Shape>::slotWriteGSD, this, std::placeholders::_1, name);
     std::shared_ptr<hoomd::detail::SignalSlot> pslot( new SlotType(writer->getWriteSignal(), func));
     addSlot(pslot);
     }
 
 template <class Shape>
-int IntegratorHPMCMono<Shape>::slotWriteGSD( gsd_handle& handle, std::string name ) const
+int IntegratorMCMMono<Shape>::slotWriteGSD( gsd_handle& handle, std::string name ) const
     {
-    m_exec_conf->msg->notice(10) << "IntegratorHPMCMono writing to GSD File to name: "<< name << std::endl;
+    m_exec_conf->msg->notice(10) << "IntegratorMCMMono writing to GSD File to name: "<< name << std::endl;
     int retval = 0;
     // create schema helpers
     #ifdef ENABLE_MPI
@@ -1687,10 +1687,10 @@ int IntegratorHPMCMono<Shape>::slotWriteGSD( gsd_handle& handle, std::string nam
     }
 
 template <class Shape>
-bool IntegratorHPMCMono<Shape>::restoreStateGSD( std::shared_ptr<GSDReader> reader, std::string name)
+bool IntegratorMCMMono<Shape>::restoreStateGSD( std::shared_ptr<GSDReader> reader, std::string name)
     {
     bool success = true;
-    m_exec_conf->msg->notice(10) << "IntegratorHPMCMono from GSD File to name: "<< name << std::endl;
+    m_exec_conf->msg->notice(10) << "IntegratorMCMMono from GSD File to name: "<< name << std::endl;
     uint64_t frame = reader->getFrame();
     // create schemas
     #ifdef ENABLE_MPI
@@ -1712,24 +1712,24 @@ bool IntegratorHPMCMono<Shape>::restoreStateGSD( std::shared_ptr<GSDReader> read
     return success;
     }
 
-//! Export the IntegratorHPMCMono class to python
+//! Export the IntegratorMCMMono class to python
 /*! \param name Name of the class in the exported python module
-    \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
+    \tparam Shape An instantiation of IntegratorMCMMono<Shape> will be exported
 */
-template < class Shape > void export_IntegratorHPMCMono(pybind11::module& m, const std::string& name)
+template < class Shape > void export_IntegratorMCMMono(pybind11::module& m, const std::string& name)
     {
-    pybind11::class_< IntegratorHPMCMono<Shape>, std::shared_ptr< IntegratorHPMCMono<Shape> > >(m, name.c_str(), pybind11::base<IntegratorHPMC>())
+    pybind11::class_< IntegratorMCMMono<Shape>, std::shared_ptr< IntegratorMCMMono<Shape> > >(m, name.c_str(), pybind11::base<IntegratorMCM>())
           .def(pybind11::init< std::shared_ptr<SystemDefinition>, unsigned int >())
-          .def("setParam", &IntegratorHPMCMono<Shape>::setParam)
-          .def("setOverlapChecks", &IntegratorHPMCMono<Shape>::setOverlapChecks)
-          .def("setExternalField", &IntegratorHPMCMono<Shape>::setExternalField)
-          .def("setPatchEnergy", &IntegratorHPMCMono<Shape>::setPatchEnergy)
-          .def("mapOverlaps", &IntegratorHPMCMono<Shape>::PyMapOverlaps)
-          .def("connectGSDSignal", &IntegratorHPMCMono<Shape>::connectGSDSignal)
-          .def("restoreStateGSD", &IntegratorHPMCMono<Shape>::restoreStateGSD)
+          .def("setParam", &IntegratorMCMMono<Shape>::setParam)
+          .def("setOverlapChecks", &IntegratorMCMMono<Shape>::setOverlapChecks)
+          .def("setExternalField", &IntegratorMCMMono<Shape>::setExternalField)
+          .def("setPatchEnergy", &IntegratorMCMMono<Shape>::setPatchEnergy)
+          .def("mapOverlaps", &IntegratorMCMMono<Shape>::PyMapOverlaps)
+          .def("connectGSDSignal", &IntegratorMCMMono<Shape>::connectGSDSignal)
+          .def("restoreStateGSD", &IntegratorMCMMono<Shape>::restoreStateGSD)
           ;
     }
 
 } // end namespace mcm
 
-#endif // _INTEGRATOR_HPMC_MONO_H_
+#endif // _INTEGRATOR_MCM_MONO_H_

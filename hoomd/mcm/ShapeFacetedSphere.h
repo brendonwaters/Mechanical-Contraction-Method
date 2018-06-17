@@ -3,7 +3,7 @@
 
 #include "hoomd/HOOMDMath.h"
 #include "hoomd/BoxDim.h"
-#include "HPMCPrecisionSetup.h"
+#include "MCMPrecisionSetup.h"
 #include "hoomd/VectorMath.h"
 #include "ShapeSphere.h"
 #include "XenoCollide3D.h"
@@ -224,7 +224,7 @@ class SupportFuncFacetedSphere
 
 
 //! Faceted sphere shape template
-/*! ShapeFacetedSphere implements IntegragorHPMC's shape protocol for a sphere that is truncated
+/*! ShapeFacetedSphere implements IntegragorMCM's shape protocol for a sphere that is truncated
     by a set of planes, defined through their plane equations n_i*x = n_i^2.
 
     The parameter defining the sphere is just a single Scalar, the sphere radius.

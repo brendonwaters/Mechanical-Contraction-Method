@@ -2,9 +2,9 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 // Include the defined classes that are to be exported to python
-#include "IntegratorHPMC.h"
-#include "IntegratorHPMCMono.h"
-#include "IntegratorHPMCMonoImplicit.h"
+#include "IntegratorMCM.h"
+#include "IntegratorMCMMono.h"
+#include "IntegratorMCMMonoImplicit.h"
 
 #include "ShapeSphere.h"
 #include "ShapeConvexPolygon.h"
@@ -26,7 +26,7 @@
 #include "GPUTree.h"
 
 #ifdef ENABLE_CUDA
-#include "IntegratorHPMCMonoGPU.h"
+#include "IntegratorMCMMonoGPU.h"
 #endif
 
 #include "modules.h"
@@ -41,9 +41,9 @@ namespace py = pybind11;
 namespace mcm
 {
 
-//! HPMC implementation details
-/*! The detail namespace contains classes and functions that are not part of the HPMC public interface. These are
-    subject to change without notice and are designed solely for internal use within HPMC.
+//! MCM implementation details
+/*! The detail namespace contains classes and functions that are not part of the MCM public interface. These are
+    subject to change without notice and are designed solely for internal use within MCM.
 */
 namespace detail
 {
@@ -59,7 +59,7 @@ using namespace mcm::detail;
 //! Define the _mcm python module exports
 PYBIND11_MODULE(_mcm, m)
     {
-    export_IntegratorHPMC(m);
+    export_IntegratorMCM(m);
 
     export_UpdaterBoxMC(m);
     export_external_fields(m);
@@ -108,10 +108,10 @@ PYBIND11_MODULE(_mcm, m)
     export_mcm_clusters_counters(m);
     }
 
-/*! \defgroup mcm_integrators HPMC integrators
+/*! \defgroup mcm_integrators MCM integrators
 */
 
-/*! \defgroup mcm_analyzers HPMC analyzers
+/*! \defgroup mcm_analyzers MCM analyzers
 */
 
 /*! \defgroup shape Shapes
@@ -123,16 +123,16 @@ PYBIND11_MODULE(_mcm, m)
 */
 
 /*! \defgroup mcm_detail Details
-    HPMC implementation details
+    MCM implementation details
     @{
 */
 
 /*! \defgroup mcm_data_structs Data structures
-    HPMC internal data structures
+    MCM internal data structures
 */
 
-/*! \defgroup mcm_kernels HPMC kernels
-    HPMC GPU kernels
+/*! \defgroup mcm_kernels MCM kernels
+    MCM GPU kernels
 */
 
 /*! \defgroup minkowski Minkowski methods

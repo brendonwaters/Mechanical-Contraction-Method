@@ -21,8 +21,8 @@
 #include <algorithm>
 #include <numeric>
 
-#ifndef _GSD_HPMC_Schema_H_
-#define _GSD_HPMC_Schema_H_
+#ifndef _GSD_MCM_Schema_H_
+#define _GSD_MCM_Schema_H_
 
 template<class T>
 using param_array = typename std::vector<T, managed_allocator<T> >;

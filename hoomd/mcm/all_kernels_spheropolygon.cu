@@ -2,9 +2,9 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 #include "ComputeFreeVolumeGPU.cuh"
-#include "IntegratorHPMCMonoGPU.cuh"
-#include "IntegratorHPMCMonoImplicitGPU.cuh"
-#include "IntegratorHPMCMonoImplicitNewGPU.cuh"
+#include "IntegratorMCMMonoGPU.cuh"
+#include "IntegratorMCMMonoImplicitGPU.cuh"
+#include "IntegratorMCMMonoImplicitNewGPU.cuh"
 
 #include "ShapeSpheropolygon.h"
 
@@ -14,7 +14,7 @@ namespace mcm
 namespace detail
 {
 
-//! HPMC kernels for ShapeSpheropolygon
+//! MCM kernels for ShapeSpheropolygon
 template cudaError_t gpu_mcm_free_volume<ShapeSpheropolygon>(const mcm_free_volume_args_t &args,
                                                        const typename ShapeSpheropolygon::param_type *d_params);
 template cudaError_t gpu_mcm_update<ShapeSpheropolygon>(const mcm_args_t& args,

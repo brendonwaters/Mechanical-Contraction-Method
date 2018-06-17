@@ -4,8 +4,8 @@
 #ifndef _COMPUTE_FREE_VOLUME_CUH_
 #define _COMPUTE_FREE_VOLUME_CUH_
 
-#include "HPMCCounters.h"
-#include "HPMCPrecisionSetup.h"
+#include "MCMCounters.h"
+#include "MCMPrecisionSetup.h"
 
 #include "hoomd/HOOMDMath.h"
 #include "hoomd/ParticleData.cuh"
@@ -25,7 +25,7 @@ namespace mcm
 namespace detail
 {
 
-/*! \file IntegratorHPMCMonoImplicit.cuh
+/*! \file IntegratorMCMMonoImplicit.cuh
     \brief Declaration of CUDA kernels drivers
 */
 

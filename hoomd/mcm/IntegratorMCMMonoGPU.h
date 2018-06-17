@@ -3,14 +3,14 @@
 
 #ifdef ENABLE_CUDA
 
-#include "IntegratorHPMCMono.h"
-#include "IntegratorHPMCMonoGPU.cuh"
+#include "IntegratorMCMMono.h"
+#include "IntegratorMCMMonoGPU.cuh"
 #include "hoomd/Autotuner.h"
 
 #include <cuda_runtime.h>
 
-/*! \file IntegratorHPMCMonoGPU.h
-    \brief Defines the template class for HPMC on the GPU
+/*! \file IntegratorMCMMonoGPU.h
+    \brief Defines the template class for MCM on the GPU
     \note This header cannot be compiled by nvcc
 */
 
@@ -23,20 +23,20 @@
 namespace mcm
 {
 
-//! Template class for HPMC update on the GPU
+//! Template class for MCM update on the GPU
 /*!
     \ingroup mcm_integrators
 */
 template< class Shape >
-class IntegratorHPMCMonoGPU : public IntegratorHPMCMono<Shape>
+class IntegratorMCMMonoGPU : public IntegratorMCMMono<Shape>
     {
     public:
         //! Construct the integrator
-        IntegratorHPMCMonoGPU(std::shared_ptr<SystemDefinition> sysdef,
+        IntegratorMCMMonoGPU(std::shared_ptr<SystemDefinition> sysdef,
                               std::shared_ptr<CellList> cl,
                               unsigned int seed);
         //! Destructor
-        virtual ~IntegratorHPMCMonoGPU();
+        virtual ~IntegratorMCMMonoGPU();
 
         //! Set autotuner parameters
         /*! \param enable Enable/disable autotuning
@@ -93,10 +93,10 @@ class IntegratorHPMCMonoGPU : public IntegratorHPMCMono<Shape>
     };
 
 template< class Shape >
-IntegratorHPMCMonoGPU< Shape >::IntegratorHPMCMonoGPU(std::shared_ptr<SystemDefinition> sysdef,
+IntegratorMCMMonoGPU< Shape >::IntegratorMCMMonoGPU(std::shared_ptr<SystemDefinition> sysdef,
                                                                    std::shared_ptr<CellList> cl,
                                                                    unsigned int seed)
-    : IntegratorHPMCMono<Shape>(sysdef, seed), m_cl(cl), m_cell_set_order(seed+this->m_exec_conf->getRank())
+    : IntegratorMCMMono<Shape>(sysdef, seed), m_cl(cl), m_cell_set_order(seed+this->m_exec_conf->getRank())
     {
     this->m_cl->setRadius(1);
     this->m_cl->setComputeTDB(false);
@@ -169,22 +169,22 @@ IntegratorHPMCMonoGPU< Shape >::IntegratorHPMCMonoGPU(std::shared_ptr<SystemDefi
     }
 
 template< class Shape >
-IntegratorHPMCMonoGPU< Shape>::~IntegratorHPMCMonoGPU()
+IntegratorMCMMonoGPU< Shape>::~IntegratorMCMMonoGPU()
     {
     cudaStreamDestroy(m_stream);
     CHECK_CUDA_ERROR();
     }
 
 template< class Shape >
-void IntegratorHPMCMonoGPU< Shape >::update(unsigned int timestep)
+void IntegratorMCMMonoGPU< Shape >::update(unsigned int timestep)
     {
     if (this->m_patch && !this->m_patch_log)
         {
         this->m_exec_conf->msg->error() << "GPU simulations with patches are unsupported." << std::endl;
-        throw std::runtime_error("Error during HPMC integration\n");
+        throw std::runtime_error("Error during MCM integration\n");
         }
 
-    IntegratorHPMC::update(timestep);
+    IntegratorMCM::update(timestep);
     // compute the width of the active region
     Scalar3 npd = this->m_pdata->getBox().getNearestPlaneDistance();
     Scalar3 ghost_fraction = this->m_nominal_width / npd;
@@ -198,15 +198,15 @@ void IntegratorHPMCMonoGPU< Shape >::update(unsigned int timestep)
         (box.getPeriodic().y && nearest_plane_distance.y <= this->m_nominal_width*2) ||
         (this->m_sysdef->getNDimensions() == 3 && box.getPeriodic().z && nearest_plane_distance.z <= this->m_nominal_width*2))
         {
-        this->m_exec_conf->msg->error() << "Simulation box too small for GPU accelerated HPMC execution - increase it so the minimum image convention works" << std::endl;
-        throw std::runtime_error("Error performing HPMC update");
+        this->m_exec_conf->msg->error() << "Simulation box too small for GPU accelerated MCM execution - increase it so the minimum image convention works" << std::endl;
+        throw std::runtime_error("Error performing MCM update");
         }
 
     // update the cell list
     this->m_cl->compute(timestep);
 
     // start the profile
-    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "HPMC");
+    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "MCM");
 
     // rng for shuffle and grid shift
     hoomd::detail::Saru rng(this->m_seed, timestep, 0xf4a3210e);
@@ -388,7 +388,7 @@ void IntegratorHPMCMonoGPU< Shape >::update(unsigned int timestep)
     }
 
 template< class Shape >
-void IntegratorHPMCMonoGPU< Shape >::initializeCellSets()
+void IntegratorMCMMonoGPU< Shape >::initializeCellSets()
     {
     this->m_exec_conf->msg->notice(4) << "mcm recomputing active cells" << std::endl;
     // "ghost cells" might contain active particles. So they must be included in the active cell sets
@@ -436,7 +436,7 @@ void IntegratorHPMCMonoGPU< Shape >::initializeCellSets()
     }
 
 template< class Shape >
-void IntegratorHPMCMonoGPU< Shape >::initializeExcellMem()
+void IntegratorMCMMonoGPU< Shape >::initializeExcellMem()
     {
     this->m_exec_conf->msg->notice(4) << "mcm resizing expanded cells" << std::endl;
 
@@ -454,7 +454,7 @@ void IntegratorHPMCMonoGPU< Shape >::initializeExcellMem()
     }
 
 template< class Shape >
-void IntegratorHPMCMonoGPU< Shape >::updateCellWidth()
+void IntegratorMCMMonoGPU< Shape >::updateCellWidth()
     {
     // changing the cell width means that the particle shapes have changed, assume this invalidates the
     // image list and aabb tree
@@ -482,11 +482,11 @@ void IntegratorHPMCMonoGPU< Shape >::updateCellWidth()
 
 //! Export this mcm integrator to python
 /*! \param name Name of the class in the exported python module
-    \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
+    \tparam Shape An instantiation of IntegratorMCMMono<Shape> will be exported
 */
-template < class Shape > void export_IntegratorHPMCMonoGPU(pybind11::module& m, const std::string& name)
+template < class Shape > void export_IntegratorMCMMonoGPU(pybind11::module& m, const std::string& name)
     {
-     pybind11::class_<IntegratorHPMCMonoGPU<Shape>, std::shared_ptr< IntegratorHPMCMonoGPU<Shape> > >(m, name.c_str(), pybind11::base< IntegratorHPMCMono<Shape> >())
+     pybind11::class_<IntegratorMCMMonoGPU<Shape>, std::shared_ptr< IntegratorMCMMonoGPU<Shape> > >(m, name.c_str(), pybind11::base< IntegratorMCMMono<Shape> >())
               .def(pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr<CellList>, unsigned int >())
               ;
     }

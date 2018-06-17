@@ -3,7 +3,7 @@
 
 #include "hoomd/HOOMDMath.h"
 #include "hoomd/BoxDim.h"
-#include "HPMCPrecisionSetup.h"
+#include "MCMPrecisionSetup.h"
 #include "hoomd/VectorMath.h"
 #include "ShapeSphere.h"    //< For the base template of test_overlap
 
@@ -38,7 +38,7 @@ namespace mcm
 {
 
 //! Ellipsoid shape template
-/*! ShapeEllipsoid implements IntegragorHPMC's shape protocol.
+/*! ShapeEllipsoid implements IntegragorMCM's shape protocol.
 
     The parameter defining an ellipsoid is a OverlapReal4. First three components list the major axis in that direction.
     The last component (w) is a ignore flag for overlaps. If w!=0, for both particles in overlap check, then overlaps

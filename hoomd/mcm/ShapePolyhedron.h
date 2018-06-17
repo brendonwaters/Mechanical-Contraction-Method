@@ -5,7 +5,7 @@
 
 #include "hoomd/HOOMDMath.h"
 #include "hoomd/BoxDim.h"
-#include "HPMCPrecisionSetup.h"
+#include "MCMPrecisionSetup.h"
 #include "hoomd/VectorMath.h"
 #include "ShapeSphere.h"    //< For the base template of test_overlap
 #include "ShapeConvexPolyhedron.h"
@@ -129,7 +129,7 @@ static __device__ int warp_reduce(int val, int width)
 #endif
 
 //!  Polyhedron shape template
-/*! ShapePolyhedron implements IntegragorHPMC's shape protocol.
+/*! ShapePolyhedron implements IntegragorMCM's shape protocol.
 
     The parameter defining a polyhedron is a structure containing a list of n_faces faces, each representing
     a polygon, for which the vertices are stored in sorted order, giving a total number of n_verts vertices.

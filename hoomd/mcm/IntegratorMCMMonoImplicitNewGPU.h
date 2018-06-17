@@ -1,22 +1,22 @@
 // Copyright (c) 2009-2018 The Regents of the University of Michigan
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
-#ifndef __HPMC_MONO_IMPLICIT_NEW_GPU_H__
-#define __HPMC_MONO_IMPLICIT_NEW_GPU_H__
+#ifndef __MCM_MONO_IMPLICIT_NEW_GPU_H__
+#define __MCM_MONO_IMPLICIT_NEW_GPU_H__
 
 #ifdef ENABLE_CUDA
 
-#include "IntegratorHPMCMonoImplicitNew.h"
-#include "IntegratorHPMCMonoGPU.cuh"
-#include "IntegratorHPMCMonoImplicitNewGPU.cuh"
+#include "IntegratorMCMMonoImplicitNew.h"
+#include "IntegratorMCMMonoGPU.cuh"
+#include "IntegratorMCMMonoImplicitNewGPU.cuh"
 #include "hoomd/Autotuner.h"
 
 #include "hoomd/GPUVector.h"
 
 #include <cuda_runtime.h>
 
-/*! \file IntegratorHPMCMonoImplicitNewGPU.h
-    \brief Defines the template class for HPMC with implicit generated depletant solvent on the GPU
+/*! \file IntegratorMCMMonoImplicitNewGPU.h
+    \brief Defines the template class for MCM with implicit generated depletant solvent on the GPU
     \note This header cannot be compiled by nvcc
 */
 
@@ -29,7 +29,7 @@
 namespace mcm
 {
 
-//! Template class for HPMC update with implicit depletants on the GPU
+//! Template class for MCM update with implicit depletants on the GPU
 /*!
     Depletants are generated randomly on the fly according to the semi-grand canonical ensemble.
 
@@ -38,15 +38,15 @@ namespace mcm
     \ingroup mcm_integrators
 */
 template< class Shape >
-class IntegratorHPMCMonoImplicitNewGPU : public IntegratorHPMCMonoImplicitNew<Shape>
+class IntegratorMCMMonoImplicitNewGPU : public IntegratorMCMMonoImplicitNew<Shape>
     {
     public:
         //! Construct the integrator
-        IntegratorHPMCMonoImplicitNewGPU(std::shared_ptr<SystemDefinition> sysdef,
+        IntegratorMCMMonoImplicitNewGPU(std::shared_ptr<SystemDefinition> sysdef,
                               std::shared_ptr<CellList> cl,
                               unsigned int seed);
         //! Destructor
-        virtual ~IntegratorHPMCMonoImplicitNewGPU();
+        virtual ~IntegratorMCMMonoImplicitNewGPU();
 
         //! Set autotuner parameters
         /*! \param enable Enable/disable autotuning
@@ -128,12 +128,12 @@ class IntegratorHPMCMonoImplicitNewGPU : public IntegratorHPMCMonoImplicitNew<Sh
     */
 
 template< class Shape >
-IntegratorHPMCMonoImplicitNewGPU< Shape >::IntegratorHPMCMonoImplicitNewGPU(std::shared_ptr<SystemDefinition> sysdef,
+IntegratorMCMMonoImplicitNewGPU< Shape >::IntegratorMCMMonoImplicitNewGPU(std::shared_ptr<SystemDefinition> sysdef,
                                                                    std::shared_ptr<CellList> cl,
                                                                    unsigned int seed)
-    : IntegratorHPMCMonoImplicitNew<Shape>(sysdef, seed), m_cl(cl), m_cell_set_order(seed+this->m_exec_conf->getRank())
+    : IntegratorMCMMonoImplicitNew<Shape>(sysdef, seed), m_cl(cl), m_cell_set_order(seed+this->m_exec_conf->getRank())
     {
-    this->m_exec_conf->msg->notice(5) << "Constructing IntegratorHPMCImplicitGPU" << std::endl;
+    this->m_exec_conf->msg->notice(5) << "Constructing IntegratorMCMImplicitGPU" << std::endl;
 
     this->m_cl->setRadius(1);
     this->m_cl->setComputeTDB(false);
@@ -224,7 +224,7 @@ IntegratorHPMCMonoImplicitNewGPU< Shape >::IntegratorHPMCMonoImplicitNewGPU(std:
 
 //! Destructor
 template< class Shape >
-IntegratorHPMCMonoImplicitNewGPU< Shape >::~IntegratorHPMCMonoImplicitNewGPU()
+IntegratorMCMMonoImplicitNewGPU< Shape >::~IntegratorMCMMonoImplicitNewGPU()
     {
     // destroy the registered poisson RNG's
     ArrayHandle<curandDiscreteDistribution_t> h_poisson_dist(m_poisson_dist, access_location::host, access_mode::read);
@@ -241,7 +241,7 @@ IntegratorHPMCMonoImplicitNewGPU< Shape >::~IntegratorHPMCMonoImplicitNewGPU()
     }
 
 template< class Shape >
-void IntegratorHPMCMonoImplicitNewGPU< Shape >::update(unsigned int timestep)
+void IntegratorMCMMonoImplicitNewGPU< Shape >::update(unsigned int timestep)
     {
     if (this->m_patch && !this->m_patch_log)
         {
@@ -249,7 +249,7 @@ void IntegratorHPMCMonoImplicitNewGPU< Shape >::update(unsigned int timestep)
         throw std::runtime_error("Error during implicit depletant integration\n");
         }
 
-    IntegratorHPMC::update(timestep);
+    IntegratorMCM::update(timestep);
 
     // update poisson distributions
     if (this->m_need_initialize_poisson)
@@ -273,7 +273,7 @@ void IntegratorHPMCMonoImplicitNewGPU< Shape >::update(unsigned int timestep)
         (this->m_sysdef->getNDimensions() == 3 && box.getPeriodic().z && npd.z <= this->m_nominal_width*2))
         {
         this->m_exec_conf->msg->error() << "Simulation box too small for implicit depletant simulations on GPU - increase it so the minimum image convention works" << std::endl;
-        throw std::runtime_error("Error performing HPMC update");
+        throw std::runtime_error("Error performing MCM update");
         }
 
 
@@ -281,7 +281,7 @@ void IntegratorHPMCMonoImplicitNewGPU< Shape >::update(unsigned int timestep)
     this->m_cl->compute(timestep);
 
     // start the profile
-    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "HPMC");
+    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "MCM");
 
     // rng for shuffle and grid shift
     hoomd::detail::Saru rng(this->m_seed, timestep, 0xf4a3210e);
@@ -671,7 +671,7 @@ void IntegratorHPMCMonoImplicitNewGPU< Shape >::update(unsigned int timestep)
     }
 
 template<class Shape>
-void IntegratorHPMCMonoImplicitNewGPU< Shape >::initializePoissonDistribution()
+void IntegratorMCMMonoImplicitNewGPU< Shape >::initializePoissonDistribution()
     {
     // resize GPUArray
     m_poisson_dist.resize(this->m_pdata->getNTypes());
@@ -712,7 +712,7 @@ void IntegratorHPMCMonoImplicitNewGPU< Shape >::initializePoissonDistribution()
     }
 
 template< class Shape >
-void IntegratorHPMCMonoImplicitNewGPU< Shape >::initializeCellSets()
+void IntegratorMCMMonoImplicitNewGPU< Shape >::initializeCellSets()
     {
     this->m_exec_conf->msg->notice(4) << "mcm recomputing active cells" << std::endl;
     // "ghost cells" might contain active particles. So they must be included in the active cell sets
@@ -760,7 +760,7 @@ void IntegratorHPMCMonoImplicitNewGPU< Shape >::initializeCellSets()
     }
 
 template< class Shape >
-void IntegratorHPMCMonoImplicitNewGPU< Shape >::initializeExcellMem()
+void IntegratorMCMMonoImplicitNewGPU< Shape >::initializeExcellMem()
     {
     this->m_exec_conf->msg->notice(4) << "mcm resizing expanded cells" << std::endl;
 
@@ -778,9 +778,9 @@ void IntegratorHPMCMonoImplicitNewGPU< Shape >::initializeExcellMem()
     }
 
 template< class Shape >
-void IntegratorHPMCMonoImplicitNewGPU< Shape >::updateCellWidth()
+void IntegratorMCMMonoImplicitNewGPU< Shape >::updateCellWidth()
     {
-    IntegratorHPMCMonoImplicitNew<Shape>::updateCellWidth();
+    IntegratorMCMMonoImplicitNew<Shape>::updateCellWidth();
 
     this->m_cl->setNominalWidth(this->m_nominal_width);
 
@@ -803,11 +803,11 @@ void IntegratorHPMCMonoImplicitNewGPU< Shape >::updateCellWidth()
 
 //! Export this mcm integrator to python
 /*! \param name Name of the class in the exported python module
-    \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
+    \tparam Shape An instantiation of IntegratorMCMMono<Shape> will be exported
 */
-template < class Shape > void export_IntegratorHPMCMonoImplicitNewGPU(pybind11::module& m, const std::string& name)
+template < class Shape > void export_IntegratorMCMMonoImplicitNewGPU(pybind11::module& m, const std::string& name)
     {
-     pybind11::class_<IntegratorHPMCMonoImplicitNewGPU<Shape>, std::shared_ptr< IntegratorHPMCMonoImplicitNewGPU<Shape> > >(m, name.c_str(), pybind11::base< IntegratorHPMCMonoImplicitNew<Shape> >())
+     pybind11::class_<IntegratorMCMMonoImplicitNewGPU<Shape>, std::shared_ptr< IntegratorMCMMonoImplicitNewGPU<Shape> > >(m, name.c_str(), pybind11::base< IntegratorMCMMonoImplicitNew<Shape> >())
               .def(pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr<CellList>, unsigned int >())
         ;
     }
@@ -816,4 +816,4 @@ template < class Shape > void export_IntegratorHPMCMonoImplicitNewGPU(pybind11::
 
 #endif // ENABLE_CUDA
 
-#endif // __HPMC_MONO_IMPLICIT_NEW_GPU_H__
+#endif // __MCM_MONO_IMPLICIT_NEW_GPU_H__

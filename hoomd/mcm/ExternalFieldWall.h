@@ -11,7 +11,7 @@
 #include "hoomd/Saru.h"
 #include "hoomd/VectorMath.h"
 
-#include "IntegratorHPMCMono.h"
+#include "IntegratorMCMMono.h"
 #include "ExternalField.h"
 
 #include <tuple>
@@ -421,7 +421,7 @@ class ExternalFieldWall : public ExternalFieldMono<Shape>
     {
         using Compute::m_pdata;
     public:
-        ExternalFieldWall(std::shared_ptr<SystemDefinition> sysdef, std::shared_ptr<IntegratorHPMCMono<Shape> > mc) : ExternalFieldMono<Shape>(sysdef), m_mc(mc)
+        ExternalFieldWall(std::shared_ptr<SystemDefinition> sysdef, std::shared_ptr<IntegratorMCMMono<Shape> > mc) : ExternalFieldMono<Shape>(sysdef), m_mc(mc)
           {
           m_box = m_pdata->getGlobalBox();
           //! scale the container walls every time the box changes
@@ -825,7 +825,7 @@ class ExternalFieldWall : public ExternalFieldMono<Shape>
         std::vector<std::string>    m_CylinderLogQuantities;
         Scalar                      m_Volume;
     private:
-        std::shared_ptr<IntegratorHPMCMono<Shape> > m_mc; //!< integrator
+        std::shared_ptr<IntegratorMCMMono<Shape> > m_mc; //!< integrator
         BoxDim                                      m_box; //!< the current box
     };
 
@@ -835,7 +835,7 @@ template<class Shape>
 void export_ExternalFieldWall(pybind11::module& m, const std::string& name)
 {
    pybind11::class_< ExternalFieldWall<Shape>, std::shared_ptr< ExternalFieldWall<Shape> > >(m, name.c_str(), pybind11::base< ExternalFieldMono<Shape> >())
-    .def(pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr< IntegratorHPMCMono<Shape> > >())
+    .def(pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr< IntegratorMCMMono<Shape> > >())
     .def("SetSphereWallParameter", &ExternalFieldWall<Shape>::SetSphereWallParameter)
     .def("SetCylinderWallParameter", &ExternalFieldWall<Shape>::SetCylinderWallParameter)
     .def("SetPlaneWallParameter", &ExternalFieldWall<Shape>::SetPlaneWallParameter)

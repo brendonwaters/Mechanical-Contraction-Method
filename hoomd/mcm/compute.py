@@ -23,7 +23,7 @@ class free_volume(_compute):
         suffix (str): Suffix to use for log quantity
 
     :py:class`free_volume` computes the free volume of a particle assembly using stochastic integration with a test particle type.
-    It works together with an HPMC integrator, which defines the particle types used in the simulation.
+    It works together with an MCM integrator, which defines the particle types used in the simulation.
     As parameters it requires the number of MC integration samples (*nsample*), and the type of particle (*test_type*)
     to use for the integration.
 

@@ -3,11 +3,11 @@
 
 R""" Hard particle Monte Carlo
 
-HPMC performs hard particle Monte Carlo simulations of a variety of classes of shapes.
+MCM performs hard particle Monte Carlo simulations of a variety of classes of shapes.
 
 .. rubric:: Overview
 
-HPMC implements hard particle Monte Carlo in HOOMD-blue.
+MCM implements hard particle Monte Carlo in HOOMD-blue.
 
 .. rubric:: Logging
 
@@ -98,7 +98,7 @@ from hoomd.mcm import compute
 from hoomd.mcm import util
 from hoomd.mcm import field
 
-# add HPMC article citation notice
+# add MCM article citation notice
 import hoomd
 _citation = hoomd.cite.article(cite_key='anderson2016',
                                author=['J A Anderson', 'M E Irrgang', 'S C Glotzer'],
@@ -109,7 +109,7 @@ _citation = hoomd.cite.article(cite_key='anderson2016',
                                month='July',
                                year='2016',
                                doi='10.1016/j.cpc.2016.02.024',
-                               feature='HPMC')
+                               feature='MCM')
 
 if hoomd.context.bib is None:
     hoomd.cite._extra_default_entries.append(_citation)

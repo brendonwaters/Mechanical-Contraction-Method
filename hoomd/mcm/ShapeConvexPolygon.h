@@ -3,7 +3,7 @@
 
 #include "hoomd/HOOMDMath.h"
 #include "hoomd/BoxDim.h"
-#include "HPMCPrecisionSetup.h"
+#include "MCMPrecisionSetup.h"
 #include "hoomd/VectorMath.h"
 #include "ShapeSphere.h"    //< For the base template of test_overlap
 #include "XenoCollide2D.h"
@@ -101,7 +101,7 @@ class SupportFuncConvexPolygon
 
             if (verts.N > 0)
                 {
-                #if !defined(NVCC) && defined(__AVX__) && (defined(SINGLE_PRECISION) || defined(ENABLE_HPMC_MIXED_PRECISION))
+                #if !defined(NVCC) && defined(__AVX__) && (defined(SINGLE_PRECISION) || defined(ENABLE_MCM_MIXED_PRECISION))
                 // process dot products with AVX 8 at a time on the CPU when working with more than 4 verts
                 __m256 nx_v = _mm256_broadcast_ss(&n.x);
                 __m256 ny_v = _mm256_broadcast_ss(&n.y);
@@ -145,7 +145,7 @@ class SupportFuncConvexPolygon
                         }
                     }
 
-                #elif !defined(NVCC) && defined(__SSE__) && (defined(SINGLE_PRECISION) || defined(ENABLE_HPMC_MIXED_PRECISION))
+                #elif !defined(NVCC) && defined(__SSE__) && (defined(SINGLE_PRECISION) || defined(ENABLE_MCM_MIXED_PRECISION))
                 // process dot products with SSE 4 at a time on the CPU
                 __m128 nx_v = _mm_load_ps1(&n.x);
                 __m128 ny_v = _mm_load_ps1(&n.y);
@@ -258,8 +258,8 @@ class SupportFuncConvexPolygon
 }; // end namespace detail
 
 //! Convex Polygon shape template
-/*! ShapeConvexPolygon implements IntegragorHPMC's shape protocol. It serves at the simplest example of an orientable
-    shape for HPMC.
+/*! ShapeConvexPolygon implements IntegragorMCM's shape protocol. It serves at the simplest example of an orientable
+    shape for MCM.
 
     The parameter defining a polygon is a structure containing a list of N vertices. They are assumed to be listed
     in counter-clockwise order and centered on 0,0. In fact, it is **required** that the origin is inside the shape,

@@ -13,11 +13,11 @@ using namespace std;
 #include "hoomd/CellList.h"
 #include "hoomd/Autotuner.h"
 
-#include "HPMCPrecisionSetup.h"
-#include "IntegratorHPMCMono.h"
+#include "MCMPrecisionSetup.h"
+#include "IntegratorMCMMono.h"
 #include "ComputeFreeVolume.h"
 #include "ComputeFreeVolumeGPU.cuh"
-#include "IntegratorHPMCMonoGPU.cuh"
+#include "IntegratorMCMMonoGPU.cuh"
 
 /*! \file ComputeFreeVolumeGPU.h
     \brief Defines the template class for an approximate free volume integration
@@ -43,7 +43,7 @@ class ComputeFreeVolumeGPU : public ComputeFreeVolume<Shape>
     public:
         //! Construct the integrator
         ComputeFreeVolumeGPU(std::shared_ptr<SystemDefinition> sysdef,
-                             std::shared_ptr<IntegratorHPMCMono<Shape> > mc,
+                             std::shared_ptr<IntegratorMCMMono<Shape> > mc,
                              std::shared_ptr<CellList> cl,
                              unsigned int seed,
                              std::string suffix);
@@ -86,7 +86,7 @@ class ComputeFreeVolumeGPU : public ComputeFreeVolume<Shape>
 
 template< class Shape >
 ComputeFreeVolumeGPU< Shape >::ComputeFreeVolumeGPU(std::shared_ptr<SystemDefinition> sysdef,
-                                                    std::shared_ptr<IntegratorHPMCMono<Shape> > mc,
+                                                    std::shared_ptr<IntegratorMCMMono<Shape> > mc,
                                                     std::shared_ptr<CellList> cl,
                                                     unsigned int seed,
                                                     std::string suffix)
@@ -147,7 +147,7 @@ ComputeFreeVolumeGPU<Shape>::~ComputeFreeVolumeGPU()
 template<class Shape>
 void ComputeFreeVolumeGPU<Shape>::computeFreeVolume(unsigned int timestep)
     {
-    this->m_exec_conf->msg->notice(5) << "HPMC computing free volume " << timestep << std::endl;
+    this->m_exec_conf->msg->notice(5) << "MCM computing free volume " << timestep << std::endl;
 
     // set nominal width
     Scalar nominal_width = this->m_mc->getMaxCoreDiameter();
@@ -170,7 +170,7 @@ void ComputeFreeVolumeGPU<Shape>::computeFreeVolume(unsigned int timestep)
         (this->m_sysdef->getNDimensions() == 3 && box.getPeriodic().z && npd.z <= nominal_width*2))
         {
         this->m_exec_conf->msg->error() << "Simulation box too small for compute.free_volume() on GPU - increase it so the minimum image convention works" << endl;
-        throw runtime_error("Error performing HPMC update");
+        throw runtime_error("Error performing MCM update");
         }
 
     // compute cell list
@@ -312,13 +312,13 @@ void ComputeFreeVolumeGPU< Shape >::initializeExcellMem()
 
 //! Export this mcm analyzer to python
 /*! \param name Name of the class in the exported python module
-    \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
+    \tparam Shape An instantiation of IntegratorMCMMono<Shape> will be exported
 */
 template < class Shape > void export_ComputeFreeVolumeGPU(pybind11::module& m, const std::string& name)
     {
      pybind11::class_<ComputeFreeVolumeGPU<Shape>, std::shared_ptr< ComputeFreeVolumeGPU<Shape> > >(m, name.c_str(), pybind11::base< ComputeFreeVolume<Shape> >())
               .def(pybind11::init< std::shared_ptr<SystemDefinition>,
-                std::shared_ptr<IntegratorHPMCMono<Shape> >,
+                std::shared_ptr<IntegratorMCMMono<Shape> >,
                 std::shared_ptr<CellList>,
                 unsigned int,
                 std::string >())

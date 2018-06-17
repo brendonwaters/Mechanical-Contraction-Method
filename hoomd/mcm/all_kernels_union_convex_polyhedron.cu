@@ -2,9 +2,9 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 #include "ComputeFreeVolumeGPU.cuh"
-#include "IntegratorHPMCMonoGPU.cuh"
-#include "IntegratorHPMCMonoImplicitGPU.cuh"
-#include "IntegratorHPMCMonoImplicitNewGPU.cuh"
+#include "IntegratorMCMMonoGPU.cuh"
+#include "IntegratorMCMMonoImplicitGPU.cuh"
+#include "IntegratorMCMMonoImplicitNewGPU.cuh"
 
 #include "ShapeSphere.h"
 #include "ShapeConvexPolygon.h"
@@ -24,7 +24,7 @@ namespace mcm
 namespace detail
 {
 
-//! HPMC kernels for ShapeUnion<ShapeConvexPolyhedron>
+//! MCM kernels for ShapeUnion<ShapeConvexPolyhedron>
 template cudaError_t gpu_mcm_free_volume<ShapeUnion<ShapeConvexPolyhedron> >(const mcm_free_volume_args_t &args,
                                                   const typename ShapeUnion<ShapeConvexPolyhedron> ::param_type *d_params);
 template cudaError_t gpu_mcm_update<ShapeUnion<ShapeConvexPolyhedron> >(const mcm_args_t& args,

@@ -2,18 +2,18 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 // inclusion guard
-#ifndef _INTEGRATOR_HPMC_H_
-#define _INTEGRATOR_HPMC_H_
+#ifndef _INTEGRATOR_MCM_H_
+#define _INTEGRATOR_MCM_H_
 
-/*! \file IntegratorHPMC.h
-    \brief Declaration of IntegratorHPMC
+/*! \file IntegratorMCM.h
+    \brief Declaration of IntegratorMCM
 */
 
 
 #include "hoomd/Integrator.h"
 #include "hoomd/CellList.h"
 
-#include "HPMCCounters.h"
+#include "MCMCounters.h"
 #include "ExternalField.h"
 
 #ifndef NVCC
@@ -23,10 +23,10 @@
 namespace mcm
 {
 
-//! Integrator that implements the HPMC approach
+//! Integrator that implements the MCM approach
 /*! **Overview** <br>
-    IntegratorHPMC is an non-templated base class that implements the basic methods that all HPMC integrators have.
-    This provides a base interface that any other code can use when given a shared pointer to an IntegratorHPMC.
+    IntegratorMCM is an non-templated base class that implements the basic methods that all MCM integrators have.
+    This provides a base interface that any other code can use when given a shared pointer to an IntegratorMCM.
 
     The move ratio is stored as an unsigned int (0xffff = 100%) to avoid numerical issues when the move ratio is exactly
     at 100%.
@@ -79,14 +79,14 @@ class PatchEnergy
 
     };
 
-class IntegratorHPMC : public Integrator
+class IntegratorMCM : public Integrator
     {
     public:
         //! Constructor
-        IntegratorHPMC(std::shared_ptr<SystemDefinition> sysdef,
+        IntegratorMCM(std::shared_ptr<SystemDefinition> sysdef,
                        unsigned int seed);
 
-        virtual ~IntegratorHPMC();
+        virtual ~IntegratorMCM();
 
         //! Take one timestep forward
         virtual void update(unsigned int timestep)
@@ -195,7 +195,7 @@ class IntegratorHPMC : public Integrator
         virtual void printStats()
             {
             mcm_counters_t counters = getCounters(1);
-            m_exec_conf->msg->notice(2) << "-- HPMC stats:" << "\n";
+            m_exec_conf->msg->notice(2) << "-- MCM stats:" << "\n";
             m_exec_conf->msg->notice(2) << "Average translate acceptance: " << counters.getTranslateAcceptance() << "\n";
             if (counters.rotate_accept_count + counters.rotate_reject_count != 0)
                 {
@@ -393,14 +393,14 @@ class IntegratorHPMC : public Integrator
                 {
                 // only add the migrate request on the first call
                 assert(comm);
-                comm->getGhostLayerWidthRequestSignal().connect<IntegratorHPMC, &IntegratorHPMC::getGhostLayerWidth>(this);
+                comm->getGhostLayerWidthRequestSignal().connect<IntegratorMCM, &IntegratorMCM::getGhostLayerWidth>(this);
                 m_communicator_ghost_width_connected = true;
                 }
             if (! m_communicator_flags_connected)
                 {
                 // only add the migrate request on the first call
                 assert(comm);
-                comm->getCommFlagsRequestSignal().connect<IntegratorHPMC, &IntegratorHPMC::getCommFlags>(this);
+                comm->getCommFlagsRequestSignal().connect<IntegratorMCM, &IntegratorMCM::getCommFlags>(this);
                 m_communicator_flags_connected = true;
                 }
 
@@ -419,9 +419,9 @@ class IntegratorHPMC : public Integrator
         #endif
     };
 
-//! Export the IntegratorHPMC class to python
-void export_IntegratorHPMC(pybind11::module& m);
+//! Export the IntegratorMCM class to python
+void export_IntegratorMCM(pybind11::module& m);
 
 } // end namespace mcm
 
-#endif // _INTEGRATOR_HPMC_H_
+#endif // _INTEGRATOR_MCM_H_

@@ -2,10 +2,10 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 // Include the defined classes that are to be exported to python
-#include "IntegratorHPMC.h"
-#include "IntegratorHPMCMono.h"
-#include "IntegratorHPMCMonoImplicit.h"
-#include "IntegratorHPMCMonoImplicitNew.h"
+#include "IntegratorMCM.h"
+#include "IntegratorMCMMono.h"
+#include "IntegratorMCMMonoImplicit.h"
+#include "IntegratorMCMMonoImplicitNew.h"
 #include "ComputeFreeVolume.h"
 
 #include "ShapeSpheropolygon.h"
@@ -26,9 +26,9 @@
 #include "UpdaterClustersImplicit.h"
 
 #ifdef ENABLE_CUDA
-#include "IntegratorHPMCMonoGPU.h"
-#include "IntegratorHPMCMonoImplicitGPU.h"
-#include "IntegratorHPMCMonoImplicitNewGPU.h"
+#include "IntegratorMCMMonoGPU.h"
+#include "IntegratorMCMMonoImplicitGPU.h"
+#include "IntegratorMCMMonoImplicitNewGPU.h"
 #include "ComputeFreeVolumeGPU.h"
 #endif
 
@@ -40,20 +40,20 @@ using namespace mcm::detail;
 namespace mcm
 {
 
-//! Export the base HPMCMono integrators
+//! Export the base MCMMono integrators
 void export_spheropolygon(py::module& m)
     {
-    export_IntegratorHPMCMono< ShapeSpheropolygon >(m, "IntegratorHPMCMonoSpheropolygon");
-    export_IntegratorHPMCMonoImplicit< ShapeSpheropolygon >(m, "IntegratorHPMCMonoImplicitSpheropolygon");
-    export_IntegratorHPMCMonoImplicitNew< ShapeSpheropolygon >(m, "IntegratorHPMCMonoImplicitNewSpheropolygon");
+    export_IntegratorMCMMono< ShapeSpheropolygon >(m, "IntegratorMCMMonoSpheropolygon");
+    export_IntegratorMCMMonoImplicit< ShapeSpheropolygon >(m, "IntegratorMCMMonoImplicitSpheropolygon");
+    export_IntegratorMCMMonoImplicitNew< ShapeSpheropolygon >(m, "IntegratorMCMMonoImplicitNewSpheropolygon");
     export_ComputeFreeVolume< ShapeSpheropolygon >(m, "ComputeFreeVolumeSpheropolygon");
     export_AnalyzerSDF< ShapeSpheropolygon >(m, "AnalyzerSDFSpheropolygon");
     export_UpdaterMuVT< ShapeSpheropolygon >(m, "UpdaterMuVTSpheropolygon");
     export_UpdaterClusters< ShapeSpheropolygon >(m, "UpdaterClustersSpheropolygon");
-    export_UpdaterClustersImplicit< ShapeSpheropolygon, IntegratorHPMCMonoImplicit<ShapeSpheropolygon> >(m, "UpdaterClustersImplicitSpheropolygon");
-    export_UpdaterClustersImplicit< ShapeSpheropolygon, IntegratorHPMCMonoImplicitNew<ShapeSpheropolygon> >(m, "UpdaterClustersImplicitNewSpheropolygon");
-    export_UpdaterMuVTImplicit< ShapeSpheropolygon, IntegratorHPMCMonoImplicit<ShapeSpheropolygon> >(m, "UpdaterMuVTImplicitSpheropolygon");
-    export_UpdaterMuVTImplicit< ShapeSpheropolygon, IntegratorHPMCMonoImplicitNew<ShapeSpheropolygon> >(m, "UpdaterMuVTImplicitNewSpheropolygon");
+    export_UpdaterClustersImplicit< ShapeSpheropolygon, IntegratorMCMMonoImplicit<ShapeSpheropolygon> >(m, "UpdaterClustersImplicitSpheropolygon");
+    export_UpdaterClustersImplicit< ShapeSpheropolygon, IntegratorMCMMonoImplicitNew<ShapeSpheropolygon> >(m, "UpdaterClustersImplicitNewSpheropolygon");
+    export_UpdaterMuVTImplicit< ShapeSpheropolygon, IntegratorMCMMonoImplicit<ShapeSpheropolygon> >(m, "UpdaterMuVTImplicitSpheropolygon");
+    export_UpdaterMuVTImplicit< ShapeSpheropolygon, IntegratorMCMMonoImplicitNew<ShapeSpheropolygon> >(m, "UpdaterMuVTImplicitNewSpheropolygon");
 
     export_ExternalFieldInterface<ShapeSpheropolygon>(m, "ExternalFieldSpheropolygon");
     export_LatticeField<ShapeSpheropolygon>(m, "ExternalFieldLatticeSpheropolygon");
@@ -64,9 +64,9 @@ void export_spheropolygon(py::module& m)
     export_ExternalCallback<ShapeSpheropolygon>(m, "ExternalCallbackSpheropolygon");
 
     #ifdef ENABLE_CUDA
-    export_IntegratorHPMCMonoGPU< ShapeSpheropolygon >(m, "IntegratorHPMCMonoGPUSpheropolygon");
-    export_IntegratorHPMCMonoImplicitGPU< ShapeSpheropolygon >(m, "IntegratorHPMCMonoImplicitGPUSpheropolygon");
-    export_IntegratorHPMCMonoImplicitNewGPU< ShapeSpheropolygon >(m, "IntegratorHPMCMonoImplicitNewGPUSpheropolygon");
+    export_IntegratorMCMMonoGPU< ShapeSpheropolygon >(m, "IntegratorMCMMonoGPUSpheropolygon");
+    export_IntegratorMCMMonoImplicitGPU< ShapeSpheropolygon >(m, "IntegratorMCMMonoImplicitGPUSpheropolygon");
+    export_IntegratorMCMMonoImplicitNewGPU< ShapeSpheropolygon >(m, "IntegratorMCMMonoImplicitNewGPUSpheropolygon");
     export_ComputeFreeVolumeGPU< ShapeSpheropolygon >(m, "ComputeFreeVolumeGPUSpheropolygon");
     #endif
     }

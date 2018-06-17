@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2018 The Regents of the University of Michigan
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
-#include "IntegratorHPMCMonoGPU.cuh"
+#include "IntegratorMCMMonoGPU.cuh"
 
 #include "hoomd/TextureTools.h"
 
@@ -13,8 +13,8 @@ namespace mcm
 namespace detail
 {
 
-/*! \file IntegratorHPMCMonoGPU.cu
-    \brief Definition of CUDA kernels and drivers for IntegratorHPMCMono
+/*! \file IntegratorMCMMonoGPU.cu
+    \brief Definition of CUDA kernels and drivers for IntegratorMCMMono
 */
 
 //! Kernel to generate expanded cells

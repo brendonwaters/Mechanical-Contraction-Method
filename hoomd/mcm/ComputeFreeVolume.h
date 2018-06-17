@@ -9,8 +9,8 @@
 #include "hoomd/CellList.h"
 #include "hoomd/Autotuner.h"
 
-#include "HPMCPrecisionSetup.h"
-#include "IntegratorHPMCMono.h"
+#include "MCMPrecisionSetup.h"
+#include "IntegratorMCMMono.h"
 
 
 /*! \file ComputeFreeVolume.h
@@ -38,7 +38,7 @@ class ComputeFreeVolume : public Compute
     public:
         //! Construct the integrator
         ComputeFreeVolume(std::shared_ptr<SystemDefinition> sysdef,
-                             std::shared_ptr<IntegratorHPMCMono<Shape> > mc,
+                             std::shared_ptr<IntegratorMCMMono<Shape> > mc,
                              std::shared_ptr<CellList> cl,
                              unsigned int seed,
                              std::string suffix);
@@ -78,7 +78,7 @@ class ComputeFreeVolume : public Compute
         virtual void compute(unsigned int timestep);
 
     protected:
-        std::shared_ptr<IntegratorHPMCMono<Shape> > m_mc;              //!< The parent integrator
+        std::shared_ptr<IntegratorMCMMono<Shape> > m_mc;              //!< The parent integrator
         std::shared_ptr<CellList> m_cl;                        //!< The cell list
 
         unsigned int m_type;                                     //!< Type of depletant particle to generate
@@ -92,7 +92,7 @@ class ComputeFreeVolume : public Compute
 
 template< class Shape >
 ComputeFreeVolume< Shape >::ComputeFreeVolume(std::shared_ptr<SystemDefinition> sysdef,
-                                                    std::shared_ptr<IntegratorHPMCMono<Shape> > mc,
+                                                    std::shared_ptr<IntegratorMCMMono<Shape> > mc,
                                                     std::shared_ptr<CellList> cl,
                                                     unsigned int seed,
                                                     std::string suffix)
@@ -136,7 +136,7 @@ void ComputeFreeVolume<Shape>::computeFreeVolume(unsigned int timestep)
     unsigned int overlap_count = 0;
     unsigned int err_count = 0;
 
-    this->m_exec_conf->msg->notice(5) << "HPMC computing free volume " << timestep << std::endl;
+    this->m_exec_conf->msg->notice(5) << "MCM computing free volume " << timestep << std::endl;
 
     // update AABB tree
     const detail::AABBTree& aabb_tree = this->m_mc->buildAABBTree();
@@ -303,13 +303,13 @@ Scalar ComputeFreeVolume<Shape>::getLogValue(const std::string& quantity, unsign
 
 //! Export this mcm analyzer to python
 /*! \param name Name of the class in the exported python module
-    \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
+    \tparam Shape An instantiation of IntegratorMCMMono<Shape> will be exported
 */
 template < class Shape > void export_ComputeFreeVolume(pybind11::module& m, const std::string& name)
     {
      pybind11::class_<ComputeFreeVolume<Shape>, std::shared_ptr< ComputeFreeVolume<Shape> > >(m, name.c_str(), pybind11::base< Compute >())
               .def(pybind11::init< std::shared_ptr<SystemDefinition>,
-                std::shared_ptr<IntegratorHPMCMono<Shape> >,
+                std::shared_ptr<IntegratorMCMMono<Shape> >,
                 std::shared_ptr<CellList>,
                 unsigned int,
                 std::string >())

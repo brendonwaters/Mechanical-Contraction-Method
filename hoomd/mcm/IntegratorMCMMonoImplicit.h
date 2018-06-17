@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2018 The Regents of the University of Michigan
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
-#ifndef __HPMC_MONO_IMPLICIT__H__
-#define __HPMC_MONO_IMPLICIT__H__
+#ifndef __MCM_MONO_IMPLICIT__H__
+#define __MCM_MONO_IMPLICIT__H__
 
-#include "IntegratorHPMCMono.h"
+#include "IntegratorMCMMono.h"
 #include "hoomd/Autotuner.h"
 
 #include <random>
@@ -14,8 +14,8 @@
 #include <omp.h>
 #endif
 
-/*! \file IntegratorHPMCMonoImplicit.h
-    \brief Defines the template class for HPMC with implicit generated depletant solvent
+/*! \file IntegratorMCMMonoImplicit.h
+    \brief Defines the template class for MCM with implicit generated depletant solvent
     \note This header cannot be compiled by nvcc
 */
 
@@ -28,7 +28,7 @@
 namespace mcm
 {
 
-//! Template class for HPMC update with implicit depletants
+//! Template class for MCM update with implicit depletants
 /*!
     Depletants are generated randomly on the fly according to the semi-grand canonical ensemble.
 
@@ -37,14 +37,14 @@ namespace mcm
     \ingroup mcm_integrators
 */
 template< class Shape >
-class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
+class IntegratorMCMMonoImplicit : public IntegratorMCMMono<Shape>
     {
     public:
         //! Construct the integrator
-        IntegratorHPMCMonoImplicit(std::shared_ptr<SystemDefinition> sysdef,
+        IntegratorMCMMonoImplicit(std::shared_ptr<SystemDefinition> sysdef,
                               unsigned int seed);
         //! Destructor
-        virtual ~IntegratorHPMCMonoImplicit();
+        virtual ~IntegratorMCMMonoImplicit();
 
         //! Set the depletant density in the free volume
         void setDepletantDensity(Scalar n_R)
@@ -94,7 +94,7 @@ class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
         //! Reset statistics counters
         virtual void resetStats()
             {
-            IntegratorHPMCMono<Shape>::resetStats();
+            IntegratorMCMMono<Shape>::resetStats();
             ArrayHandle<mcm_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
             m_implicit_count_run_start = h_counters.data[0];
             }
@@ -102,7 +102,7 @@ class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
         //! Print statistics about the mcm steps taken
         virtual void printStats()
             {
-            IntegratorHPMCMono<Shape>::printStats();
+            IntegratorMCMMono<Shape>::printStats();
 
             mcm_implicit_counters_t result = getImplicitCounters(1);
 
@@ -127,7 +127,7 @@ class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
         std::vector< std::string > getProvidedLogQuantities()
             {
             // start with the integrator provided quantities
-            std::vector< std::string > result = IntegratorHPMCMono<Shape>::getProvidedLogQuantities();
+            std::vector< std::string > result = IntegratorMCMMono<Shape>::getProvidedLogQuantities();
 
             // then add ours
             result.push_back("mcm_fugacity");
@@ -210,12 +210,12 @@ class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
     */
 
 template< class Shape >
-IntegratorHPMCMonoImplicit< Shape >::IntegratorHPMCMonoImplicit(std::shared_ptr<SystemDefinition> sysdef,
+IntegratorMCMMonoImplicit< Shape >::IntegratorMCMMonoImplicit(std::shared_ptr<SystemDefinition> sysdef,
                                                                    unsigned int seed)
-    : IntegratorHPMCMono<Shape>(sysdef, seed), m_n_R(0), m_type(0), m_d_dep(0.0), m_rng_initialized(false), m_n_trial(0),
+    : IntegratorMCMMono<Shape>(sysdef, seed), m_n_R(0), m_type(0), m_d_dep(0.0), m_rng_initialized(false), m_n_trial(0),
       m_need_initialize_poisson(true)
     {
-    this->m_exec_conf->msg->notice(5) << "Constructing IntegratorHPMCImplicit" << std::endl;
+    this->m_exec_conf->msg->notice(5) << "Constructing IntegratorMCMImplicit" << std::endl;
 
     GPUArray<mcm_implicit_counters_t> implicit_count(1,this->m_exec_conf);
     m_implicit_count.swap(implicit_count);
@@ -231,15 +231,15 @@ IntegratorHPMCMonoImplicit< Shape >::IntegratorHPMCMonoImplicit(std::shared_ptr<
 
 //! Destructor
 template< class Shape >
-IntegratorHPMCMonoImplicit< Shape >::~IntegratorHPMCMonoImplicit()
+IntegratorMCMMonoImplicit< Shape >::~IntegratorMCMMonoImplicit()
     {
     }
 
 template <class Shape>
-void IntegratorHPMCMonoImplicit<Shape>::slotNumTypesChange()
+void IntegratorMCMMonoImplicit<Shape>::slotNumTypesChange()
     {
     // call parent class method
-    IntegratorHPMCMono<Shape>::slotNumTypesChange();
+    IntegratorMCMMono<Shape>::slotNumTypesChange();
 
     m_lambda.resize(this->m_pdata->getNTypes(),FLT_MAX);
 
@@ -253,7 +253,7 @@ void IntegratorHPMCMonoImplicit<Shape>::slotNumTypesChange()
     }
 
 template< class Shape >
-void IntegratorHPMCMonoImplicit< Shape >::updatePoissonParameters()
+void IntegratorMCMMonoImplicit< Shape >::updatePoissonParameters()
     {
     // Depletant diameter
     quat<Scalar> o;
@@ -289,7 +289,7 @@ void IntegratorHPMCMonoImplicit< Shape >::updatePoissonParameters()
     }
 
 template<class Shape>
-void IntegratorHPMCMonoImplicit< Shape >::initializePoissonDistribution()
+void IntegratorMCMMonoImplicit< Shape >::initializePoissonDistribution()
     {
     m_poisson.resize(this->m_pdata->getNTypes());
 
@@ -308,7 +308,7 @@ void IntegratorHPMCMonoImplicit< Shape >::initializePoissonDistribution()
 
 
 template< class Shape >
-void IntegratorHPMCMonoImplicit< Shape >::updateCellWidth()
+void IntegratorMCMMonoImplicit< Shape >::updateCellWidth()
     {
     this->m_nominal_width = this->getMaxCoreDiameter();
 
@@ -334,14 +334,14 @@ void IntegratorHPMCMonoImplicit< Shape >::updateCellWidth()
         this->m_nominal_width = std::max(this->m_nominal_width, this->m_patch->getRCut() + max_extent);
         }
 
-    this->m_exec_conf->msg->notice(5) << "IntegratorHPMCMonoImplicit: updating nominal width to " << this->m_nominal_width << std::endl;
+    this->m_exec_conf->msg->notice(5) << "IntegratorMCMMonoImplicit: updating nominal width to " << this->m_nominal_width << std::endl;
     }
 
 template< class Shape >
-void IntegratorHPMCMonoImplicit< Shape >::update(unsigned int timestep)
+void IntegratorMCMMonoImplicit< Shape >::update(unsigned int timestep)
     {
-    this->m_exec_conf->msg->notice(10) << "HPMCMonoImplicit update: " << timestep << std::endl;
-    IntegratorHPMC::update(timestep);
+    this->m_exec_conf->msg->notice(10) << "MCMMonoImplicit update: " << timestep << std::endl;
+    IntegratorMCM::update(timestep);
 
     // update poisson distributions
     if (m_need_initialize_poisson)
@@ -406,7 +406,7 @@ void IntegratorHPMCMonoImplicit< Shape >::update(unsigned int timestep)
     // RNG for poisson distribution
     std::mt19937 rng_poisson(seed);
 
-    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "HPMC implicit");
+    if (this->m_prof) this->m_prof->push(this->m_exec_conf, "MCM implicit");
 
     // access depletant insertion sphere dimensions
     ArrayHandle<Scalar> h_d_min(m_d_min, access_location::host, access_mode::read);
@@ -1086,7 +1086,7 @@ void IntegratorHPMCMonoImplicit< Shape >::update(unsigned int timestep)
  */
 template<class Shape>
 template<class RNG>
-inline void IntegratorHPMCMonoImplicit<Shape>::generateDepletant(RNG& rng, vec3<Scalar> pos_sphere, Scalar delta,
+inline void IntegratorMCMMonoImplicit<Shape>::generateDepletant(RNG& rng, vec3<Scalar> pos_sphere, Scalar delta,
     Scalar d_min, vec3<Scalar>& pos, quat<Scalar>& orientation, const typename Shape::param_type& params_depletant)
     {
     // draw a random vector in the excluded volume sphere of the colloid
@@ -1122,7 +1122,7 @@ inline void IntegratorHPMCMonoImplicit<Shape>::generateDepletant(RNG& rng, vec3<
  */
 template<class Shape>
 template<class RNG>
-inline void IntegratorHPMCMonoImplicit<Shape>::generateDepletantRestricted(RNG& rng, vec3<Scalar> pos_sphere, Scalar delta,
+inline void IntegratorMCMMonoImplicit<Shape>::generateDepletantRestricted(RNG& rng, vec3<Scalar> pos_sphere, Scalar delta,
     Scalar delta_other, vec3<Scalar>& pos, quat<Scalar>& orientation, const typename Shape::param_type& params_depletant,
     vec3<Scalar> pos_sphere_other)
     {
@@ -1213,10 +1213,10 @@ inline void IntegratorHPMCMonoImplicit<Shape>::generateDepletantRestricted(RNG& 
  * \param pos_new New position of updated particle
  * \param orientation_new New orientation of updated particle
  * \param params_new New shape parameters of updated particle
- * \param counters HPMC overlap counters
+ * \param counters MCM overlap counters
  */
 template<class Shape>
-inline bool IntegratorHPMCMonoImplicit<Shape>::insertDepletant(vec3<Scalar>& pos_depletant,
+inline bool IntegratorMCMMonoImplicit<Shape>::insertDepletant(vec3<Scalar>& pos_depletant,
     const Shape& shape_depletant, unsigned int idx, typename Shape::param_type *params, unsigned int *h_overlaps,
     unsigned int typ_i, Scalar4 *h_postype, Scalar4 *h_orientation, vec3<Scalar>  pos_new, quat<Scalar>& orientation_new,
     const typename Shape::param_type& params_new, unsigned int &n_overlap_checks,
@@ -1403,7 +1403,7 @@ inline bool IntegratorHPMCMonoImplicit<Shape>::insertDepletant(vec3<Scalar>& pos
     \return the requested log quantity.
 */
 template<class Shape>
-Scalar IntegratorHPMCMonoImplicit<Shape>::getLogValue(const std::string& quantity, unsigned int timestep)
+Scalar IntegratorMCMMonoImplicit<Shape>::getLogValue(const std::string& quantity, unsigned int timestep)
     {
     if (quantity == "mcm_fugacity")
         {
@@ -1414,7 +1414,7 @@ Scalar IntegratorHPMCMonoImplicit<Shape>::getLogValue(const std::string& quantit
         return (Scalar) m_n_trial;
         }
 
-    mcm_counters_t counters = IntegratorHPMC::getCounters(2);
+    mcm_counters_t counters = IntegratorMCM::getCounters(2);
     mcm_implicit_counters_t implicit_counters = getImplicitCounters(2);
 
     if (quantity == "mcm_insert_count")
@@ -1451,18 +1451,18 @@ Scalar IntegratorHPMCMonoImplicit<Shape>::getLogValue(const std::string& quantit
 
 
     //nothing found -> pass on to base class
-    return IntegratorHPMCMono<Shape>::getLogValue(quantity, timestep);
+    return IntegratorMCMMono<Shape>::getLogValue(quantity, timestep);
     }
 
 /*! \param mode 0 -> Absolute count, 1 -> relative to the start of the run, 2 -> relative to the last executed step
     \return The current state of the acceptance counters
 
-    IntegratorHPMCMonoImplicit maintains a count of the number of accepted and rejected moves since instantiation. getCounters()
+    IntegratorMCMMonoImplicit maintains a count of the number of accepted and rejected moves since instantiation. getCounters()
     provides the current value. The parameter *mode* controls whether the returned counts are absolute, relative
     to the start of the run, or relative to the start of the last executed step.
 */
 template<class Shape>
-mcm_implicit_counters_t IntegratorHPMCMonoImplicit<Shape>::getImplicitCounters(unsigned int mode)
+mcm_implicit_counters_t IntegratorMCMMonoImplicit<Shape>::getImplicitCounters(unsigned int mode)
     {
     ArrayHandle<mcm_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
     mcm_implicit_counters_t result;
@@ -1495,7 +1495,7 @@ mcm_implicit_counters_t IntegratorHPMCMonoImplicit<Shape>::getImplicitCounters(u
     \returns false if resize results in overlaps
 */
 template<class Shape>
-bool IntegratorHPMCMonoImplicit<Shape>::attemptBoxResize(unsigned int timestep, const BoxDim& new_box)
+bool IntegratorMCMMonoImplicit<Shape>::attemptBoxResize(unsigned int timestep, const BoxDim& new_box)
     {
     this->m_exec_conf->msg->error() << "Nmu_pPT simulations are unsupported." << std::endl;
     throw std::runtime_error("Error during implicit depletant integration\n");
@@ -1503,17 +1503,17 @@ bool IntegratorHPMCMonoImplicit<Shape>::attemptBoxResize(unsigned int timestep, 
 
 //! Export this mcm integrator to python
 /*! \param name Name of the class in the exported python module
-    \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
+    \tparam Shape An instantiation of IntegratorMCMMono<Shape> will be exported
 */
-template < class Shape > void export_IntegratorHPMCMonoImplicit(pybind11::module& m, const std::string& name)
+template < class Shape > void export_IntegratorMCMMonoImplicit(pybind11::module& m, const std::string& name)
     {
-    pybind11::class_<IntegratorHPMCMonoImplicit<Shape>, std::shared_ptr< IntegratorHPMCMonoImplicit<Shape> > >(m, name.c_str(),  pybind11::base< IntegratorHPMCMono<Shape> >())
+    pybind11::class_<IntegratorMCMMonoImplicit<Shape>, std::shared_ptr< IntegratorMCMMonoImplicit<Shape> > >(m, name.c_str(),  pybind11::base< IntegratorMCMMono<Shape> >())
         .def(pybind11::init< std::shared_ptr<SystemDefinition>, unsigned int >())
-        .def("setDepletantDensity", &IntegratorHPMCMonoImplicit<Shape>::setDepletantDensity)
-        .def("setDepletantType", &IntegratorHPMCMonoImplicit<Shape>::setDepletantType)
-        .def("setNTrial", &IntegratorHPMCMonoImplicit<Shape>::setNTrial)
-        .def("getNTrial", &IntegratorHPMCMonoImplicit<Shape>::getNTrial)
-        .def("getImplicitCounters", &IntegratorHPMCMonoImplicit<Shape>::getImplicitCounters)
+        .def("setDepletantDensity", &IntegratorMCMMonoImplicit<Shape>::setDepletantDensity)
+        .def("setDepletantType", &IntegratorMCMMonoImplicit<Shape>::setDepletantType)
+        .def("setNTrial", &IntegratorMCMMonoImplicit<Shape>::setNTrial)
+        .def("getNTrial", &IntegratorMCMMonoImplicit<Shape>::getNTrial)
+        .def("getImplicitCounters", &IntegratorMCMMonoImplicit<Shape>::getImplicitCounters)
         ;
 
     }
@@ -1533,4 +1533,4 @@ inline void export_mcm_implicit_counters(pybind11::module& m)
     }
 } // end namespace mcm
 
-#endif // __HPMC_MONO_IMPLICIT__H__
+#endif // __MCM_MONO_IMPLICIT__H__

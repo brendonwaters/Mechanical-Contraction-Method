@@ -2,7 +2,7 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 #include "hoomd/HOOMDMath.h"
-#include "HPMCPrecisionSetup.h"
+#include "MCMPrecisionSetup.h"
 #include "hoomd/BoxDim.h"
 #include "hoomd/VectorMath.h"
 #include "ShapeSphere.h"    //< For the base template of test_overlap

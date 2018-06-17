@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2018 The Regents of the University of Michigan
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
-#include "IntegratorHPMC.h"
+#include "IntegratorMCM.h"
 
 namespace py = pybind11;
 
@@ -10,14 +10,14 @@ namespace py = pybind11;
 
 using namespace std;
 
-/*! \file IntegratorHPMC.cc
-    \brief Definition of common methods for HPMC integrators
+/*! \file IntegratorMCM.cc
+    \brief Definition of common methods for MCM integrators
 */
 
 namespace mcm
 {
 
-IntegratorHPMC::IntegratorHPMC(std::shared_ptr<SystemDefinition> sysdef,
+IntegratorMCM::IntegratorMCM(std::shared_ptr<SystemDefinition> sysdef,
                                unsigned int seed)
     : Integrator(sysdef, 0.005), m_seed(seed),  m_move_ratio(32768), m_nselect(4),
       m_nominal_width(1.0), m_extra_ghost_width(0), m_external_base(NULL), m_patch_log(false),
@@ -27,7 +27,7 @@ IntegratorHPMC::IntegratorHPMC(std::shared_ptr<SystemDefinition> sysdef,
       m_communicator_flags_connected(false)
       #endif
     {
-    m_exec_conf->msg->notice(5) << "Constructing IntegratorHPMC" << endl;
+    m_exec_conf->msg->notice(5) << "Constructing IntegratorMCM" << endl;
 
     // broadcast the seed from rank 0 to all other ranks.
     #ifdef ENABLE_MPI
@@ -54,26 +54,26 @@ IntegratorHPMC::IntegratorHPMC(std::shared_ptr<SystemDefinition> sysdef,
       }
 
     // Connect to number of types change signal
-    m_pdata->getNumTypesChangeSignal().connect<IntegratorHPMC, &IntegratorHPMC::slotNumTypesChange>(this);
+    m_pdata->getNumTypesChangeSignal().connect<IntegratorMCM, &IntegratorMCM::slotNumTypesChange>(this);
 
     resetStats();
     }
 
-IntegratorHPMC::~IntegratorHPMC()
+IntegratorMCM::~IntegratorMCM()
     {
-    m_exec_conf->msg->notice(5) << "Destroying IntegratorHPMC" << endl;
-    m_pdata->getNumTypesChangeSignal().disconnect<IntegratorHPMC, &IntegratorHPMC::slotNumTypesChange>(this);
+    m_exec_conf->msg->notice(5) << "Destroying IntegratorMCM" << endl;
+    m_pdata->getNumTypesChangeSignal().disconnect<IntegratorMCM, &IntegratorMCM::slotNumTypesChange>(this);
 
     #ifdef ENABLE_MPI
     if (m_communicator_ghost_width_connected)
-        m_comm->getGhostLayerWidthRequestSignal().disconnect<IntegratorHPMC, &IntegratorHPMC::getGhostLayerWidth>(this);
+        m_comm->getGhostLayerWidthRequestSignal().disconnect<IntegratorMCM, &IntegratorMCM::getGhostLayerWidth>(this);
     if (m_communicator_flags_connected)
-        m_comm->getCommFlagsRequestSignal().disconnect<IntegratorHPMC, &IntegratorHPMC::getCommFlags>(this);
+        m_comm->getCommFlagsRequestSignal().disconnect<IntegratorMCM, &IntegratorMCM::getCommFlags>(this);
     #endif
     }
 
 
-void IntegratorHPMC::slotNumTypesChange()
+void IntegratorMCM::slotNumTypesChange()
     {
     // old size of arrays
     unsigned int old_ntypes = m_a.size();
@@ -94,7 +94,7 @@ void IntegratorHPMC::slotNumTypesChange()
         }
     }
 
-/*! IntegratorHPMC provides:
+/*! IntegratorMCM provides:
     - mcm_sweep (Number of sweeps completed)
     - mcm_translate_acceptance (Ratio of translation moves accepted in the last step)
     - mcm_rotate_acceptance (Ratio of rotation moves accepted in the last step)
@@ -107,7 +107,7 @@ void IntegratorHPMC::slotNumTypesChange()
 
     \returns a list of provided quantities
 */
-std::vector< std::string > IntegratorHPMC::getProvidedLogQuantities()
+std::vector< std::string > IntegratorMCM::getProvidedLogQuantities()
     {
     // start with the integrator provided quantities
     std::vector< std::string > result = Integrator::getProvidedLogQuantities();
@@ -136,7 +136,7 @@ std::vector< std::string > IntegratorHPMC::getProvidedLogQuantities()
     \param timestep Current time step of the simulation
     \return the requested log quantity.
 */
-Scalar IntegratorHPMC::getLogValue(const std::string& quantity, unsigned int timestep)
+Scalar IntegratorMCM::getLogValue(const std::string& quantity, unsigned int timestep)
     {
     mcm_counters_t counters = getCounters(2);
 
@@ -200,7 +200,7 @@ Scalar IntegratorHPMC::getLogValue(const std::string& quantity, unsigned int tim
 
 /*! \returns True if the particle orientations are normalized
 */
-bool IntegratorHPMC::checkParticleOrientations()
+bool IntegratorMCM::checkParticleOrientations()
     {
     // get the orientations data array
     ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::read);
@@ -239,7 +239,7 @@ bool IntegratorHPMC::checkParticleOrientations()
 
     \returns false if resize results in overlaps
 */
-bool IntegratorHPMC::attemptBoxResize(unsigned int timestep, const BoxDim& new_box)
+bool IntegratorMCM::attemptBoxResize(unsigned int timestep, const BoxDim& new_box)
     {
     unsigned int N = m_pdata->getN();
 
@@ -279,11 +279,11 @@ bool IntegratorHPMC::attemptBoxResize(unsigned int timestep, const BoxDim& new_b
 /*! \param mode 0 -> Absolute count, 1 -> relative to the start of the run, 2 -> relative to the last executed step
     \return The current state of the acceptance counters
 
-    IntegratorHPMC maintains a count of the number of accepted and rejected moves since instantiation. getCounters()
+    IntegratorMCM maintains a count of the number of accepted and rejected moves since instantiation. getCounters()
     provides the current value. The parameter *mode* controls whether the returned counts are absolute, relative
     to the start of the run, or relative to the start of the last executed step.
 */
-mcm_counters_t IntegratorHPMC::getCounters(unsigned int mode)
+mcm_counters_t IntegratorMCM::getCounters(unsigned int mode)
     {
     ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::read);
     mcm_counters_t result;
@@ -310,27 +310,27 @@ mcm_counters_t IntegratorHPMC::getCounters(unsigned int mode)
     return result;
     }
 
-void export_IntegratorHPMC(py::module& m)
+void export_IntegratorMCM(py::module& m)
     {
-   py::class_<IntegratorHPMC, std::shared_ptr< IntegratorHPMC > >(m, "IntegratorHPMC", py::base<Integrator>())
+   py::class_<IntegratorMCM, std::shared_ptr< IntegratorMCM > >(m, "IntegratorMCM", py::base<Integrator>())
     .def(py::init< std::shared_ptr<SystemDefinition>, unsigned int >())
-    .def("setD", &IntegratorHPMC::setD)
-    .def("setA", &IntegratorHPMC::setA)
-    .def("setMoveRatio", &IntegratorHPMC::setMoveRatio)
-    .def("setNSelect", &IntegratorHPMC::setNSelect)
-    .def("getD", &IntegratorHPMC::getD)
-    .def("getA", &IntegratorHPMC::getA)
-    .def("getMoveRatio", &IntegratorHPMC::getMoveRatio)
-    .def("getNSelect", &IntegratorHPMC::getNSelect)
-    .def("getMaxCoreDiameter", &IntegratorHPMC::getMaxCoreDiameter)
-    .def("countOverlaps", &IntegratorHPMC::countOverlaps)
-    .def("checkParticleOrientations", &IntegratorHPMC::checkParticleOrientations)
-    .def("getMPS", &IntegratorHPMC::getMPS)
-    .def("getCounters", &IntegratorHPMC::getCounters)
-    .def("communicate", &IntegratorHPMC::communicate)
-    .def("slotNumTypesChange", &IntegratorHPMC::slotNumTypesChange)
-    .def("setDeterministic", &IntegratorHPMC::setDeterministic)
-    .def("disablePatchEnergyLogOnly", &IntegratorHPMC::disablePatchEnergyLogOnly)
+    .def("setD", &IntegratorMCM::setD)
+    .def("setA", &IntegratorMCM::setA)
+    .def("setMoveRatio", &IntegratorMCM::setMoveRatio)
+    .def("setNSelect", &IntegratorMCM::setNSelect)
+    .def("getD", &IntegratorMCM::getD)
+    .def("getA", &IntegratorMCM::getA)
+    .def("getMoveRatio", &IntegratorMCM::getMoveRatio)
+    .def("getNSelect", &IntegratorMCM::getNSelect)
+    .def("getMaxCoreDiameter", &IntegratorMCM::getMaxCoreDiameter)
+    .def("countOverlaps", &IntegratorMCM::countOverlaps)
+    .def("checkParticleOrientations", &IntegratorMCM::checkParticleOrientations)
+    .def("getMPS", &IntegratorMCM::getMPS)
+    .def("getCounters", &IntegratorMCM::getCounters)
+    .def("communicate", &IntegratorMCM::communicate)
+    .def("slotNumTypesChange", &IntegratorMCM::slotNumTypesChange)
+    .def("setDeterministic", &IntegratorMCM::setDeterministic)
+    .def("disablePatchEnergyLogOnly", &IntegratorMCM::disablePatchEnergyLogOnly)
     ;
 
    py::class_< mcm_counters_t >(m, "mcm_counters_t")

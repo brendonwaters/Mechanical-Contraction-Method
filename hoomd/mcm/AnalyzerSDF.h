@@ -11,7 +11,7 @@
 
 #include "hoomd/Analyzer.h"
 #include "hoomd/Filesystem.h"
-#include "IntegratorHPMCMono.h"
+#include "IntegratorMCMMono.h"
 
 #ifdef ENABLE_MPI
 #include "hoomd/Communicator.h"
@@ -63,7 +63,7 @@ bool test_scaled_overlap(const vec3<Scalar>& r_ij,
     an NVT system of hard particles. Performing this extrapolation only needs data very near zero
     (e.g. up to 0.02 for disks).
 
-    AnalyzeSDF is implemented as an analyzer in HPMC (and not in freud) due to the need for high performance evaluation
+    AnalyzeSDF is implemented as an analyzer in MCM (and not in freud) due to the need for high performance evaluation
     at very small periods. A future module from freud does not conflict with this code, as that would be more general
     and extend to larger values of \f$\lambda\f$, whereas this code is optimized only for small values.
 
@@ -112,7 +112,7 @@ class AnalyzerSDF : public Analyzer
 
         //! Constructor
         AnalyzerSDF(std::shared_ptr<SystemDefinition> sysdef,
-                    std::shared_ptr< IntegratorHPMCMono<Shape> > mc,
+                    std::shared_ptr< IntegratorMCMMono<Shape> > mc,
                     double lmax,
                     double dl,
                     unsigned int navg,
@@ -130,7 +130,7 @@ class AnalyzerSDF : public Analyzer
         virtual void analyze(unsigned int timestep);
 
     protected:
-        std::shared_ptr< IntegratorHPMCMono<Shape> > m_mc; //!< The integrator
+        std::shared_ptr< IntegratorMCMMono<Shape> > m_mc; //!< The integrator
         double m_lmax;                          //!< Maximum lambda value
         double m_dl;                            //!< Histogram step size
         unsigned int m_navg;                    //!< Number of samples to average before writing out to the file
@@ -177,7 +177,7 @@ class AnalyzerSDF : public Analyzer
 */
 template < class Shape >
 AnalyzerSDF<Shape>::AnalyzerSDF(std::shared_ptr<SystemDefinition> sysdef,
-                                std::shared_ptr< IntegratorHPMCMono<Shape> > mc,
+                                std::shared_ptr< IntegratorMCMMono<Shape> > mc,
                                 double lmax,
                                 double dl,
                                 unsigned int navg,
@@ -468,7 +468,7 @@ int AnalyzerSDF<Shape>:: computeBin(const vec3<Scalar>& r_ij,
 template < class Shape > void export_AnalyzerSDF(pybind11::module& m, const std::string& name)
     {
     pybind11::class_< AnalyzerSDF<Shape>, std::shared_ptr< AnalyzerSDF<Shape> > >(m, name.c_str(), pybind11::base<Analyzer>())
-          .def(pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr< IntegratorHPMCMono<Shape> >, double, double, unsigned int, const std::string&, bool>())
+          .def(pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr< IntegratorMCMMono<Shape> >, double, double, unsigned int, const std::string&, bool>())
           ;
     }
 

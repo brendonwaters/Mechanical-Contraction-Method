@@ -2,10 +2,10 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 // Include the defined classes that are to be exported to python
-#include "IntegratorHPMC.h"
-#include "IntegratorHPMCMono.h"
-#include "IntegratorHPMCMonoImplicit.h"
-#include "IntegratorHPMCMonoImplicitNew.h"
+#include "IntegratorMCM.h"
+#include "IntegratorMCMMono.h"
+#include "IntegratorMCMMonoImplicit.h"
+#include "IntegratorMCMMonoImplicitNew.h"
 #include "ComputeFreeVolume.h"
 
 #include "ShapeSimplePolygon.h"
@@ -26,9 +26,9 @@
 #include "UpdaterClustersImplicit.h"
 
 #ifdef ENABLE_CUDA
-#include "IntegratorHPMCMonoGPU.h"
-#include "IntegratorHPMCMonoImplicitGPU.h"
-#include "IntegratorHPMCMonoImplicitNewGPU.h"
+#include "IntegratorMCMMonoGPU.h"
+#include "IntegratorMCMMonoImplicitGPU.h"
+#include "IntegratorMCMMonoImplicitNewGPU.h"
 #include "ComputeFreeVolumeGPU.h"
 #endif
 
@@ -43,20 +43,20 @@ using namespace mcm::detail;
 namespace mcm
 {
 
-//! Export the base HPMCMono integrators
+//! Export the base MCMMono integrators
 void export_simple_polygon(py::module& m)
     {
-    export_IntegratorHPMCMono< ShapeSimplePolygon >(m, "IntegratorHPMCMonoSimplePolygon");
-    export_IntegratorHPMCMonoImplicit< ShapeSimplePolygon >(m, "IntegratorHPMCMonoImplicitSimplePolygon");
-    export_IntegratorHPMCMonoImplicitNew< ShapeSimplePolygon >(m, "IntegratorHPMCMonoImplicitNewSimplePolygon");
+    export_IntegratorMCMMono< ShapeSimplePolygon >(m, "IntegratorMCMMonoSimplePolygon");
+    export_IntegratorMCMMonoImplicit< ShapeSimplePolygon >(m, "IntegratorMCMMonoImplicitSimplePolygon");
+    export_IntegratorMCMMonoImplicitNew< ShapeSimplePolygon >(m, "IntegratorMCMMonoImplicitNewSimplePolygon");
     export_ComputeFreeVolume< ShapeSimplePolygon >(m, "ComputeFreeVolumeSimplePolygon");
     export_AnalyzerSDF< ShapeSimplePolygon >(m, "AnalyzerSDFSimplePolygon");
     export_UpdaterMuVT< ShapeSimplePolygon >(m, "UpdaterMuVTSimplePolygon");
     export_UpdaterClusters< ShapeSimplePolygon >(m, "UpdaterClustersSimplePolygon");
-    export_UpdaterClustersImplicit< ShapeSimplePolygon, IntegratorHPMCMonoImplicit<ShapeSimplePolygon> >(m, "UpdaterClustersImplicitSimplePolygon");
-    export_UpdaterClustersImplicit< ShapeSimplePolygon, IntegratorHPMCMonoImplicitNew<ShapeSimplePolygon> >(m, "UpdaterClustersImplicitNewSimplePolygon");
-    export_UpdaterMuVTImplicit< ShapeSimplePolygon, IntegratorHPMCMonoImplicit<ShapeSimplePolygon> >(m, "UpdaterMuVTImplicitSimplePolygon");
-    export_UpdaterMuVTImplicit< ShapeSimplePolygon, IntegratorHPMCMonoImplicitNew<ShapeSimplePolygon> >(m, "UpdaterMuVTImplicitNewSimplePolygon");
+    export_UpdaterClustersImplicit< ShapeSimplePolygon, IntegratorMCMMonoImplicit<ShapeSimplePolygon> >(m, "UpdaterClustersImplicitSimplePolygon");
+    export_UpdaterClustersImplicit< ShapeSimplePolygon, IntegratorMCMMonoImplicitNew<ShapeSimplePolygon> >(m, "UpdaterClustersImplicitNewSimplePolygon");
+    export_UpdaterMuVTImplicit< ShapeSimplePolygon, IntegratorMCMMonoImplicit<ShapeSimplePolygon> >(m, "UpdaterMuVTImplicitSimplePolygon");
+    export_UpdaterMuVTImplicit< ShapeSimplePolygon, IntegratorMCMMonoImplicitNew<ShapeSimplePolygon> >(m, "UpdaterMuVTImplicitNewSimplePolygon");
 
     export_ExternalFieldInterface<ShapeSimplePolygon>(m, "ExternalFieldSimplePolygon");
     export_LatticeField<ShapeSimplePolygon>(m, "ExternalFieldLatticeSimplePolygon");
@@ -67,9 +67,9 @@ void export_simple_polygon(py::module& m)
     export_ExternalCallback<ShapeSimplePolygon>(m, "ExternalCallbackSimplePolygon");
 
     #ifdef ENABLE_CUDA
-    export_IntegratorHPMCMonoGPU< ShapeSimplePolygon >(m, "IntegratorHPMCMonoGPUSimplePolygon");
-    export_IntegratorHPMCMonoImplicitGPU< ShapeSimplePolygon >(m, "IntegratorHPMCMonoImplicitGPUSimplePolygon");
-    export_IntegratorHPMCMonoImplicitNewGPU< ShapeSimplePolygon >(m, "IntegratorHPMCMonoImplicitNewGPUSimplePolygon");
+    export_IntegratorMCMMonoGPU< ShapeSimplePolygon >(m, "IntegratorMCMMonoGPUSimplePolygon");
+    export_IntegratorMCMMonoImplicitGPU< ShapeSimplePolygon >(m, "IntegratorMCMMonoImplicitGPUSimplePolygon");
+    export_IntegratorMCMMonoImplicitNewGPU< ShapeSimplePolygon >(m, "IntegratorMCMMonoImplicitNewGPUSimplePolygon");
     export_ComputeFreeVolumeGPU< ShapeSimplePolygon >(m, "ComputeFreeVolumeGPUSimplePolygon");
     #endif
     }

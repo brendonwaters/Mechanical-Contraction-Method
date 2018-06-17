@@ -3,12 +3,12 @@
 
 #include "hoomd/HOOMDMath.h"
 
-/*! \file HPMCPrecisionSetup.h
+/*! \file MCMPrecisionSetup.h
     \brief Setup for mcm mixed precision
 */
 
-#ifndef __HPMC_PRECISION_SETUP_H__
-#define __HPMC_PRECISION_SETUP_H__
+#ifndef __MCM_PRECISION_SETUP_H__
+#define __MCM_PRECISION_SETUP_H__
 
 // need to declare these class methods with __device__ qualifiers when building in nvcc
 // DEVICE is __host__ __device__ when included in nvcc and blank when included into the host compiler
@@ -33,7 +33,7 @@ typedef float4 OverlapReal4;
 #else
 
 // in double precision, mixed mode enables floats for OverlapReal, otherwise it is double
-#ifdef ENABLE_HPMC_MIXED_PRECISION
+#ifdef ENABLE_MCM_MIXED_PRECISION
 typedef float OverlapReal;
 typedef float3 OverlapReal3;
 typedef float4 OverlapReal4;
@@ -70,4 +70,4 @@ DEVICE inline OverlapReal4 make_overlapreal4(OverlapReal x, OverlapReal y, Overl
 
 }; // end namespace mcm
 
-#endif //__HPMC_PRECISION_SETUP_H__
+#endif //__MCM_PRECISION_SETUP_H__

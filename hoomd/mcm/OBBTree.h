@@ -9,7 +9,7 @@
 #include <vector>
 #include <stack>
 
-#include "HPMCPrecisionSetup.h"
+#include "MCMPrecisionSetup.h"
 
 #include "OBB.h"
 

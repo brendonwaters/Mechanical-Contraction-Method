@@ -1,7 +1,7 @@
 # Maintainer: joaander
 
-option(ENABLE_HPMC_SPHINX_GPU "Enable sphinx on the GPU" OFF)
-if (ENABLE_HPMC_SPHINX_GPU)
+option(ENABLE_MCM_SPHINX_GPU "Enable sphinx on the GPU" OFF)
+if (ENABLE_MCM_SPHINX_GPU)
     add_definitions(-DENABLE_SPHINX_GPU)
 endif()
 
@@ -20,7 +20,7 @@ set(_mcm_sources   module.cc
                     module_convex_polyhedron.cc
                     module_convex_spheropolyhedron.cc
                     UpdaterBoxMC.cc
-                    IntegratorHPMC.cc
+                    IntegratorMCM.cc
                     )
 
 set(_mcm_headers
@@ -32,15 +32,15 @@ set(_mcm_headers
     ExternalFieldLattice.h
     ExternalFieldWall.h
     GPUTree.h
-    HPMCCounters.h
-    HPMCPrecisionSetup.h
-    IntegratorHPMC.h
-    IntegratorHPMCMonoGPU.h
-    IntegratorHPMCMono.h
-    IntegratorHPMCMonoImplicitGPU.h
-    IntegratorHPMCMonoImplicit.h
-    IntegratorHPMCMonoImplicitNew.h
-    IntegratorHPMCMonoImplicitNewGPU.h
+    MCMCounters.h
+    MCMPrecisionSetup.h
+    IntegratorMCM.h
+    IntegratorMCMMonoGPU.h
+    IntegratorMCMMono.h
+    IntegratorMCMMonoImplicitGPU.h
+    IntegratorMCMMonoImplicit.h
+    IntegratorMCMMonoImplicitNew.h
+    IntegratorMCMMonoImplicitNewGPU.h
     MinkowskiMath.h
     modules.h
     Moves.h
@@ -73,8 +73,8 @@ set(_mcm_headers
 #                            )
 # endif()
 
-set(_mcm_cu_sources IntegratorHPMCMonoGPU.cu
-                     IntegratorHPMCMonoImplicitGPU.cu
+set(_mcm_cu_sources IntegratorMCMMonoGPU.cu
+                     IntegratorMCMMonoImplicitGPU.cu
                      all_kernels_sphere.cu
                      all_kernels_convex_polygon.cu
                      all_kernels_simple_polygon.cu
@@ -91,7 +91,7 @@ set(_mcm_cu_sources IntegratorHPMCMonoGPU.cu
 
 # quiet some warnings locally on files we can't modify
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    set_source_files_properties(IntegratorHPMCMonoImplicitGPU.cu PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
+    set_source_files_properties(IntegratorMCMMonoImplicitGPU.cu PROPERTIES COMPILE_FLAGS "-Wno-deprecated-declarations")
 endif()
 
 if (ENABLE_CUDA)
