@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # HOOMD-blue
 
 HOOMD-blue is a general purpose particle simulation toolkit. It performs hard particle Monte Carlo simulations
@@ -97,3 +98,8 @@ See [ChangeLog.md](ChangeLog.md).
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+=======
+# Mechanical-Contraction-Method
+Particle simulation package based on HOOMD-Blue
+test
+>>>>>>> master
