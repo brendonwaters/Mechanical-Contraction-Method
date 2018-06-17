@@ -36,14 +36,14 @@
 #define HOSTDEVICE
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 
 //! Data structure for intersection planes
-/*! \ingroup hpmc_data_structs */
+/*! \ingroup mcm_data_structs */
 struct faceted_sphere_params : param_base
     {
     //! Empty constructor
@@ -433,6 +433,6 @@ DEVICE inline bool test_overlap<ShapeFacetedSphere, ShapeFacetedSphere>(const ve
     */
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__SHAPE_FACETED_SPHERE_H__

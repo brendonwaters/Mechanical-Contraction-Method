@@ -8,7 +8,7 @@
 #ifndef __SPHINXOVERLAP__H__
 #define __SPHINXOVERLAP__H__
 
-namespace hpmc
+namespace mcm
 {
 
 /*! \file SphinxOverlap.h
@@ -2414,5 +2414,5 @@ DEVICE inline     OverlapReal yol4(OverlapReal ar,OverlapReal br,OverlapReal cr,
     }
 
 } // detail
-} // hpmc
+} // mcm
 #endif // __SPHINXOVERLAP__H__

@@ -27,16 +27,16 @@
 template<class T>
 using param_array = typename std::vector<T, managed_allocator<T> >;
 
-struct gsd_schema_hpmc_base
+struct gsd_schema_mcm_base
     {
-    gsd_schema_hpmc_base(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : m_exec_conf(exec_conf), m_mpi(mpi) {}
+    gsd_schema_mcm_base(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : m_exec_conf(exec_conf), m_mpi(mpi) {}
     const std::shared_ptr<const ExecutionConfiguration> m_exec_conf;
     bool m_mpi;
     };
 
-struct gsd_schema_hpmc : public gsd_schema_hpmc_base
+struct gsd_schema_mcm : public gsd_schema_mcm_base
     {
-    gsd_schema_hpmc(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_hpmc_base(exec_conf, mpi) {}
+    gsd_schema_mcm(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_mcm_base(exec_conf, mpi) {}
     template<class T>
     int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes, const T* const data, gsd_type type)
         {
@@ -74,9 +74,9 @@ struct gsd_schema_hpmc : public gsd_schema_hpmc_base
     };
 
 template<class T>
-struct gsd_shape_schema : public gsd_schema_hpmc_base
+struct gsd_shape_schema : public gsd_schema_mcm_base
     {
-    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_hpmc_base(exec_conf, mpi) {}
+    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_mcm_base(exec_conf, mpi) {}
 
     int write(gsd_handle&, const std::string&, unsigned int, const param_array<T>& )
         {
@@ -91,18 +91,18 @@ struct gsd_shape_schema : public gsd_schema_hpmc_base
     };
 
 template<>
-struct gsd_shape_schema<hpmc::sph_params>: public gsd_schema_hpmc_base
+struct gsd_shape_schema<mcm::sph_params>: public gsd_schema_mcm_base
     {
-    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_hpmc_base(exec_conf, mpi) {}
+    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_mcm_base(exec_conf, mpi) {}
 
-    int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes, const param_array<hpmc::sph_params>& shape)
+    int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes, const param_array<mcm::sph_params>& shape)
         {
         if(!m_exec_conf->isRoot())
             return 0;
         int retval = 0;
         std::string path = name + "radius";
         std::vector<float> data(Ntypes);
-        std::transform(shape.begin(), shape.end(), data.begin(), [](const hpmc::sph_params& s)->float{return s.radius;});
+        std::transform(shape.begin(), shape.end(), data.begin(), [](const mcm::sph_params& s)->float{return s.radius;});
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
         return retval;
         }
@@ -111,7 +111,7 @@ struct gsd_shape_schema<hpmc::sph_params>: public gsd_schema_hpmc_base
                 uint64_t frame,
                 const std::string& name,
                 unsigned int Ntypes,
-                param_array<hpmc::sph_params>& shape
+                param_array<mcm::sph_params>& shape
             )
         {
         bool success = true;
@@ -141,11 +141,11 @@ struct gsd_shape_schema<hpmc::sph_params>: public gsd_schema_hpmc_base
     };
 
 template<>
-struct gsd_shape_schema<hpmc::ell_params>: public gsd_schema_hpmc_base
+struct gsd_shape_schema<mcm::ell_params>: public gsd_schema_mcm_base
     {
-    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_hpmc_base(exec_conf, mpi) {}
+    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_mcm_base(exec_conf, mpi) {}
 
-    int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes,const param_array<hpmc::ell_params>& shape)
+    int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes,const param_array<mcm::ell_params>& shape)
         {
         if(!m_exec_conf->isRoot())
             return 0;
@@ -153,13 +153,13 @@ struct gsd_shape_schema<hpmc::ell_params>: public gsd_schema_hpmc_base
         int retval = 0;
         std::vector<float> data(Ntypes);
         std::string path = name + "a";
-        std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const hpmc::ell_params& s)->float{return s.x;});
+        std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const mcm::ell_params& s)->float{return s.x;});
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
         path = name + "b";
-        std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const hpmc::ell_params& s)->float{return s.y;});
+        std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const mcm::ell_params& s)->float{return s.y;});
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
         path = name + "c";
-        std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const hpmc::ell_params& s)->float{return s.z;});
+        std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const mcm::ell_params& s)->float{return s.z;});
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
         return retval;
         }
@@ -168,7 +168,7 @@ struct gsd_shape_schema<hpmc::ell_params>: public gsd_schema_hpmc_base
                 uint64_t frame,
                 const std::string& name,
                 unsigned int Ntypes,
-                param_array<hpmc::ell_params>& shape
+                param_array<mcm::ell_params>& shape
             )
         {
         bool success = true;
@@ -207,11 +207,11 @@ struct gsd_shape_schema<hpmc::ell_params>: public gsd_schema_hpmc_base
     };
 
 template<>
-struct gsd_shape_schema< hpmc::detail::poly3d_verts > : public gsd_schema_hpmc_base
+struct gsd_shape_schema< mcm::detail::poly3d_verts > : public gsd_schema_mcm_base
     {
-    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_hpmc_base(exec_conf, mpi) {}
+    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_mcm_base(exec_conf, mpi) {}
 
-    int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes, const param_array<hpmc::detail::poly3d_verts>& shape)
+    int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes, const param_array<mcm::detail::poly3d_verts>& shape)
         {
         if(!m_exec_conf->isRoot())
             return 0;
@@ -220,7 +220,7 @@ struct gsd_shape_schema< hpmc::detail::poly3d_verts > : public gsd_schema_hpmc_b
         int retval = 0;
         std::vector<uint32_t> N(Ntypes);
         path = name + "N";
-        std::transform(shape.cbegin(), shape.cend(), N.begin(), [](const hpmc::detail::poly3d_verts& s) -> uint32_t{return s.N;});
+        std::transform(shape.cbegin(), shape.cend(), N.begin(), [](const mcm::detail::poly3d_verts& s) -> uint32_t{return s.N;});
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_UINT32, Ntypes, 1, 0, (void *)&N[0]);
         path = name + "vertices";
         size_t count = std::accumulate(N.begin(), N.end(), 0);
@@ -238,7 +238,7 @@ struct gsd_shape_schema< hpmc::detail::poly3d_verts > : public gsd_schema_hpmc_b
             }
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, count, 3, 0, (void *)&data[0]);
         path = name + "sweep_radius";
-        std::transform(shape.cbegin(), shape.cend(), sr.begin(), [](const hpmc::detail::poly3d_verts& s) -> float{return s.sweep_radius;});
+        std::transform(shape.cbegin(), shape.cend(), sr.begin(), [](const mcm::detail::poly3d_verts& s) -> float{return s.sweep_radius;});
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&sr[0]);
         return retval;
         }
@@ -247,7 +247,7 @@ struct gsd_shape_schema< hpmc::detail::poly3d_verts > : public gsd_schema_hpmc_b
                 uint64_t frame,
                 const std::string& name,
                 unsigned int Ntypes,
-                param_array<hpmc::detail::poly3d_verts>& shape
+                param_array<mcm::detail::poly3d_verts>& shape
             )
         {
         bool success = true;
@@ -284,7 +284,7 @@ struct gsd_shape_schema< hpmc::detail::poly3d_verts > : public gsd_schema_hpmc_b
         for (unsigned int i = 0; i < Ntypes; i++)
             {
             float dsq = 0.0;
-            hpmc::detail::poly3d_verts result(N[i], m_exec_conf->isCUDAEnabled());
+            mcm::detail::poly3d_verts result(N[i], m_exec_conf->isCUDAEnabled());
             for (unsigned int v = 0; v < N[i]; v++)
                 {
                 result.x[v] = vertices[count*3+0];
@@ -304,11 +304,11 @@ struct gsd_shape_schema< hpmc::detail::poly3d_verts > : public gsd_schema_hpmc_b
     };
 
 template<>
-struct gsd_shape_schema< hpmc::detail::poly2d_verts >: public gsd_schema_hpmc_base
+struct gsd_shape_schema< mcm::detail::poly2d_verts >: public gsd_schema_mcm_base
     {
-    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_hpmc_base(exec_conf, mpi) {}
+    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_mcm_base(exec_conf, mpi) {}
 
-    int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes, const param_array<hpmc::detail::poly2d_verts>& shape)
+    int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes, const param_array<mcm::detail::poly2d_verts>& shape)
         {
         if(!m_exec_conf->isRoot())
             return 0;
@@ -317,10 +317,10 @@ struct gsd_shape_schema< hpmc::detail::poly2d_verts >: public gsd_schema_hpmc_ba
         int retval = 0;
         std::vector<uint32_t> N(Ntypes);
         path = name + "N";
-        std::transform(shape.cbegin(), shape.cend(), N.begin(), [](const hpmc::detail::poly2d_verts& s) -> uint32_t{return s.N;});
+        std::transform(shape.cbegin(), shape.cend(), N.begin(), [](const mcm::detail::poly2d_verts& s) -> uint32_t{return s.N;});
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_UINT32, Ntypes, 1, 0, (void *)&N[0]);
         path = name + "vertices";
-        std::vector<float> data(hpmc::detail::MAX_POLY2D_VERTS*Ntypes*2), sr(Ntypes); // over allocate is ok because we just wont write those extra ones
+        std::vector<float> data(mcm::detail::MAX_POLY2D_VERTS*Ntypes*2), sr(Ntypes); // over allocate is ok because we just wont write those extra ones
         uint32_t count = 0;
         for(unsigned int i = 0; i < Ntypes; i++)
             {
@@ -333,7 +333,7 @@ struct gsd_shape_schema< hpmc::detail::poly2d_verts >: public gsd_schema_hpmc_ba
             }
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, count, 2, 0, (void *)&data[0]);
         path = name + "sweep_radius";
-        std::transform(shape.cbegin(), shape.cend(), sr.begin(), [](const hpmc::detail::poly2d_verts& s) -> float{return s.sweep_radius;});
+        std::transform(shape.cbegin(), shape.cend(), sr.begin(), [](const mcm::detail::poly2d_verts& s) -> float{return s.sweep_radius;});
         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&sr[0]);
         return retval;
         }
@@ -342,7 +342,7 @@ struct gsd_shape_schema< hpmc::detail::poly2d_verts >: public gsd_schema_hpmc_ba
                 uint64_t frame,
                 const std::string& name,
                 unsigned int Ntypes,
-                param_array<hpmc::detail::poly2d_verts>& shape
+                param_array<mcm::detail::poly2d_verts>& shape
             )
         {
         bool success = true;
@@ -353,7 +353,7 @@ struct gsd_shape_schema< hpmc::detail::poly2d_verts >: public gsd_schema_hpmc_ba
         if(m_exec_conf->isRoot())
             {
             N.resize(Ntypes);
-            vertices.resize(hpmc::detail::MAX_POLY2D_VERTS*Ntypes*2);
+            vertices.resize(mcm::detail::MAX_POLY2D_VERTS*Ntypes*2);
             sweep_radius.resize(Ntypes);
             path = name + "N";
             success = reader->readChunk((void *)&N[0], frame, path.c_str(),  Ntypes*gsd_sizeof_type(GSD_TYPE_UINT32), Ntypes) && success;

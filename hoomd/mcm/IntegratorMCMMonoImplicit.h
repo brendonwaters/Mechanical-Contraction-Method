@@ -25,7 +25,7 @@
 
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 
-namespace hpmc
+namespace mcm
 {
 
 //! Template class for HPMC update with implicit depletants
@@ -34,7 +34,7 @@ namespace hpmc
 
     The penetrable depletants model is simulated.
 
-    \ingroup hpmc_integrators
+    \ingroup mcm_integrators
 */
 template< class Shape >
 class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
@@ -95,16 +95,16 @@ class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
         virtual void resetStats()
             {
             IntegratorHPMCMono<Shape>::resetStats();
-            ArrayHandle<hpmc_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
+            ArrayHandle<mcm_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
             m_implicit_count_run_start = h_counters.data[0];
             }
 
-        //! Print statistics about the hpmc steps taken
+        //! Print statistics about the mcm steps taken
         virtual void printStats()
             {
             IntegratorHPMCMono<Shape>::printStats();
 
-            hpmc_implicit_counters_t result = getImplicitCounters(1);
+            mcm_implicit_counters_t result = getImplicitCounters(1);
 
             double cur_time = double(this->m_clock.getTime()) / Scalar(1e9);
 
@@ -120,7 +120,7 @@ class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
             }
 
         //! Get the current counter values
-        hpmc_implicit_counters_t getImplicitCounters(unsigned int mode=0);
+        mcm_implicit_counters_t getImplicitCounters(unsigned int mode=0);
 
         /* \returns a list of provided quantities
         */
@@ -130,13 +130,13 @@ class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
             std::vector< std::string > result = IntegratorHPMCMono<Shape>::getProvidedLogQuantities();
 
             // then add ours
-            result.push_back("hpmc_fugacity");
-            result.push_back("hpmc_ntrial");
-            result.push_back("hpmc_insert_count");
-            result.push_back("hpmc_reinsert_count");
-            result.push_back("hpmc_free_volume_fraction");
-            result.push_back("hpmc_overlap_fraction");
-            result.push_back("hpmc_configurational_bias_ratio");
+            result.push_back("mcm_fugacity");
+            result.push_back("mcm_ntrial");
+            result.push_back("mcm_insert_count");
+            result.push_back("mcm_reinsert_count");
+            result.push_back("mcm_free_volume_fraction");
+            result.push_back("mcm_overlap_fraction");
+            result.push_back("mcm_configurational_bias_ratio");
 
             return result;
             }
@@ -154,9 +154,9 @@ class IntegratorHPMCMonoImplicit : public IntegratorHPMCMono<Shape>
         Scalar m_n_R;                                            //!< Average depletant number density in free volume
         unsigned int m_type;                                     //!< Type of depletant particle to generate
 
-        GPUArray<hpmc_implicit_counters_t> m_implicit_count;     //!< Counter of active cell cluster moves
-        hpmc_implicit_counters_t m_implicit_count_run_start;     //!< Counter of active cell cluster moves at run start
-        hpmc_implicit_counters_t m_implicit_count_step_start;    //!< Counter of active cell cluster moves at run start
+        GPUArray<mcm_implicit_counters_t> m_implicit_count;     //!< Counter of active cell cluster moves
+        mcm_implicit_counters_t m_implicit_count_run_start;     //!< Counter of active cell cluster moves at run start
+        mcm_implicit_counters_t m_implicit_count_step_start;    //!< Counter of active cell cluster moves at run start
 
         std::vector<std::poisson_distribution<unsigned int> > m_poisson;   //!< Poisson distribution
         std::vector<Scalar> m_lambda;                            //!< Poisson distribution parameters per type
@@ -217,7 +217,7 @@ IntegratorHPMCMonoImplicit< Shape >::IntegratorHPMCMonoImplicit(std::shared_ptr<
     {
     this->m_exec_conf->msg->notice(5) << "Constructing IntegratorHPMCImplicit" << std::endl;
 
-    GPUArray<hpmc_implicit_counters_t> implicit_count(1,this->m_exec_conf);
+    GPUArray<mcm_implicit_counters_t> implicit_count(1,this->m_exec_conf);
     m_implicit_count.swap(implicit_count);
 
     GPUArray<Scalar> d_min(this->m_pdata->getNTypes(), this->m_exec_conf);
@@ -368,11 +368,11 @@ void IntegratorHPMCMonoImplicit< Shape >::update(unsigned int timestep)
         }
 
     // get needed vars
-    ArrayHandle<hpmc_counters_t> h_counters(this->m_count_total, access_location::host, access_mode::readwrite);
-    hpmc_counters_t& counters = h_counters.data[0];
+    ArrayHandle<mcm_counters_t> h_counters(this->m_count_total, access_location::host, access_mode::readwrite);
+    mcm_counters_t& counters = h_counters.data[0];
 
-    ArrayHandle<hpmc_implicit_counters_t> h_implicit_counters(m_implicit_count, access_location::host, access_mode::readwrite);
-    hpmc_implicit_counters_t& implicit_counters = h_implicit_counters.data[0];
+    ArrayHandle<mcm_implicit_counters_t> h_implicit_counters(m_implicit_count, access_location::host, access_mode::readwrite);
+    mcm_implicit_counters_t& implicit_counters = h_implicit_counters.data[0];
 
     m_implicit_count_step_start = implicit_counters;
 
@@ -1405,19 +1405,19 @@ inline bool IntegratorHPMCMonoImplicit<Shape>::insertDepletant(vec3<Scalar>& pos
 template<class Shape>
 Scalar IntegratorHPMCMonoImplicit<Shape>::getLogValue(const std::string& quantity, unsigned int timestep)
     {
-    if (quantity == "hpmc_fugacity")
+    if (quantity == "mcm_fugacity")
         {
         return (Scalar) m_n_R;
         }
-    if (quantity == "hpmc_ntrial")
+    if (quantity == "mcm_ntrial")
         {
         return (Scalar) m_n_trial;
         }
 
-    hpmc_counters_t counters = IntegratorHPMC::getCounters(2);
-    hpmc_implicit_counters_t implicit_counters = getImplicitCounters(2);
+    mcm_counters_t counters = IntegratorHPMC::getCounters(2);
+    mcm_implicit_counters_t implicit_counters = getImplicitCounters(2);
 
-    if (quantity == "hpmc_insert_count")
+    if (quantity == "mcm_insert_count")
         {
         // return number of depletant insertions per colloid
         if (counters.getNMoves() > 0)
@@ -1425,7 +1425,7 @@ Scalar IntegratorHPMCMonoImplicit<Shape>::getLogValue(const std::string& quantit
         else
             return Scalar(0.0);
         }
-    if (quantity == "hpmc_reinsert_count")
+    if (quantity == "mcm_reinsert_count")
         {
         // return number of overlapping depletants reinserted per colloid
         if (counters.getNMoves() > 0)
@@ -1433,17 +1433,17 @@ Scalar IntegratorHPMCMonoImplicit<Shape>::getLogValue(const std::string& quantit
         else
             return Scalar(0.0);
         }
-    if (quantity == "hpmc_free_volume_fraction")
+    if (quantity == "mcm_free_volume_fraction")
         {
         // return fraction of free volume in depletant insertion sphere
         return (Scalar) implicit_counters.getFreeVolumeFraction();
         }
-    if (quantity == "hpmc_overlap_fraction")
+    if (quantity == "mcm_overlap_fraction")
         {
         // return fraction of overlapping depletants after trial move
         return (Scalar) implicit_counters.getOverlapFraction();
         }
-    if (quantity == "hpmc_configurational_bias_ratio")
+    if (quantity == "mcm_configurational_bias_ratio")
         {
         // return fraction of overlapping depletants after trial move
         return (Scalar) implicit_counters.getConfigurationalBiasRatio();
@@ -1462,10 +1462,10 @@ Scalar IntegratorHPMCMonoImplicit<Shape>::getLogValue(const std::string& quantit
     to the start of the run, or relative to the start of the last executed step.
 */
 template<class Shape>
-hpmc_implicit_counters_t IntegratorHPMCMonoImplicit<Shape>::getImplicitCounters(unsigned int mode)
+mcm_implicit_counters_t IntegratorHPMCMonoImplicit<Shape>::getImplicitCounters(unsigned int mode)
     {
-    ArrayHandle<hpmc_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
-    hpmc_implicit_counters_t result;
+    ArrayHandle<mcm_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
+    mcm_implicit_counters_t result;
 
     if (mode == 0)
         result = h_counters.data[0];
@@ -1501,7 +1501,7 @@ bool IntegratorHPMCMonoImplicit<Shape>::attemptBoxResize(unsigned int timestep, 
     throw std::runtime_error("Error during implicit depletant integration\n");
     }
 
-//! Export this hpmc integrator to python
+//! Export this mcm integrator to python
 /*! \param name Name of the class in the exported python module
     \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
 */
@@ -1519,18 +1519,18 @@ template < class Shape > void export_IntegratorHPMCMonoImplicit(pybind11::module
     }
 
 //! Export the counters for depletants
-inline void export_hpmc_implicit_counters(pybind11::module& m)
+inline void export_mcm_implicit_counters(pybind11::module& m)
     {
-    pybind11::class_< hpmc_implicit_counters_t >(m, "hpmc_implicit_counters_t")
-    .def_readwrite("insert_count", &hpmc_implicit_counters_t::insert_count)
-    .def_readwrite("reinsert_count", &hpmc_implicit_counters_t::reinsert_count)
-    .def_readwrite("free_volume_count", &hpmc_implicit_counters_t::free_volume_count)
-    .def_readwrite("overlap_count", &hpmc_implicit_counters_t::overlap_count)
-    .def("getFreeVolumeFraction", &hpmc_implicit_counters_t::getFreeVolumeFraction)
-    .def("getOverlapFraction", &hpmc_implicit_counters_t::getOverlapFraction)
-    .def("getConfigurationalBiasRatio", &hpmc_implicit_counters_t::getConfigurationalBiasRatio)
+    pybind11::class_< mcm_implicit_counters_t >(m, "mcm_implicit_counters_t")
+    .def_readwrite("insert_count", &mcm_implicit_counters_t::insert_count)
+    .def_readwrite("reinsert_count", &mcm_implicit_counters_t::reinsert_count)
+    .def_readwrite("free_volume_count", &mcm_implicit_counters_t::free_volume_count)
+    .def_readwrite("overlap_count", &mcm_implicit_counters_t::overlap_count)
+    .def("getFreeVolumeFraction", &mcm_implicit_counters_t::getFreeVolumeFraction)
+    .def("getOverlapFraction", &mcm_implicit_counters_t::getOverlapFraction)
+    .def("getConfigurationalBiasRatio", &mcm_implicit_counters_t::getConfigurationalBiasRatio)
     ;
     }
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // __HPMC_MONO_IMPLICIT__H__

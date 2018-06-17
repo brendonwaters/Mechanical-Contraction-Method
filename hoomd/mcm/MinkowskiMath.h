@@ -20,7 +20,7 @@
 #define DEVICE
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -92,6 +92,6 @@ class CompositeSupportFunc3D
 
 }; // end namespace detail
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif // __MINKOWSKI_MATH_H__

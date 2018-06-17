@@ -8,26 +8,26 @@
 
 #include "ShapePolyhedron.h"
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 
 //! HPMC kernels for ShapePolyhedron
-template cudaError_t gpu_hpmc_free_volume<ShapePolyhedron>(const hpmc_free_volume_args_t &args,
+template cudaError_t gpu_mcm_free_volume<ShapePolyhedron>(const mcm_free_volume_args_t &args,
                                                        const typename ShapePolyhedron::param_type *d_params);
-template cudaError_t gpu_hpmc_update<ShapePolyhedron>(const hpmc_args_t& args,
+template cudaError_t gpu_mcm_update<ShapePolyhedron>(const mcm_args_t& args,
                                                   const typename ShapePolyhedron::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_count_overlaps<ShapePolyhedron>(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_count_overlaps<ShapePolyhedron>(const mcm_implicit_args_t& args,
                                                   const typename ShapePolyhedron::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject<ShapePolyhedron>(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject<ShapePolyhedron>(const mcm_implicit_args_t& args,
                                                   const typename ShapePolyhedron::param_type *d_params);
-template cudaError_t gpu_hpmc_insert_depletants_queue<ShapePolyhedron>(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_insert_depletants_queue<ShapePolyhedron>(const mcm_implicit_args_new_t& args,
                                                   const typename ShapePolyhedron::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject_new<ShapePolyhedron>(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject_new<ShapePolyhedron>(const mcm_implicit_args_new_t& args,
                                                   const typename ShapePolyhedron::param_type *d_params);
 
 }; // end namespace detail
 
-} // end namespace hpmc
+} // end namespace mcm

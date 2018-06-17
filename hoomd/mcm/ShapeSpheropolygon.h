@@ -23,7 +23,7 @@
 #include <iostream>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -184,6 +184,6 @@ DEVICE inline bool test_overlap<ShapeSpheropolygon,ShapeSpheropolygon>(const vec
                                   err);
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif // __SHAPE_SPHEROPOLYGON_H__

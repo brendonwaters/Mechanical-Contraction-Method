@@ -3,7 +3,7 @@
 
 #include "IntegratorHPMCMonoImplicitGPU.cuh"
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -63,4 +63,4 @@ __global__ void gpu_curand_implicit_setup(unsigned int n_rng,
 
 }; // end namespace detail
 
-} // end namespace hpmc
+} // end namespace mcm

@@ -32,7 +32,7 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -42,7 +42,7 @@ namespace detail
 /*! Stores an update order from 0 to N-1, inclusive, and can be resized. shuffle() shuffles the order of elements
     to a new random permutation. operator [i] gets the index of the item at order i in the current shuffled sequence.
 
-    \ingroup hpmc_data_structs
+    \ingroup mcm_data_structs
 */
 class UpdateOrder
     {
@@ -111,7 +111,7 @@ class UpdateOrder
 
     TODO: I need better documentation
 
-    \ingroup hpmc_integrators
+    \ingroup mcm_integrators
 */
 template < class Shape >
 class IntegratorHPMCMono : public IntegratorHPMC
@@ -397,8 +397,8 @@ std::vector< std::string > IntegratorHPMCMono<Shape>::getProvidedLogQuantities()
     // then add ours
     if(m_patch)
         {
-        result.push_back("hpmc_patch_energy");
-        result.push_back("hpmc_patch_rcut");
+        result.push_back("mcm_patch_energy");
+        result.push_back("mcm_patch_rcut");
         }
 
     return result;
@@ -407,7 +407,7 @@ std::vector< std::string > IntegratorHPMCMono<Shape>::getProvidedLogQuantities()
 template<class Shape>
 Scalar IntegratorHPMCMono<Shape>::getLogValue(const std::string& quantity, unsigned int timestep)
     {
-    if (quantity == "hpmc_patch_energy")
+    if (quantity == "mcm_patch_energy")
         {
         if (m_patch)
             {
@@ -419,7 +419,7 @@ Scalar IntegratorHPMCMono<Shape>::getLogValue(const std::string& quantity, unsig
             throw std::runtime_error("Error getting log value");
             }
         }
-    else if (quantity == "hpmc_patch_rcut")
+    else if (quantity == "mcm_patch_rcut")
         {
         if (m_patch)
             {
@@ -495,8 +495,8 @@ void IntegratorHPMCMono<Shape>::update(unsigned int timestep)
     IntegratorHPMC::update(timestep);
 
     // get needed vars
-    ArrayHandle<hpmc_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
-    hpmc_counters_t& counters = h_counters.data[0];
+    ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
+    mcm_counters_t& counters = h_counters.data[0];
     const BoxDim& box = m_pdata->getBox();
     unsigned int ndim = this->m_sysdef->getNDimensions();
 
@@ -1196,7 +1196,7 @@ void IntegratorHPMCMono<Shape>::setParam(unsigned int typ,  const param_type& pa
     // validate input
     if (typ >= this->m_pdata->getNTypes())
         {
-        this->m_exec_conf->msg->error() << "integrate.mode_hpmc_?." << /*evaluator::getName() <<*/ ": Trying to set pair params for a non existant type! "
+        this->m_exec_conf->msg->error() << "integrate.mode_mcm_?." << /*evaluator::getName() <<*/ ": Trying to set pair params for a non existant type! "
                   << typ << std::endl;
         throw std::runtime_error("Error setting parameters in IntegratorHPMCMono");
         }
@@ -1217,14 +1217,14 @@ void IntegratorHPMCMono<Shape>::setOverlapChecks(unsigned int typi, unsigned int
     // validate input
     if (typi >= this->m_pdata->getNTypes())
         {
-        this->m_exec_conf->msg->error() << "integrate.mode_hpmc_?." << /*evaluator::getName() <<*/ ": Trying to set interaction matrix for a non existant type! "
+        this->m_exec_conf->msg->error() << "integrate.mode_mcm_?." << /*evaluator::getName() <<*/ ": Trying to set interaction matrix for a non existant type! "
                   << typi << std::endl;
         throw std::runtime_error("Error setting interaction matrix in IntegratorHPMCMono");
         }
 
     if (typj >= this->m_pdata->getNTypes())
         {
-        this->m_exec_conf->msg->error() << "integrate.mode_hpmc_?." << /*evaluator::getName() <<*/ ": Trying to set interaction matrix for a non existant type! "
+        this->m_exec_conf->msg->error() << "integrate.mode_mcm_?." << /*evaluator::getName() <<*/ ": Trying to set interaction matrix for a non existant type! "
                   << typj << std::endl;
         throw std::runtime_error("Error setting interaction matrix in IntegratorHPMCMono");
         }
@@ -1670,16 +1670,16 @@ int IntegratorHPMCMono<Shape>::slotWriteGSD( gsd_handle& handle, std::string nam
     #else
     bool mpi=false;
     #endif
-    gsd_schema_hpmc schema(m_exec_conf, mpi);
+    gsd_schema_mcm schema(m_exec_conf, mpi);
     gsd_shape_schema<typename Shape::param_type> schema_shape(m_exec_conf, mpi);
 
     // access parameters
     ArrayHandle<Scalar> h_d(m_d, access_location::host, access_mode::read);
     ArrayHandle<Scalar> h_a(m_a, access_location::host, access_mode::read);
-    schema.write(handle, "state/hpmc/integrate/d", m_pdata->getNTypes(), h_d.data, GSD_TYPE_DOUBLE);
+    schema.write(handle, "state/mcm/integrate/d", m_pdata->getNTypes(), h_d.data, GSD_TYPE_DOUBLE);
     if(m_hasOrientation)
         {
-        schema.write(handle, "state/hpmc/integrate/a", m_pdata->getNTypes(), h_a.data, GSD_TYPE_DOUBLE);
+        schema.write(handle, "state/mcm/integrate/a", m_pdata->getNTypes(), h_a.data, GSD_TYPE_DOUBLE);
         }
     retval |= schema_shape.write(handle, name, m_pdata->getNTypes(), m_params);
 
@@ -1698,15 +1698,15 @@ bool IntegratorHPMCMono<Shape>::restoreStateGSD( std::shared_ptr<GSDReader> read
     #else
     bool mpi=false;
     #endif
-    gsd_schema_hpmc schema(m_exec_conf, mpi);
+    gsd_schema_mcm schema(m_exec_conf, mpi);
     gsd_shape_schema<typename Shape::param_type> schema_shape(m_exec_conf, mpi);
 
     ArrayHandle<Scalar> h_d(m_d, access_location::host, access_mode::readwrite);
     ArrayHandle<Scalar> h_a(m_a, access_location::host, access_mode::readwrite);
-    schema.read(reader, frame, "state/hpmc/integrate/d", m_pdata->getNTypes(), h_d.data, GSD_TYPE_DOUBLE);
+    schema.read(reader, frame, "state/mcm/integrate/d", m_pdata->getNTypes(), h_d.data, GSD_TYPE_DOUBLE);
     if(m_hasOrientation)
         {
-        schema.read(reader, frame, "state/hpmc/integrate/a", m_pdata->getNTypes(), h_a.data, GSD_TYPE_DOUBLE);
+        schema.read(reader, frame, "state/mcm/integrate/a", m_pdata->getNTypes(), h_a.data, GSD_TYPE_DOUBLE);
         }
     schema_shape.read(reader, frame, name, m_pdata->getNTypes(), m_params);
     return success;
@@ -1730,6 +1730,6 @@ template < class Shape > void export_IntegratorHPMCMono(pybind11::module& m, con
           ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // _INTEGRATOR_HPMC_MONO_H_

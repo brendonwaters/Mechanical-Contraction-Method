@@ -19,8 +19,8 @@
 #define DEVICE
 #endif
 
-//! hpmc namespace
-namespace hpmc
+//! mcm namespace
+namespace mcm
 {
 
 //! Translation move
@@ -261,6 +261,6 @@ inline vec3<Scalar> lineReflection(vec3<Scalar> pos, vec3<Scalar> p, quat<Scalar
     return r - (pos - r);
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__MOVES_H__

@@ -24,7 +24,7 @@
 #include <iostream>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -217,6 +217,6 @@ DEVICE inline bool test_overlap(const vec3<Scalar>& r_ab,
     */
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__SHAPE_SPHEROPOLYHEDRON_H__

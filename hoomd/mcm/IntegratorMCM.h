@@ -20,7 +20,7 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 //! Integrator that implements the HPMC approach
@@ -31,7 +31,7 @@ namespace hpmc
     The move ratio is stored as an unsigned int (0xffff = 100%) to avoid numerical issues when the move ratio is exactly
     at 100%.
 
-    \ingroup hpmc_integrators
+    \ingroup mcm_integrators
 */
 
 class PatchEnergy
@@ -91,7 +91,7 @@ class IntegratorHPMC : public Integrator
         //! Take one timestep forward
         virtual void update(unsigned int timestep)
             {
-            ArrayHandle<hpmc_counters_t> h_counters(m_count_total, access_location::host, access_mode::read);
+            ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::read);
             m_count_step_start = h_counters.data[0];
             }
 
@@ -194,7 +194,7 @@ class IntegratorHPMC : public Integrator
         //! Print statistics about the hmc steps taken
         virtual void printStats()
             {
-            hpmc_counters_t counters = getCounters(1);
+            mcm_counters_t counters = getCounters(1);
             m_exec_conf->msg->notice(2) << "-- HPMC stats:" << "\n";
             m_exec_conf->msg->notice(2) << "Average translate acceptance: " << counters.getTranslateAcceptance() << "\n";
             if (counters.rotate_accept_count + counters.rotate_reject_count != 0)
@@ -214,7 +214,7 @@ class IntegratorHPMC : public Integrator
         //! Get performance in moves per second
         virtual double getMPS()
             {
-            hpmc_counters_t counters = getCounters(1);
+            mcm_counters_t counters = getCounters(1);
             double cur_time = double(m_clock.getTime()) / Scalar(1e9);
             return double(counters.getNMoves()) / cur_time;
             }
@@ -222,7 +222,7 @@ class IntegratorHPMC : public Integrator
         //! Reset statistics counters
         virtual void resetStats()
             {
-            ArrayHandle<hpmc_counters_t> h_counters(m_count_total, access_location::host, access_mode::read);
+            ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::read);
             m_count_run_start = h_counters.data[0];
             m_clock = ClockSource();
             }
@@ -264,7 +264,7 @@ class IntegratorHPMC : public Integrator
         virtual bool checkParticleOrientations();
 
         //! Get the current counter values
-        hpmc_counters_t getCounters(unsigned int mode=0);
+        mcm_counters_t getCounters(unsigned int mode=0);
 
         //! Communicate particles
         /*! \param migrate Set to true to both migrate and exchange, set to false to only exchange
@@ -350,7 +350,7 @@ class IntegratorHPMC : public Integrator
         GPUVector<Scalar> m_d;                      //!< Maximum move displacement by type
         GPUVector<Scalar> m_a;                      //!< Maximum angular displacement by type
 
-        GPUArray< hpmc_counters_t > m_count_total;  //!< Accept/reject total count
+        GPUArray< mcm_counters_t > m_count_total;  //!< Accept/reject total count
 
         Scalar m_nominal_width;                      //!< nominal cell width
         Scalar m_extra_ghost_width;                  //!< extra ghost width to add
@@ -410,8 +410,8 @@ class IntegratorHPMC : public Integrator
         #endif
 
     private:
-        hpmc_counters_t m_count_run_start;             //!< Count saved at run() start
-        hpmc_counters_t m_count_step_start;            //!< Count saved at the start of the last step
+        mcm_counters_t m_count_run_start;             //!< Count saved at run() start
+        mcm_counters_t m_count_step_start;            //!< Count saved at the start of the last step
 
         #ifdef ENABLE_MPI
         bool m_communicator_ghost_width_connected;     //!< True if we have connected to Communicator's ghost layer width signal
@@ -422,6 +422,6 @@ class IntegratorHPMC : public Integrator
 //! Export the IntegratorHPMC class to python
 void export_IntegratorHPMC(pybind11::module& m);
 
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // _INTEGRATOR_HPMC_H_

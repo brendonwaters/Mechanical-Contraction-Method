@@ -24,18 +24,18 @@
 
 #include "SphinxOverlap.h"  //< This is the main overlap function.
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 
 //! maximum number of sphere centers that can be stored
-/*! \ingroup hpmc_data_structs */
+/*! \ingroup mcm_data_structs */
 const unsigned int MAX_SPHERE_CENTERS = 8;
 
 //! Data structure for sphere centers and diameters
-/*! \ingroup hpmc_data_structs */
+/*! \ingroup mcm_data_structs */
 struct sphinx3d_params : param_base
     {
     OverlapReal circumsphereDiameter;               //!< Circumsphere Diameter of all spheres defined in intersection
@@ -617,6 +617,6 @@ DEVICE inline OverlapReal initVolume(bool disjoint, OverlapReal r[MAX_SPHERE_CEN
 
 } // detail
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif // __SHAPE_SPHINX_H__

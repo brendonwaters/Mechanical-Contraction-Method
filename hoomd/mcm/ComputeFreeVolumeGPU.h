@@ -30,12 +30,12 @@ using namespace std;
 
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 
-namespace hpmc
+namespace mcm
 {
 
 //! Template class for a free volume integration analyzer
 /*!
-    \ingroup hpmc_integrators
+    \ingroup mcm_integrators
 */
 template< class Shape >
 class ComputeFreeVolumeGPU : public ComputeFreeVolume<Shape>
@@ -116,7 +116,7 @@ ComputeFreeVolumeGPU< Shape >::ComputeFreeVolumeGPU(std::shared_ptr<SystemDefini
             s = s * 2;
             }
         }
-    m_tuner_free_volume.reset(new Autotuner(valid_params, 5, 1000000, "hpmc_free_volume", this->m_exec_conf));
+    m_tuner_free_volume.reset(new Autotuner(valid_params, 5, 1000000, "mcm_free_volume", this->m_exec_conf));
 
     GPUArray<unsigned int> excell_size(0, this->m_exec_conf);
     m_excell_size.swap(excell_size);
@@ -128,7 +128,7 @@ ComputeFreeVolumeGPU< Shape >::ComputeFreeVolumeGPU(std::shared_ptr<SystemDefini
     m_last_dim = make_uint3(0xffffffff, 0xffffffff, 0xffffffff);
     m_last_nmax = 0xffffffff;
 
-    m_tuner_excell_block_size.reset(new Autotuner(32,1024,32, 5, 1000000, "hpmc_free_volume_excell_block_size", this->m_exec_conf));
+    m_tuner_excell_block_size.reset(new Autotuner(32,1024,32, 5, 1000000, "mcm_free_volume_excell_block_size", this->m_exec_conf));
 
     // create a cuda stream to ensure managed memory coherency
     cudaStreamCreate(&m_stream);
@@ -200,7 +200,7 @@ void ComputeFreeVolumeGPU<Shape>::computeFreeVolume(unsigned int timestep)
 
     // update the expanded cells
     this->m_tuner_excell_block_size->begin();
-    detail::gpu_hpmc_excell(d_excell_idx.data,
+    detail::gpu_mcm_excell(d_excell_idx.data,
                             d_excell_size.data,
                             this->m_excell_list_indexer,
                             d_cell_idx.data,
@@ -241,7 +241,7 @@ void ComputeFreeVolumeGPU<Shape>::computeFreeVolume(unsigned int timestep)
         n_sample /= this->m_exec_conf->getNRanks();
         #endif
 
-        detail::hpmc_free_volume_args_t free_volume_args(n_sample,
+        detail::mcm_free_volume_args_t free_volume_args(n_sample,
                                                    this->m_type,
                                                    d_postype.data,
                                                    d_orientation.data,
@@ -273,7 +273,7 @@ void ComputeFreeVolumeGPU<Shape>::computeFreeVolume(unsigned int timestep)
 
 
         // invoke kernel for counting total overlap volume
-        detail::gpu_hpmc_free_volume<Shape> (free_volume_args, params.data());
+        detail::gpu_mcm_free_volume<Shape> (free_volume_args, params.data());
 
         if (this->m_exec_conf->isCUDAErrorCheckingEnabled())
             CHECK_CUDA_ERROR();
@@ -295,7 +295,7 @@ void ComputeFreeVolumeGPU<Shape>::computeFreeVolume(unsigned int timestep)
 template< class Shape >
 void ComputeFreeVolumeGPU< Shape >::initializeExcellMem()
     {
-    this->m_exec_conf->msg->notice(4) << "hpmc resizing expanded cells" << std::endl;
+    this->m_exec_conf->msg->notice(4) << "mcm resizing expanded cells" << std::endl;
 
     // get the current cell dimensions
     unsigned int num_cells = this->m_cl->getCellIndexer().getNumElements();
@@ -310,7 +310,7 @@ void ComputeFreeVolumeGPU< Shape >::initializeExcellMem()
     m_excell_size.resize(num_cells);
     }
 
-//! Export this hpmc analyzer to python
+//! Export this mcm analyzer to python
 /*! \param name Name of the class in the exported python module
     \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
 */
@@ -325,7 +325,7 @@ template < class Shape > void export_ComputeFreeVolumeGPU(pybind11::module& m, c
         ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // ENABLE_CUDA
 

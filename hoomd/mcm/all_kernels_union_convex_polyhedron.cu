@@ -18,25 +18,25 @@
 #include "ShapeSphinx.h"
 #include "ShapeUnion.h"
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 
 //! HPMC kernels for ShapeUnion<ShapeConvexPolyhedron>
-template cudaError_t gpu_hpmc_free_volume<ShapeUnion<ShapeConvexPolyhedron> >(const hpmc_free_volume_args_t &args,
+template cudaError_t gpu_mcm_free_volume<ShapeUnion<ShapeConvexPolyhedron> >(const mcm_free_volume_args_t &args,
                                                   const typename ShapeUnion<ShapeConvexPolyhedron> ::param_type *d_params);
-template cudaError_t gpu_hpmc_update<ShapeUnion<ShapeConvexPolyhedron> >(const hpmc_args_t& args,
+template cudaError_t gpu_mcm_update<ShapeUnion<ShapeConvexPolyhedron> >(const mcm_args_t& args,
                                                   const typename ShapeUnion<ShapeConvexPolyhedron> ::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_count_overlaps<ShapeUnion<ShapeConvexPolyhedron> >(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_count_overlaps<ShapeUnion<ShapeConvexPolyhedron> >(const mcm_implicit_args_t& args,
                                                   const typename ShapeUnion<ShapeConvexPolyhedron> ::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject<ShapeUnion<ShapeConvexPolyhedron> >(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject<ShapeUnion<ShapeConvexPolyhedron> >(const mcm_implicit_args_t& args,
                                                   const typename ShapeUnion<ShapeConvexPolyhedron> ::param_type *d_params);
-template cudaError_t gpu_hpmc_insert_depletants_queue<ShapeUnion<ShapeConvexPolyhedron> >(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_insert_depletants_queue<ShapeUnion<ShapeConvexPolyhedron> >(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeUnion<ShapeConvexPolyhedron> ::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject_new<ShapeUnion<ShapeConvexPolyhedron> >(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject_new<ShapeUnion<ShapeConvexPolyhedron> >(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeUnion<ShapeConvexPolyhedron> ::param_type *d_params);
 }; // end namespace detail
 
-} // end namespace hpmc
+} // end namespace mcm

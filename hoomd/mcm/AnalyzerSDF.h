@@ -22,7 +22,7 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -101,7 +101,7 @@ bool test_scaled_overlap(const vec3<Scalar>& r_ij,
     analyzer which then calls a method to set up the extra ghost width. This connection is also used to get the maximum
     particle diameter for an input into the cell list size.
 
-    \ingroup hpmc_analyzers
+    \ingroup mcm_analyzers
 */
 template < class Shape >
 class AnalyzerSDF : public Analyzer
@@ -472,6 +472,6 @@ template < class Shape > void export_AnalyzerSDF(pybind11::module& m, const std:
           ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // _ANALYZER_SDF_H_

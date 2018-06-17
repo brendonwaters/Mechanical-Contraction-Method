@@ -25,7 +25,7 @@
 #include "hoomd/extern/quickhull/QuickHull.hpp"
 #endif
 
-namespace hpmc{
+namespace mcm{
 namespace detail{
 
 // make these global constants in one of the shape headers.
@@ -240,7 +240,7 @@ inline ShapePolyhedron::param_type make_poly3d_data(pybind11::list verts,pybind1
         result.face_verts[i] = j;
         }
 
-    hpmc::detail::OBB *obbs = new hpmc::detail::OBB[len(face_offs)];
+    mcm::detail::OBB *obbs = new mcm::detail::OBB[len(face_offs)];
     std::vector<std::vector<vec3<OverlapReal> > > internal_coordinates;
 
     // construct bounding box tree
@@ -257,7 +257,7 @@ inline ShapePolyhedron::param_type make_poly3d_data(pybind11::list verts,pybind1
             }
 
         std::vector<OverlapReal> vertex_radii(n_vert, result.sweep_radius);
-        obbs[i] = hpmc::detail::compute_obb(face_vec, vertex_radii, false);
+        obbs[i] = mcm::detail::compute_obb(face_vec, vertex_radii, false);
         obbs[i].mask = result.face_overlap[i];
         internal_coordinates.push_back(face_vec);
         }
@@ -421,7 +421,7 @@ typename ShapeUnion<Shape>::param_type make_union_params(pybind11::list _members
 
     result.ignore = ignore_stats;
 
-    hpmc::detail::OBB *obbs = new hpmc::detail::OBB[result.N];
+    mcm::detail::OBB *obbs = new mcm::detail::OBB[result.N];
 
     std::vector<std::vector<vec3<OverlapReal> > > internal_coordinates;
 
@@ -1109,7 +1109,7 @@ void export_shape_params(pybind11::module& m)
     export_shape_union_proxy<ShapeSphere>(m, "sphere_union_param_proxy", export_sphere_proxy<ShapeUnion<ShapeSphere>, detail::access_shape_union_members< ShapeUnion<ShapeSphere> > > );
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
 
 #endif // end __SHAPE_PROXY_H__

@@ -21,7 +21,7 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 struct SphereWall
     {
@@ -686,7 +686,7 @@ class ExternalFieldWall : public ExternalFieldMono<Shape>
             m_WallLogQuantities.reserve(m_SphereLogQuantities.size() + m_CylinderLogQuantities.size());
             m_WallLogQuantities.insert(m_WallLogQuantities.end(), m_SphereLogQuantities.begin(), m_SphereLogQuantities.end());
             m_WallLogQuantities.insert(m_WallLogQuantities.end(), m_CylinderLogQuantities.begin(), m_CylinderLogQuantities.end());
-            m_WallLogQuantities.push_back("hpmc_wall_volume");
+            m_WallLogQuantities.push_back("mcm_wall_volume");
             return m_WallLogQuantities;
             }
 
@@ -706,7 +706,7 @@ class ExternalFieldWall : public ExternalFieldMono<Shape>
                 return m_Cylinders[i].rsq;
                 }
               }
-            if (quantity == "hpmc_wall_volume")
+            if (quantity == "mcm_wall_volume")
             {
               return m_Volume;
             }
@@ -807,7 +807,7 @@ class ExternalFieldWall : public ExternalFieldMono<Shape>
           std::string snum;
           ss << i;
           ss >> snum;
-          return "hpmc_wall_sph_rsq-" + snum;
+          return "mcm_wall_sph_rsq-" + snum;
           }
         std::string getCylWallParamName(size_t i)
           {
@@ -815,7 +815,7 @@ class ExternalFieldWall : public ExternalFieldMono<Shape>
           std::string snum;
           ss << i;
           ss >> snum;
-          return "hpmc_wall_cyl_rsq-" + snum;
+          return "mcm_wall_cyl_rsq-" + snum;
           }
     protected:
         std::vector<SphereWall>     m_Spheres;
@@ -864,6 +864,6 @@ void export_ExternalFieldWall(pybind11::module& m, const std::string& name)
     ;
 }
 
-} // namespace hpmc
+} // namespace mcm
 
 #endif // inclusion guard

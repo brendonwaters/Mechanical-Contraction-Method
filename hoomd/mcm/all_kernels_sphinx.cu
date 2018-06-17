@@ -8,26 +8,26 @@
 
 #include "ShapeSphinx.h"
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 #ifdef ENABLE_SPHINX_GPU
 //! HPMC kernels for ShapeSphinx
-template cudaError_t gpu_hpmc_free_volume<ShapeSphinx>(const hpmc_free_volume_args_t &args,
+template cudaError_t gpu_mcm_free_volume<ShapeSphinx>(const mcm_free_volume_args_t &args,
                                                        const typename ShapeSphinx::param_type *d_params);
-template cudaError_t gpu_hpmc_update<ShapeSphinx>(const hpmc_args_t& args,
+template cudaError_t gpu_mcm_update<ShapeSphinx>(const mcm_args_t& args,
                                                   const typename ShapeSphinx::param_type *d_params);
-template cudaError_t gpu_hpmc_count_overlaps<ShapeSphinx>(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_count_overlaps<ShapeSphinx>(const mcm_implicit_args_t& args,
                                                   const typename ShapeSphinx::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject<ShapeSphinx>(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject<ShapeSphinx>(const mcm_implicit_args_t& args,
                                                   const typename ShapeSphinx::param_type *d_params);
-template cudaError_t gpu_hpmc_insert_depletants_queue<ShapeSphinx>(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_insert_depletants_queue<ShapeSphinx>(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeSphinx::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject_new<ShapeSphinx>(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject_new<ShapeSphinx>(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeSphinx::param_type *d_params);
 #endif
 }; // end namespace detail
 
-} // end namespace hpmc
+} // end namespace mcm

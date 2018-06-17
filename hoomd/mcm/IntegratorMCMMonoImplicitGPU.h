@@ -26,7 +26,7 @@
 
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 
-namespace hpmc
+namespace mcm
 {
 
 //! Template class for HPMC update with implicit depletants on the GPU
@@ -35,7 +35,7 @@ namespace hpmc
 
     The penetrable depletants model is simulated.
 
-    \ingroup hpmc_integrators
+    \ingroup mcm_integrators
 */
 template< class Shape >
 class IntegratorHPMCMonoImplicitGPU : public IntegratorHPMCMonoImplicit<Shape>
@@ -287,12 +287,12 @@ IntegratorHPMCMonoImplicitGPU< Shape >::IntegratorHPMCMonoImplicitGPU(std::share
             }
         }
 
-    m_tuner_update.reset(new Autotuner(valid_params_update, 5, 1000000, "hpmc_update", this->m_exec_conf));
-    m_tuner_excell_block_size.reset(new Autotuner(dev_prop.warpSize, dev_prop.maxThreadsPerBlock, dev_prop.warpSize, 5, 1000000, "hpmc_excell_block_size", this->m_exec_conf));
-    m_tuner_implicit.reset(new Autotuner(valid_params, 5, 1000000, "hpmc_implicit_count_overlaps", this->m_exec_conf));
-    m_tuner_reinsert.reset(new Autotuner(valid_params, 5, 1000000, "hpmc_implicit_reinsert", this->m_exec_conf));
+    m_tuner_update.reset(new Autotuner(valid_params_update, 5, 1000000, "mcm_update", this->m_exec_conf));
+    m_tuner_excell_block_size.reset(new Autotuner(dev_prop.warpSize, dev_prop.maxThreadsPerBlock, dev_prop.warpSize, 5, 1000000, "mcm_excell_block_size", this->m_exec_conf));
+    m_tuner_implicit.reset(new Autotuner(valid_params, 5, 1000000, "mcm_implicit_count_overlaps", this->m_exec_conf));
+    m_tuner_reinsert.reset(new Autotuner(valid_params, 5, 1000000, "mcm_implicit_reinsert", this->m_exec_conf));
 
-    GPUArray<hpmc_implicit_counters_t> implicit_count(1,this->m_exec_conf);
+    GPUArray<mcm_implicit_counters_t> implicit_count(1,this->m_exec_conf);
     this->m_implicit_count.swap(implicit_count);
 
     GPUArray<curandDiscreteDistribution_t> poisson_dist(1,this->m_exec_conf);
@@ -346,7 +346,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
         }
 
         {
-        ArrayHandle<hpmc_implicit_counters_t> h_implicit_counters(this->m_implicit_count, access_location::host, access_mode::readwrite);
+        ArrayHandle<mcm_implicit_counters_t> h_implicit_counters(this->m_implicit_count, access_location::host, access_mode::readwrite);
         this->m_implicit_count_step_start = h_implicit_counters.data[0];
         }
 
@@ -474,7 +474,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
 
             // update the expanded cells
             this->m_tuner_excell_block_size->begin();
-            detail::gpu_hpmc_excell(d_excell_idx.data,
+            detail::gpu_mcm_excell(d_excell_idx.data,
                                     d_excell_size.data,
                                     this->m_excell_list_indexer,
                                     d_cell_idx.data,
@@ -538,7 +538,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
                 ArrayHandle<unsigned int> d_active_cell_accept(m_active_cell_accept, access_location::device, access_mode::overwrite);
                 ArrayHandle<unsigned int> d_active_cell_move_type_translate(m_active_cell_move_type_translate, access_location::device, access_mode::overwrite);
 
-                ArrayHandle<hpmc_counters_t> d_counters(this->m_count_total, access_location::device, access_mode::readwrite);
+                ArrayHandle<mcm_counters_t> d_counters(this->m_count_total, access_location::device, access_mode::readwrite);
 
                 // move particles
                 this->m_tuner_update->begin();
@@ -547,8 +547,8 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
                 unsigned int block_size = param / 1000000;
                 unsigned int stride = (param % 1000000 ) / 100;
                 unsigned int group_size = param % 100;
-                detail::gpu_hpmc_update<Shape> (
-                    detail::hpmc_args_t(d_postype.data,
+                detail::gpu_mcm_update<Shape> (
+                    detail::mcm_args_t(d_postype.data,
                         d_orientation.data,
                         d_counters.data,
                         d_cell_idx.data,
@@ -621,7 +621,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
 
                         {
                         // counters
-                        ArrayHandle<hpmc_implicit_counters_t> d_implicit_count(this->m_implicit_count, access_location::device, access_mode::readwrite);
+                        ArrayHandle<mcm_implicit_counters_t> d_implicit_count(this->m_implicit_count, access_location::device, access_mode::readwrite);
 
                         // Kernel driver arguments
                         unsigned int param = m_tuner_implicit->getParam();
@@ -632,8 +632,8 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
                         m_tuner_implicit->begin();
 
                         // invoke kernel
-                        detail::gpu_hpmc_implicit_count_overlaps<Shape>(
-                            detail::hpmc_implicit_args_t(d_postype.data,
+                        detail::gpu_mcm_implicit_count_overlaps<Shape>(
+                            detail::mcm_implicit_args_t(d_postype.data,
                                 d_orientation.data,
                                 d_old_postype.data,
                                 d_old_orientation.data,
@@ -707,7 +707,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
 
                         {
                         // counters
-                        ArrayHandle<hpmc_implicit_counters_t> d_implicit_count(this->m_implicit_count, access_location::device, access_mode::readwrite);
+                        ArrayHandle<mcm_implicit_counters_t> d_implicit_count(this->m_implicit_count, access_location::device, access_mode::readwrite);
 
                         ArrayHandle<unsigned int> d_depletant_active_cell(m_depletant_active_cell, access_location::device, access_mode::overwrite);
                         ArrayHandle<unsigned int> d_n_success_forward(m_n_success_forward, access_location::device, access_mode::overwrite);
@@ -725,8 +725,8 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
                         m_tuner_reinsert->begin();
 
                         // apply acceptance/rejection criterium
-                        detail::gpu_hpmc_implicit_accept_reject<Shape>(
-                            detail::hpmc_implicit_args_t(d_postype.data,
+                        detail::gpu_mcm_implicit_accept_reject<Shape>(
+                            detail::mcm_implicit_args_t(d_postype.data,
                                 d_orientation.data,
                                 d_old_postype.data,
                                 d_old_orientation.data,
@@ -802,7 +802,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
             } // end loop nselect*particles_per_cell
 
             {
-            ArrayHandle<hpmc_implicit_counters_t> h_implicit_count(this->m_implicit_count, access_location::host, access_mode::readwrite);
+            ArrayHandle<mcm_implicit_counters_t> h_implicit_count(this->m_implicit_count, access_location::host, access_mode::readwrite);
             h_implicit_count.data->reinsert_count += n_reinsert;
             }
 
@@ -815,7 +815,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::update(unsigned int timestep)
             shift.z = rng.s(-this->m_nominal_width/Scalar(2.0),this->m_nominal_width/Scalar(2.0));
             }
 
-        detail::gpu_hpmc_shift(d_postype.data,
+        detail::gpu_mcm_shift(d_postype.data,
                                d_image.data,
                                this->m_pdata->getN(),
                                box,
@@ -881,7 +881,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::initializePoissonDistribution()
 template< class Shape >
 void IntegratorHPMCMonoImplicitGPU< Shape >::initializeCellSets()
     {
-    this->m_exec_conf->msg->notice(4) << "hpmc recomputing active cells" << std::endl;
+    this->m_exec_conf->msg->notice(4) << "mcm recomputing active cells" << std::endl;
     // "ghost cells" might contain active particles. So they must be included in the active cell sets
     // we should not run into a multiple issue since the base multiple is 2 and the ghost cells added are 2 in each
     // direction. Check just to be on the safe side
@@ -929,7 +929,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::initializeCellSets()
 template< class Shape >
 void IntegratorHPMCMonoImplicitGPU< Shape >::initializeExcellMem()
     {
-    this->m_exec_conf->msg->notice(4) << "hpmc resizing expanded cells" << std::endl;
+    this->m_exec_conf->msg->notice(4) << "mcm resizing expanded cells" << std::endl;
 
     // get the current cell dimensions
     unsigned int num_cells = this->m_cl->getCellIndexer().getNumElements();
@@ -968,7 +968,7 @@ void IntegratorHPMCMonoImplicitGPU< Shape >::updateCellWidth()
     }
 
 
-//! Export this hpmc integrator to python
+//! Export this mcm integrator to python
 /*! \param name Name of the class in the exported python module
     \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
 */
@@ -979,7 +979,7 @@ template < class Shape > void export_IntegratorHPMCMonoImplicitGPU(pybind11::mod
         ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // ENABLE_CUDA
 

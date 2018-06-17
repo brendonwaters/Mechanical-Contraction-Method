@@ -27,7 +27,7 @@
 #include "hoomd/extern/kernels/scan.cuh"
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -37,12 +37,12 @@ namespace detail
     \brief Declaration of CUDA kernels drivers
 */
 
-//! Wraps arguments to gpu_hpmc_implicit_update
-/*! \ingroup hpmc_data_structs */
-struct hpmc_implicit_args_t
+//! Wraps arguments to gpu_mcm_implicit_update
+/*! \ingroup mcm_data_structs */
+struct mcm_implicit_args_t
     {
     //! Construct a pair_args_t
-    hpmc_implicit_args_t(Scalar4 *_d_postype,
+    mcm_implicit_args_t(Scalar4 *_d_postype,
                 Scalar4 *_d_orientation,
                 const Scalar4 *_d_postype_old,
                 const Scalar4 *_d_orientation_old,
@@ -75,8 +75,8 @@ struct hpmc_implicit_args_t
                 curandState_t *_d_state_cell,
                 curandState_t *_d_state_cell_new,
                 const unsigned int _depletant_type,
-                hpmc_counters_t *_d_counters,
-                hpmc_implicit_counters_t *_d_implicit_count,
+                mcm_counters_t *_d_counters,
+                mcm_implicit_counters_t *_d_implicit_count,
                 const curandDiscreteDistribution_t *_d_poisson,
                 unsigned int *_d_overlap_cell,
                 unsigned int *_d_overlap_cell_scan,
@@ -193,8 +193,8 @@ struct hpmc_implicit_args_t
     curandState_t *d_state_cell;        //!< RNG state per cell
     curandState_t *d_state_cell_new;    //!< RNG state per cell
     const unsigned int depletant_type; //!< Particle type of depletant
-    hpmc_counters_t *d_counters;      //!< Aceptance/rejection counters
-    hpmc_implicit_counters_t *d_implicit_count; //!< Active cell acceptance/rejection counts
+    mcm_counters_t *d_counters;      //!< Aceptance/rejection counters
+    mcm_implicit_counters_t *d_implicit_count; //!< Active cell acceptance/rejection counts
     const curandDiscreteDistribution_t *d_poisson; //!< Handle for precomputed poisson distribution (per type)
     unsigned int *d_overlap_cell;     //!< Overlap flag per active cell
     unsigned int *d_overlap_cell_scan; //!< Overlap flag per active cell (scan result)
@@ -220,10 +220,10 @@ struct hpmc_implicit_args_t
     };
 
 template< class Shape >
-cudaError_t gpu_hpmc_implicit_count_overlaps(const hpmc_implicit_args_t &args, const typename Shape::param_type *d_params);
+cudaError_t gpu_mcm_implicit_count_overlaps(const mcm_implicit_args_t &args, const typename Shape::param_type *d_params);
 
 template< class Shape >
-cudaError_t gpu_hpmc_implicit_accept_reject(const hpmc_implicit_args_t &args, const typename Shape::param_type *d_params);
+cudaError_t gpu_mcm_implicit_accept_reject(const mcm_implicit_args_t &args, const typename Shape::param_type *d_params);
 
 #ifdef NVCC
 /*!
@@ -281,10 +281,10 @@ __device__ inline int warp_reduce(int val, int width)
     \param select Current index within the loop over nselect selections (for RNG generation)
     \param d_params Per-type shape parameters
 
-    \ingroup hpmc_kernels
+    \ingroup mcm_kernels
 */
 template< class Shape >
-__global__ void gpu_hpmc_implicit_count_overlaps_kernel(Scalar4 *d_postype,
+__global__ void gpu_mcm_implicit_count_overlaps_kernel(Scalar4 *d_postype,
                                      Scalar4 *d_orientation,
                                      const Scalar4 *d_postype_old,
                                      const Scalar4 *d_orientation_old,
@@ -315,8 +315,8 @@ __global__ void gpu_hpmc_implicit_count_overlaps_kernel(Scalar4 *d_postype,
                                      unsigned int *d_overlap_cell,
                                      const unsigned int *d_active_cell_ptl_idx,
                                      const unsigned int *d_active_cell_accept,
-                                     hpmc_counters_t *d_counters,
-                                     hpmc_implicit_counters_t *d_implicit_counters,
+                                     mcm_counters_t *d_counters,
+                                     mcm_implicit_counters_t *d_implicit_counters,
                                      const unsigned int groups_per_cell,
                                      const Scalar *d_d_min,
                                      const Scalar *d_d_max,
@@ -676,10 +676,10 @@ __global__ void gpu_hpmc_implicit_count_overlaps_kernel(Scalar4 *d_postype,
     \param select Current index within the loop over nselect selections (for RNG generation)
     \param d_params Per-type shape parameters
 
-    \ingroup hpmc_kernels
+    \ingroup mcm_kernels
 */
 template< class Shape >
-__global__ void gpu_hpmc_implicit_reinsert_kernel(Scalar4 *d_postype,
+__global__ void gpu_mcm_implicit_reinsert_kernel(Scalar4 *d_postype,
                                      Scalar4 *d_orientation,
                                      const Scalar4 *d_postype_old,
                                      const Scalar4 *d_orientation_old,
@@ -706,8 +706,8 @@ __global__ void gpu_hpmc_implicit_reinsert_kernel(Scalar4 *d_postype,
                                      unsigned int depletant_type,
                                      const unsigned int *d_active_cell_ptl_idx,
                                      const unsigned int *d_active_cell_accept,
-                                     hpmc_counters_t *d_counters,
-                                     hpmc_implicit_counters_t *d_implicit_count,
+                                     mcm_counters_t *d_counters,
+                                     mcm_implicit_counters_t *d_implicit_count,
                                      const unsigned int ntrial,
                                      unsigned int *d_n_success_forward,
                                      unsigned int *d_n_overlap_shape_forward,
@@ -1283,7 +1283,7 @@ __global__ void gpu_implicit_accept_reject_kernel(
     Scalar4 *d_orientation,
     const Scalar4 *d_postype_old,
     const Scalar4 *d_orientation_old,
-    hpmc_counters_t *d_counters,
+    mcm_counters_t *d_counters,
     const BoxDim box,
     const unsigned int *d_active_cell_ptl_idx,
     const unsigned int *d_active_cell_accept,
@@ -1391,7 +1391,7 @@ __global__ void gpu_curand_implicit_setup(unsigned int n_rng,
  * Definition of templated GPU kernel drivers
  */
 
-// Kernel driver for gpu_hpmc_implicit_count_overlaps_kernel()
+// Kernel driver for gpu_mcm_implicit_count_overlaps_kernel()
 /*! \param args Bundled arguments
     \param d_params Per-type shape parameters
     \returns Error codes generated by any CUDA calls, or cudaSuccess when there is no error
@@ -1399,10 +1399,10 @@ __global__ void gpu_curand_implicit_setup(unsigned int n_rng,
     This templatized method is the kernel driver for HPMC update of any shape. It is instantiated for every shape at the
     bottom of this file.
 
-    \ingroup hpmc_kernels
+    \ingroup mcm_kernels
 */
 template< class Shape >
-cudaError_t gpu_hpmc_implicit_count_overlaps(const hpmc_implicit_args_t& args, const typename Shape::param_type *d_params)
+cudaError_t gpu_mcm_implicit_count_overlaps(const mcm_implicit_args_t& args, const typename Shape::param_type *d_params)
     {
     assert(args.d_postype);
     assert(args.d_orientation);
@@ -1421,7 +1421,7 @@ cudaError_t gpu_hpmc_implicit_count_overlaps(const hpmc_implicit_args_t& args, c
     static cudaFuncAttributes attr;
     if (max_block_size == -1)
         {
-        cudaFuncGetAttributes(&attr, gpu_hpmc_implicit_count_overlaps_kernel<Shape>);
+        cudaFuncGetAttributes(&attr, gpu_mcm_implicit_count_overlaps_kernel<Shape>);
         max_block_size = attr.maxThreadsPerBlock;
         sm = attr.binaryVersion;
         }
@@ -1537,7 +1537,7 @@ cudaError_t gpu_hpmc_implicit_count_overlaps(const hpmc_implicit_args_t& args, c
     cudaMemsetAsync(args.d_overlap_cell,0, sizeof(unsigned int)*args.n_active_cells, args.stream);
 
     // check for newly generated overlaps with depletants
-    gpu_hpmc_implicit_count_overlaps_kernel<Shape><<<grid, threads, shared_bytes, args.stream>>>(args.d_postype,
+    gpu_mcm_implicit_count_overlaps_kernel<Shape><<<grid, threads, shared_bytes, args.stream>>>(args.d_postype,
                                                                  args.d_orientation,
                                                                  args.d_postype_old,
                                                                  args.d_orientation_old,
@@ -1586,7 +1586,7 @@ cudaError_t gpu_hpmc_implicit_count_overlaps(const hpmc_implicit_args_t& args, c
     return cudaSuccess;
     }
 
-//! Kernel driver for gpu_hpmc_implicit_reinsert_kernel() and gpu_hpmc_implict_accept_reject_kernel()
+//! Kernel driver for gpu_mcm_implicit_reinsert_kernel() and gpu_mcm_implict_accept_reject_kernel()
 /*! \param args Bundled arguments
     \param d_params Per-type shape parameters
     \returns Error codes generated by any CUDA calls, or cudaSuccess when there is no error
@@ -1594,10 +1594,10 @@ cudaError_t gpu_hpmc_implicit_count_overlaps(const hpmc_implicit_args_t& args, c
     This templatized method is the kernel driver for HPMC update of any shape. It is instantiated for every shape at the
     bottom of this file.
 
-    \ingroup hpmc_kernels
+    \ingroup mcm_kernels
 */
 template< class Shape >
-cudaError_t gpu_hpmc_implicit_accept_reject(const hpmc_implicit_args_t& args, const typename Shape::param_type *d_params)
+cudaError_t gpu_mcm_implicit_accept_reject(const mcm_implicit_args_t& args, const typename Shape::param_type *d_params)
     {
     assert(args.d_postype);
     assert(args.d_orientation);
@@ -1622,7 +1622,7 @@ cudaError_t gpu_hpmc_implicit_accept_reject(const hpmc_implicit_args_t& args, co
         static cudaFuncAttributes attr;
         if (max_block_size == -1)
             {
-            cudaFuncGetAttributes(&attr, gpu_hpmc_implicit_reinsert_kernel<Shape>);
+            cudaFuncGetAttributes(&attr, gpu_mcm_implicit_reinsert_kernel<Shape>);
             max_block_size = attr.maxThreadsPerBlock;
             sm = attr.binaryVersion;
             }
@@ -1718,7 +1718,7 @@ cudaError_t gpu_hpmc_implicit_accept_reject(const hpmc_implicit_args_t& args, co
             }
 
         // check for newly generated overlaps with depletants
-        gpu_hpmc_implicit_reinsert_kernel<Shape><<<grid, threads, shared_bytes, args.stream>>>(args.d_postype,
+        gpu_mcm_implicit_reinsert_kernel<Shape><<<grid, threads, shared_bytes, args.stream>>>(args.d_postype,
                                                                      args.d_orientation,
                                                                      args.d_postype_old,
                                                                      args.d_orientation_old,
@@ -1811,7 +1811,7 @@ cudaError_t gpu_hpmc_implicit_accept_reject(const hpmc_implicit_args_t& args, co
 
 }; // end namespace detail
 
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // _HPMC_IMPLICIT_CUH_
 

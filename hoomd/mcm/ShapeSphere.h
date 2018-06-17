@@ -29,7 +29,7 @@
 
 #define SMALL 1e-5
 
-namespace hpmc
+namespace mcm
 {
 
 // put a few misc math functions here as they don't have any better home
@@ -248,6 +248,6 @@ DEVICE inline bool test_overlap<ShapeSphere, ShapeSphere>(const vec3<Scalar>& r_
         }
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__SHAPE_SPHERE_H__

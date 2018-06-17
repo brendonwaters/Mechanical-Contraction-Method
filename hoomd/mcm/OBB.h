@@ -38,7 +38,7 @@
 // Check against zero with absolute tolerance
 #define CHECK_ZERO(x, abs_tol) ((x < abs_tol && x >= 0) || (-x < abs_tol && x < 0))
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -719,7 +719,7 @@ DEVICE inline OBB compute_obb(const std::vector< vec3<OverlapReal> >& pts, const
 #endif
 }; // end namespace detail
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #undef DEVICE
 #endif //__OBB_H__

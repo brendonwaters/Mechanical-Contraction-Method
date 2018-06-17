@@ -5,7 +5,7 @@ if (ENABLE_HPMC_SPHINX_GPU)
     add_definitions(-DENABLE_SPHINX_GPU)
 endif()
 
-set(_hpmc_sources   module.cc
+set(_mcm_sources   module.cc
                     module_external_field.cc
                     module_sphere.cc
                     module_convex_polygon.cc
@@ -23,7 +23,7 @@ set(_hpmc_sources   module.cc
                     IntegratorHPMC.cc
                     )
 
-set(_hpmc_headers
+set(_mcm_headers
     AnalyzerSDF.h
     ComputeFreeVolumeGPU.h
     ComputeFreeVolume.h
@@ -69,11 +69,11 @@ set(_hpmc_headers
     )
 
 # if (ENABLE_CUDA)
-# list(APPEND _hpmc_sources
+# list(APPEND _mcm_sources
 #                            )
 # endif()
 
-set(_hpmc_cu_sources IntegratorHPMCMonoGPU.cu
+set(_mcm_cu_sources IntegratorHPMCMonoGPU.cu
                      IntegratorHPMCMonoImplicitGPU.cu
                      all_kernels_sphere.cu
                      all_kernels_convex_polygon.cu
@@ -95,31 +95,31 @@ if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 endif()
 
 if (ENABLE_CUDA)
-CUDA_COMPILE(_CUDA_GENERATED_FILES ${_hpmc_cu_sources} OPTIONS ${CUDA_ADDITIONAL_OPTIONS} SHARED)
+CUDA_COMPILE(_CUDA_GENERATED_FILES ${_mcm_cu_sources} OPTIONS ${CUDA_ADDITIONAL_OPTIONS} SHARED)
 endif (ENABLE_CUDA)
 
-pybind11_add_module (_hpmc SHARED ${_hpmc_sources} ${_CUDA_GENERATED_FILES} NO_EXTRAS)
-set_target_properties(_hpmc PROPERTIES INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${PYTHON_MODULE_BASE_DIR})
+pybind11_add_module (_mcm SHARED ${_mcm_sources} ${_CUDA_GENERATED_FILES} NO_EXTRAS)
+set_target_properties(_mcm PROPERTIES INSTALL_RPATH ${CMAKE_INSTALL_PREFIX}/${PYTHON_MODULE_BASE_DIR})
 
 # link the library to its dependencies
-target_link_libraries(_hpmc PRIVATE ${HOOMD_LIBRARIES})
+target_link_libraries(_mcm PRIVATE ${HOOMD_LIBRARIES})
 
 # if we are compiling with MPI support built in, set appropriate
 # compiler/linker flags
 if (ENABLE_MPI)
    if(MPI_COMPILE_FLAGS)
-       set_target_properties(_hpmc PROPERTIES COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+       set_target_properties(_mcm PROPERTIES COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
    endif(MPI_COMPILE_FLAGS)
    if(MPI_LINK_FLAGS)
-       set_target_properties(_hpmc PROPERTIES LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+       set_target_properties(_mcm PROPERTIES LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
    endif(MPI_LINK_FLAGS)
 endif(ENABLE_MPI)
 
-fix_cudart_rpath(_hpmc)
+fix_cudart_rpath(_mcm)
 
 # install the library
-install(TARGETS _hpmc
-        LIBRARY DESTINATION ${PYTHON_MODULE_BASE_DIR}/hpmc
+install(TARGETS _mcm
+        LIBRARY DESTINATION ${PYTHON_MODULE_BASE_DIR}/mcm
         )
 
 ################ Python only modules
@@ -131,7 +131,7 @@ MACRO(copy_file file)
         POST_BUILD
         COMMAND    ${CMAKE_COMMAND}
         ARGS       -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/${file}
-        COMMENT    "Copy hoomd/hpmc/${file}"
+        COMMENT    "Copy hoomd/mcm/${file}"
     )
 ENDMACRO(copy_file)
 
@@ -146,14 +146,14 @@ set(files   analyze.py
     )
 
 install(FILES ${files}
-        DESTINATION ${PYTHON_MODULE_BASE_DIR}/hpmc
+        DESTINATION ${PYTHON_MODULE_BASE_DIR}/mcm
        )
 
 foreach(file ${files})
     copy_file(${file})
 endforeach()
 
-add_custom_target(copy_hpmc ALL DEPENDS ${files})
+add_custom_target(copy_mcm ALL DEPENDS ${files})
 
 # copy python modules to the build directory to make it a working python package
 MACRO(copy_header file)
@@ -161,23 +161,23 @@ MACRO(copy_header file)
         OUTPUT ${file}
         POST_BUILD
         COMMAND    ${CMAKE_COMMAND}
-        ARGS       -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/../include/hoomd/hpmc/${file}
-        COMMENT    "Copy hoomd/include/hoomd/hpmc/${file}"
+        ARGS       -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/../include/hoomd/mcm/${file}
+        COMMENT    "Copy hoomd/include/hoomd/mcm/${file}"
     )
 ENDMACRO(copy_header)
 
 # install headers in installation target
-install(FILES ${_hpmc_headers}
-        DESTINATION ${PYTHON_MODULE_BASE_DIR}/include/hoomd/hpmc
+install(FILES ${_mcm_headers}
+        DESTINATION ${PYTHON_MODULE_BASE_DIR}/include/hoomd/mcm
        )
 
 if (COPY_HEADERS)
 # copy headers into build directory
-foreach(file ${_hpmc_headers})
+foreach(file ${_mcm_headers})
     copy_header(${file})
 endforeach()
 
-add_custom_target(copy_hpmc_headers ALL DEPENDS ${_hpmc_headers})
+add_custom_target(copy_mcm_headers ALL DEPENDS ${_mcm_headers})
 endif()
 
 if (BUILD_TESTING)

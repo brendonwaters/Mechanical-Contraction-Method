@@ -34,7 +34,7 @@
 #define ELLIPSOID_OVERLAP_PRECISION 1e-6
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 //! Ellipsoid shape template
@@ -157,7 +157,7 @@ DEVICE inline void compute_ellipsoid_matrix(OverlapReal *M,
                                             const ell_params& axes)
     {
     // This code is copied from incsim. TODO there may be licensing issues with including this, but since we aren't
-    // planning on releasing hpmc any time soon it doesn't matter
+    // planning on releasing mcm any time soon it doesn't matter
 
     // calculate rotation matrix
     rotmat3<OverlapReal> R(orientation);
@@ -208,7 +208,7 @@ DEVICE inline void compute_ellipsoid_matrix(OverlapReal *M,
     \pre Both M1 and M2 are 10 elements
 
     This code is copied from incsim. TODO there may be licensing issues with including this, but since we aren't
-    planning on releasing hpmc any time soon it doesn't matter
+    planning on releasing mcm any time soon it doesn't matter
 
     \ingroup overlap
 */
@@ -447,6 +447,6 @@ DEVICE inline bool test_overlap<ShapeEllipsoid,ShapeEllipsoid>(const vec3<Scalar
     return ret_val == ELLIPSOID_OVERLAP_TRUE;
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__SHAPE_ELLIPSOID_H__

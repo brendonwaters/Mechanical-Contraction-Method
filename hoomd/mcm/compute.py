@@ -7,8 +7,8 @@
 from __future__ import print_function
 
 from hoomd import _hoomd
-from hoomd.hpmc import _hpmc
-from hoomd.hpmc import integrate
+from hoomd.mcm import _mcm
+from hoomd.mcm import integrate
 from hoomd.compute import _compute
 import hoomd
 
@@ -16,7 +16,7 @@ class free_volume(_compute):
     R""" Compute the free volume available to a test particle by stochastic integration.
 
     Args:
-        mc (:py:mod:`hoomd.hpmc.integrate`): MC integrator.
+        mc (:py:mod:`hoomd.mcm.integrate`): MC integrator.
         seed (int): Random seed for MC integration.
         type (str): Type of particle to use for integration
         nsample (int): Number of samples to use in MC integration
@@ -28,15 +28,15 @@ class free_volume(_compute):
     to use for the integration.
 
     Once initialized, the compute provides a log quantity
-    called **hpmc_free_volume**, that can be logged via :py:class:`hoomd.analyze.log`.
+    called **mcm_free_volume**, that can be logged via :py:class:`hoomd.analyze.log`.
     If a suffix is specified, the log quantities name will be
-    **hpmc_free_volume_suffix**.
+    **mcm_free_volume_suffix**.
 
     Examples::
 
-        mc = hpmc.integrate.sphere(seed=415236)
+        mc = mcm.integrate.sphere(seed=415236)
         compute.free_volume(mc=mc, seed=123, test_type='B', nsample=1000)
-        log = analyze.log(quantities=['hpmc_free_volume'], period=100, filename='log.dat', overwrite=True)
+        log = analyze.log(quantities=['mcm_free_volume'], period=100, filename='log.dat', overwrite=True)
 
     """
     def __init__(self, mc, seed, suffix='', test_type=None, nsample=None):
@@ -52,57 +52,57 @@ class free_volume(_compute):
         cls = None;
         if not hoomd.context.exec_conf.isCUDAEnabled():
             if isinstance(mc, integrate.sphere):
-                cls = _hpmc.ComputeFreeVolumeSphere;
+                cls = _mcm.ComputeFreeVolumeSphere;
             elif isinstance(mc, integrate.convex_polygon):
-                cls = _hpmc.ComputeFreeVolumeConvexPolygon;
+                cls = _mcm.ComputeFreeVolumeConvexPolygon;
             elif isinstance(mc, integrate.simple_polygon):
-                cls = _hpmc.ComputeFreeVolumeSimplePolygon;
+                cls = _mcm.ComputeFreeVolumeSimplePolygon;
             elif isinstance(mc, integrate.convex_polyhedron):
-                cls = _hpmc.ComputeFreeVolumeConvexPolyhedron;
+                cls = _mcm.ComputeFreeVolumeConvexPolyhedron;
             elif isinstance(mc, integrate.convex_spheropolyhedron):
-                cls = _hpmc.ComputeFreeVolumeSpheropolyhedron;
+                cls = _mcm.ComputeFreeVolumeSpheropolyhedron;
             elif isinstance(mc, integrate.ellipsoid):
-                cls = _hpmc.ComputeFreeVolumeEllipsoid;
+                cls = _mcm.ComputeFreeVolumeEllipsoid;
             elif isinstance(mc, integrate.convex_spheropolygon):
-                cls =_hpmc.ComputeFreeVolumeSpheropolygon;
+                cls =_mcm.ComputeFreeVolumeSpheropolygon;
             elif isinstance(mc, integrate.faceted_sphere):
-                cls =_hpmc.ComputeFreeVolumeFacetedSphere;
+                cls =_mcm.ComputeFreeVolumeFacetedSphere;
             elif isinstance(mc, integrate.polyhedron):
-                cls =_hpmc.ComputeFreeVolumePolyhedron;
+                cls =_mcm.ComputeFreeVolumePolyhedron;
             elif isinstance(mc, integrate.sphinx):
-                cls =_hpmc.ComputeFreeVolumeSphinx;
+                cls =_mcm.ComputeFreeVolumeSphinx;
             elif isinstance(mc, integrate.convex_polyhedron_union):
-                cls = _hpmc.ComputeFreeVolumeConvexPolyhedronUnion
+                cls = _mcm.ComputeFreeVolumeConvexPolyhedronUnion
             elif isinstance(mc, integrate.sphere_union):
-                cls = _hpmc.ComputeFreeVolumeSphereUnion;
+                cls = _mcm.ComputeFreeVolumeSphereUnion;
             else:
                 hoomd.context.msg.error("compute.free_volume: Unsupported integrator.\n");
                 raise RuntimeError("Error initializing compute.free_volume");
         else:
             if isinstance(mc, integrate.sphere):
-                cls = _hpmc.ComputeFreeVolumeGPUSphere;
+                cls = _mcm.ComputeFreeVolumeGPUSphere;
             elif isinstance(mc, integrate.convex_polygon):
-                cls = _hpmc.ComputeFreeVolumeGPUConvexPolygon;
+                cls = _mcm.ComputeFreeVolumeGPUConvexPolygon;
             elif isinstance(mc, integrate.simple_polygon):
-                cls = _hpmc.ComputeFreeVolumeGPUSimplePolygon;
+                cls = _mcm.ComputeFreeVolumeGPUSimplePolygon;
             elif isinstance(mc, integrate.convex_polyhedron):
-                cls = _hpmc.ComputeFreeVolumeGPUConvexPolyhedron;
+                cls = _mcm.ComputeFreeVolumeGPUConvexPolyhedron;
             elif isinstance(mc, integrate.convex_spheropolyhedron):
-                cls = _hpmc.ComputeFreeVolumeGPUSpheropolyhedron;
+                cls = _mcm.ComputeFreeVolumeGPUSpheropolyhedron;
             elif isinstance(mc, integrate.ellipsoid):
-                cls = _hpmc.ComputeFreeVolumeGPUEllipsoid;
+                cls = _mcm.ComputeFreeVolumeGPUEllipsoid;
             elif isinstance(mc, integrate.convex_spheropolygon):
-                cls =_hpmc.ComputeFreeVolumeGPUSpheropolygon;
+                cls =_mcm.ComputeFreeVolumeGPUSpheropolygon;
             elif isinstance(mc, integrate.faceted_sphere):
-                cls =_hpmc.ComputeFreeVolumeGPUFacetedSphere;
+                cls =_mcm.ComputeFreeVolumeGPUFacetedSphere;
             elif isinstance(mc, integrate.polyhedron):
-                cls =_hpmc.ComputeFreeVolumeGPUPolyhedron;
+                cls =_mcm.ComputeFreeVolumeGPUPolyhedron;
             elif isinstance(mc, integrate.sphinx):
-                cls =_hpmc.ComputeFreeVolumeGPUSphinx;
+                cls =_mcm.ComputeFreeVolumeGPUSphinx;
             elif isinstance(mc, integrate.sphere_union):
-                cls = _hpmc.ComputeFreeVolumeGPUSphereUnion;
+                cls = _mcm.ComputeFreeVolumeGPUSphereUnion;
             elif isinstance(mc, integrate.convex_polyhedron_union):
-                cls = _hpmc.ComputeFreeVolumeGPUConvexPolyhedronUnion;
+                cls = _mcm.ComputeFreeVolumeGPUConvexPolyhedronUnion;
             else:
                 hoomd.context.msg.error("compute.free_volume: Unsupported integrator.\n");
                 raise RuntimeError("Error initializing compute.free_volume");

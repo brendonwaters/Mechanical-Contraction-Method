@@ -27,18 +27,18 @@
 #endif
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 
 //! maximum number of vertices that can be stored (must be multiple of 8)
-/*! \ingroup hpmc_data_structs */
+/*! \ingroup mcm_data_structs */
 
 //! Data structure for polyhedron vertices
 //! Note that vectorized methods using this struct will assume unused coordinates are set to zero.
-/*! \ingroup hpmc_data_structs */
+/*! \ingroup mcm_data_structs */
 struct poly3d_verts : param_base
 
     {
@@ -425,6 +425,6 @@ DEVICE inline bool test_overlap(const vec3<Scalar>& r_ab,
     */
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__SHAPE_CONVEX_POLYHEDRON_H__

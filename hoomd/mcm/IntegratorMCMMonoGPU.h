@@ -20,12 +20,12 @@
 
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 
-namespace hpmc
+namespace mcm
 {
 
 //! Template class for HPMC update on the GPU
 /*!
-    \ingroup hpmc_integrators
+    \ingroup mcm_integrators
 */
 template< class Shape >
 class IntegratorHPMCMonoGPU : public IntegratorHPMCMono<Shape>
@@ -58,7 +58,7 @@ class IntegratorHPMCMonoGPU : public IntegratorHPMCMono<Shape>
         //! Enable deterministic simulations
         virtual void setDeterministic(bool deterministic)
             {
-            this->m_exec_conf->msg->notice(2) << "hpmc: Sorting cell list to enable deterministic simulations." << std::endl;
+            this->m_exec_conf->msg->notice(2) << "mcm: Sorting cell list to enable deterministic simulations." << std::endl;
             m_cl->setSortCellList(deterministic);
             }
 
@@ -158,8 +158,8 @@ IntegratorHPMCMonoGPU< Shape >::IntegratorHPMCMonoGPU(std::shared_ptr<SystemDefi
             }
         }
 
-    m_tuner_update.reset(new Autotuner(valid_params, 5, 1000000, "hpmc_update", this->m_exec_conf));
-    m_tuner_excell_block_size.reset(new Autotuner(dev_prop.warpSize, dev_prop.maxThreadsPerBlock, dev_prop.warpSize, 5, 1000000, "hpmc_excell_block_size", this->m_exec_conf));
+    m_tuner_update.reset(new Autotuner(valid_params, 5, 1000000, "mcm_update", this->m_exec_conf));
+    m_tuner_excell_block_size.reset(new Autotuner(dev_prop.warpSize, dev_prop.maxThreadsPerBlock, dev_prop.warpSize, 5, 1000000, "mcm_excell_block_size", this->m_exec_conf));
 
     // create a CUDA stream
     // streams are used to ensure memory coherency until concurrent host-gpu access is fully supported (such as for compute 6.x devices
@@ -256,7 +256,7 @@ void IntegratorHPMCMonoGPU< Shape >::update(unsigned int timestep)
     ArrayHandle< unsigned int > d_excell_idx(m_excell_idx, access_location::device, access_mode::readwrite);
     ArrayHandle< unsigned int > d_excell_size(m_excell_size, access_location::device, access_mode::readwrite);
 
-    ArrayHandle<hpmc_counters_t> d_counters(this->m_count_total, access_location::device, access_mode::readwrite);
+    ArrayHandle<mcm_counters_t> d_counters(this->m_count_total, access_location::device, access_mode::readwrite);
 
     // access the parameters and interaction matrix
     const std::vector<typename Shape::param_type, managed_allocator<typename Shape::param_type> > & params = this->getParams();
@@ -277,7 +277,7 @@ void IntegratorHPMCMonoGPU< Shape >::update(unsigned int timestep)
 
     // update the expanded cells
     this->m_tuner_excell_block_size->begin();
-    detail::gpu_hpmc_excell(d_excell_idx.data,
+    detail::gpu_mcm_excell(d_excell_idx.data,
                             d_excell_size.data,
                             m_excell_list_indexer,
                             d_cell_idx.data,
@@ -309,7 +309,7 @@ void IntegratorHPMCMonoGPU< Shape >::update(unsigned int timestep)
             unsigned int stride = (param % 1000000 ) / 100;
             unsigned int group_size = param % 100;
 
-            detail::gpu_hpmc_update<Shape> (detail::hpmc_args_t(d_postype.data,
+            detail::gpu_mcm_update<Shape> (detail::mcm_args_t(d_postype.data,
                                                                 d_orientation.data,
                                                                 d_counters.data,
                                                                 d_cell_idx.data,
@@ -365,7 +365,7 @@ void IntegratorHPMCMonoGPU< Shape >::update(unsigned int timestep)
         shift.z = rng.s(-this->m_nominal_width/Scalar(2.0),this->m_nominal_width/Scalar(2.0));
         }
 
-    detail::gpu_hpmc_shift(d_postype.data,
+    detail::gpu_mcm_shift(d_postype.data,
                            d_image.data,
                            this->m_pdata->getN(),
                            box,
@@ -390,7 +390,7 @@ void IntegratorHPMCMonoGPU< Shape >::update(unsigned int timestep)
 template< class Shape >
 void IntegratorHPMCMonoGPU< Shape >::initializeCellSets()
     {
-    this->m_exec_conf->msg->notice(4) << "hpmc recomputing active cells" << std::endl;
+    this->m_exec_conf->msg->notice(4) << "mcm recomputing active cells" << std::endl;
     // "ghost cells" might contain active particles. So they must be included in the active cell sets
     // we should not run into a multiple issue since the base multiple is 2 and the ghost cells added are 2 in each
     // direction. Check just to be on the safe side
@@ -438,7 +438,7 @@ void IntegratorHPMCMonoGPU< Shape >::initializeCellSets()
 template< class Shape >
 void IntegratorHPMCMonoGPU< Shape >::initializeExcellMem()
     {
-    this->m_exec_conf->msg->notice(4) << "hpmc resizing expanded cells" << std::endl;
+    this->m_exec_conf->msg->notice(4) << "mcm resizing expanded cells" << std::endl;
 
     // get the current cell dimensions
     unsigned int num_cells = this->m_cl->getCellIndexer().getNumElements();
@@ -480,7 +480,7 @@ void IntegratorHPMCMonoGPU< Shape >::updateCellWidth()
         }
     }
 
-//! Export this hpmc integrator to python
+//! Export this mcm integrator to python
 /*! \param name Name of the class in the exported python module
     \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
 */
@@ -491,7 +491,7 @@ template < class Shape > void export_IntegratorHPMCMonoGPU(pybind11::module& m, 
               ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // ENABLE_CUDA
 

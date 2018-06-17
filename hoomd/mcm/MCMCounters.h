@@ -7,7 +7,7 @@
 
 #include "hoomd/HOOMDMath.h"
 
-namespace hpmc
+namespace mcm
 {
 
 /*! \file IntegratorHPMCMonoGPU.cuh
@@ -23,8 +23,8 @@ namespace hpmc
 #endif
 
 //! Storage for acceptance counters
-/*! \ingroup hpmc_data_structs */
-struct hpmc_counters_t
+/*! \ingroup mcm_data_structs */
+struct mcm_counters_t
     {
     unsigned long long int translate_accept_count;      //!< Count of accepted translation moves
     unsigned long long int translate_reject_count;      //!< Count of rejected translation moves
@@ -34,7 +34,7 @@ struct hpmc_counters_t
     unsigned int overlap_err_count;                     //!< Count of the number of times overlap checks encounter errors
 
     //! Construct a zero set of counters
-    hpmc_counters_t()
+    mcm_counters_t()
         {
         translate_accept_count = 0;
         translate_reject_count = 0;
@@ -76,9 +76,9 @@ struct hpmc_counters_t
     };
 
 //! Take the difference of two sets of counters
-DEVICE inline hpmc_counters_t operator-(const hpmc_counters_t& a, const hpmc_counters_t& b)
+DEVICE inline mcm_counters_t operator-(const mcm_counters_t& a, const mcm_counters_t& b)
     {
-    hpmc_counters_t result;
+    mcm_counters_t result;
     result.translate_accept_count = a.translate_accept_count - b.translate_accept_count;
     result.rotate_accept_count = a.rotate_accept_count - b.rotate_accept_count;
     result.translate_reject_count = a.translate_reject_count - b.translate_reject_count;
@@ -90,8 +90,8 @@ DEVICE inline hpmc_counters_t operator-(const hpmc_counters_t& a, const hpmc_cou
 
 
 //! Storage for NPT acceptance counters
-/*! \ingroup hpmc_data_structs */
-struct hpmc_boxmc_counters_t
+/*! \ingroup mcm_data_structs */
+struct mcm_boxmc_counters_t
     {
     unsigned long long int volume_accept_count;      //!< Count of accepted volume moves
     unsigned long long int volume_reject_count;      //!< Count of rejected volume moves
@@ -102,7 +102,7 @@ struct hpmc_boxmc_counters_t
     unsigned long long int aspect_accept_count;      //!< Count of accepted aspect moves
     unsigned long long int aspect_reject_count;      //!< Count of rejected aspect moves
     //! Construct a zero set of counters
-    hpmc_boxmc_counters_t()
+    mcm_boxmc_counters_t()
         {
         volume_accept_count = 0;
         volume_reject_count = 0;
@@ -169,9 +169,9 @@ struct hpmc_boxmc_counters_t
     };
 
 //! Take the difference of two sets of counters
-DEVICE inline hpmc_boxmc_counters_t operator-(const hpmc_boxmc_counters_t& a, const hpmc_boxmc_counters_t& b)
+DEVICE inline mcm_boxmc_counters_t operator-(const mcm_boxmc_counters_t& a, const mcm_boxmc_counters_t& b)
     {
-    hpmc_boxmc_counters_t result;
+    mcm_boxmc_counters_t result;
     result.volume_accept_count = a.volume_accept_count - b.volume_accept_count;
     result.ln_volume_accept_count = a.ln_volume_accept_count - b.ln_volume_accept_count;
     result.shear_accept_count = a.shear_accept_count - b.shear_accept_count;
@@ -184,8 +184,8 @@ DEVICE inline hpmc_boxmc_counters_t operator-(const hpmc_boxmc_counters_t& a, co
     }
 
 //! Storage for implicit depletants acceptance counters
-/*! \ingroup hpmc_data_structs */
-struct hpmc_implicit_counters_t
+/*! \ingroup mcm_data_structs */
+struct mcm_implicit_counters_t
     {
     unsigned long long int insert_count;                //!< Count of depletants inserted
     unsigned long long int free_volume_count;           //!< Count of depletants in free volume
@@ -193,7 +193,7 @@ struct hpmc_implicit_counters_t
     unsigned long long int reinsert_count;              //!< Count of resinserted depletants
 
     //! Construct a zero set of counters
-    hpmc_implicit_counters_t()
+    mcm_implicit_counters_t()
         {
         insert_count = 0;
         free_volume_count = 0;
@@ -236,8 +236,8 @@ struct hpmc_implicit_counters_t
     };
 
 //! Storage for muVT acceptance counters
-/*! \ingroup hpmc_data_structs */
-struct hpmc_muvt_counters_t
+/*! \ingroup mcm_data_structs */
+struct mcm_muvt_counters_t
     {
     unsigned long long int insert_accept_count;      //!< Count of accepted insertion moves
     unsigned long long int insert_reject_count;      //!< Count of rejected insertion moves
@@ -249,7 +249,7 @@ struct hpmc_muvt_counters_t
     unsigned long long int volume_reject_count;      //!< Count of rejected volume moves
 
     //! Construct a zero set of counters
-    hpmc_muvt_counters_t()
+    mcm_muvt_counters_t()
         {
         insert_accept_count = 0;
         insert_reject_count = 0;
@@ -326,8 +326,8 @@ struct hpmc_muvt_counters_t
     };
 
 //! Storage for cluseter move acceptance counters
-/*! \ingroup hpmc_data_structs */
-struct hpmc_clusters_counters_t
+/*! \ingroup mcm_data_structs */
+struct mcm_clusters_counters_t
     {
     unsigned long long int pivot_accept_count;      //!< Count of accepted pivot moves
     unsigned long long int pivot_reject_count;      //!< Count of rejected pivot moves
@@ -339,7 +339,7 @@ struct hpmc_clusters_counters_t
     unsigned long long int n_particles_in_clusters;   //!< Number of particles in clusters
 
     //! Construct a zero set of counters
-    hpmc_clusters_counters_t()
+    mcm_clusters_counters_t()
         {
         pivot_accept_count = 0;
         pivot_reject_count = 0;
@@ -407,9 +407,9 @@ struct hpmc_clusters_counters_t
     };
 
 //! Take the difference of two sets of counters
-DEVICE inline hpmc_implicit_counters_t operator-(const hpmc_implicit_counters_t& a, const hpmc_implicit_counters_t& b)
+DEVICE inline mcm_implicit_counters_t operator-(const mcm_implicit_counters_t& a, const mcm_implicit_counters_t& b)
     {
-    hpmc_implicit_counters_t result;
+    mcm_implicit_counters_t result;
     result.insert_count = a.insert_count - b.insert_count;
     result.free_volume_count = a.free_volume_count - b.free_volume_count;
     result.overlap_count = a.overlap_count - b.overlap_count;
@@ -417,9 +417,9 @@ DEVICE inline hpmc_implicit_counters_t operator-(const hpmc_implicit_counters_t&
     return result;
     }
 
-DEVICE inline hpmc_muvt_counters_t operator-(const hpmc_muvt_counters_t& a, const hpmc_muvt_counters_t& b)
+DEVICE inline mcm_muvt_counters_t operator-(const mcm_muvt_counters_t& a, const mcm_muvt_counters_t& b)
     {
-    hpmc_muvt_counters_t result;
+    mcm_muvt_counters_t result;
     result.insert_accept_count = a.insert_accept_count - b.insert_accept_count;
     result.remove_accept_count = a.remove_accept_count - b.remove_accept_count;
     result.exchange_accept_count = a.exchange_accept_count - b.exchange_accept_count;
@@ -432,9 +432,9 @@ DEVICE inline hpmc_muvt_counters_t operator-(const hpmc_muvt_counters_t& a, cons
     }
 
 //! Take the difference of two sets of counters
-DEVICE inline hpmc_clusters_counters_t operator-(const hpmc_clusters_counters_t& a, const hpmc_clusters_counters_t& b)
+DEVICE inline mcm_clusters_counters_t operator-(const mcm_clusters_counters_t& a, const mcm_clusters_counters_t& b)
     {
-    hpmc_clusters_counters_t result;
+    mcm_clusters_counters_t result;
     result.pivot_accept_count = a.pivot_accept_count - b.pivot_accept_count;
     result.reflection_accept_count = a.reflection_accept_count - b.reflection_accept_count;
     result.swap_accept_count = a.swap_accept_count - b.swap_accept_count;
@@ -447,6 +447,6 @@ DEVICE inline hpmc_clusters_counters_t operator-(const hpmc_clusters_counters_t&
     return result;
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // _HPMC_COUNTERS_H_

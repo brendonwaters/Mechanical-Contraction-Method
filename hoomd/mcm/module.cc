@@ -34,11 +34,11 @@
 /*! \file module.cc
     \brief Export classes to python
 */
-using namespace hpmc;
+using namespace mcm;
 using namespace std;
 namespace py = pybind11;
 
-namespace hpmc
+namespace mcm
 {
 
 //! HPMC implementation details
@@ -52,12 +52,12 @@ namespace detail
 
 }; // end namespace detail
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
-using namespace hpmc::detail;
+using namespace mcm::detail;
 
-//! Define the _hpmc python module exports
-PYBIND11_MODULE(_hpmc, m)
+//! Define the _mcm python module exports
+PYBIND11_MODULE(_mcm, m)
     {
     export_IntegratorHPMC(m);
 
@@ -103,15 +103,15 @@ PYBIND11_MODULE(_hpmc, m)
     m.def("make_overlapreal4", &make_overlapreal4);
 
     // export counters
-    export_hpmc_implicit_counters(m);
+    export_mcm_implicit_counters(m);
 
-    export_hpmc_clusters_counters(m);
+    export_mcm_clusters_counters(m);
     }
 
-/*! \defgroup hpmc_integrators HPMC integrators
+/*! \defgroup mcm_integrators HPMC integrators
 */
 
-/*! \defgroup hpmc_analyzers HPMC analyzers
+/*! \defgroup mcm_analyzers HPMC analyzers
 */
 
 /*! \defgroup shape Shapes
@@ -122,16 +122,16 @@ PYBIND11_MODULE(_hpmc, m)
     Vector, matrix, and quaternion math routines
 */
 
-/*! \defgroup hpmc_detail Details
+/*! \defgroup mcm_detail Details
     HPMC implementation details
     @{
 */
 
-/*! \defgroup hpmc_data_structs Data structures
+/*! \defgroup mcm_data_structs Data structures
     HPMC internal data structures
 */
 
-/*! \defgroup hpmc_kernels HPMC kernels
+/*! \defgroup mcm_kernels HPMC kernels
     HPMC GPU kernels
 */
 

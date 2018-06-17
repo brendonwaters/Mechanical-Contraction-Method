@@ -25,12 +25,12 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 
 
-namespace hpmc
+namespace mcm
 {
 
 //! Template class for a free volume integration analyzer
 /*!
-    \ingroup hpmc_integrators
+    \ingroup mcm_integrators
 */
 template< class Shape >
 class ComputeFreeVolume : public Compute
@@ -63,7 +63,7 @@ class ComputeFreeVolume : public Compute
         std::vector< std::string > getProvidedLogQuantities()
             {
             std::vector< std::string> result;
-            result.push_back("hpmc_free_volume"+m_suffix);
+            result.push_back("mcm_free_volume"+m_suffix);
 
             return result;
             }
@@ -274,7 +274,7 @@ void ComputeFreeVolume<Shape>::computeFreeVolume(unsigned int timestep)
 template<class Shape>
 Scalar ComputeFreeVolume<Shape>::getLogValue(const std::string& quantity, unsigned int timestep)
     {
-    if (quantity == "hpmc_free_volume"+m_suffix)
+    if (quantity == "mcm_free_volume"+m_suffix)
         {
         // perform MC integration
         compute(timestep);
@@ -301,7 +301,7 @@ Scalar ComputeFreeVolume<Shape>::getLogValue(const std::string& quantity, unsign
     throw std::runtime_error("Undefined log quantity");
     }
 
-//! Export this hpmc analyzer to python
+//! Export this mcm analyzer to python
 /*! \param name Name of the class in the exported python module
     \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
 */
@@ -318,6 +318,6 @@ template < class Shape > void export_ComputeFreeVolume(pybind11::module& m, cons
         ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // __COMPUTE_FREE_VOLUME__H__

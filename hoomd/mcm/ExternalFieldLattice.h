@@ -19,7 +19,7 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 /*
 For simplicity and consistency both the positional and orientational versions of
@@ -590,6 +590,6 @@ void export_LatticeField(pybind11::module& m, std::string name)
 
 void export_LatticeFields(pybind11::module& m);
 
-} // namespace hpmc
+} // namespace mcm
 
 #endif // _EXTERNAL_FIELD_LATTICE_H_

@@ -8,26 +8,26 @@
 
 #include "ShapeSimplePolygon.h"
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 
 //! HPMC kernels for ShapeSimplePolygon
-template cudaError_t gpu_hpmc_free_volume<ShapeSimplePolygon>(const hpmc_free_volume_args_t &args,
+template cudaError_t gpu_mcm_free_volume<ShapeSimplePolygon>(const mcm_free_volume_args_t &args,
                                                        const typename ShapeSimplePolygon::param_type *d_params);
-template cudaError_t gpu_hpmc_update<ShapeSimplePolygon>(const hpmc_args_t& args,
+template cudaError_t gpu_mcm_update<ShapeSimplePolygon>(const mcm_args_t& args,
                                                   const typename ShapeSimplePolygon::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_count_overlaps<ShapeSimplePolygon>(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_count_overlaps<ShapeSimplePolygon>(const mcm_implicit_args_t& args,
                                                   const typename ShapeSimplePolygon::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject<ShapeSimplePolygon>(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject<ShapeSimplePolygon>(const mcm_implicit_args_t& args,
                                                   const typename ShapeSimplePolygon::param_type *d_params);
-template cudaError_t gpu_hpmc_insert_depletants_queue<ShapeSimplePolygon>(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_insert_depletants_queue<ShapeSimplePolygon>(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeSimplePolygon::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject_new<ShapeSimplePolygon>(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject_new<ShapeSimplePolygon>(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeSimplePolygon::param_type *d_params);
 
 }; // end namespace detail
 
-} // end namespace hpmc
+} // end namespace mcm

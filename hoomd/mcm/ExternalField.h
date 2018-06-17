@@ -20,7 +20,7 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 class ExternalField : public Compute
     {
@@ -53,7 +53,7 @@ class ExternalField : public Compute
 //! Compute that accepts or rejects moves accoding to some external field
 /*! **Overview** <br>
 
-    \ingroup hpmc_computes
+    \ingroup mcm_computes
 */
 template< class Shape >
 class ExternalFieldMono : public ExternalField
@@ -85,7 +85,7 @@ void export_ExternalFieldInterface(pybind11::module& m, std::string name)
     ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
 
 #endif // end inclusion guard

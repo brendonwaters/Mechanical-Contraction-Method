@@ -22,7 +22,7 @@
 #define DEVICE
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 //! Simple Polygon shape template
@@ -306,6 +306,6 @@ DEVICE inline bool test_overlap<ShapeSimplePolygon,ShapeSimplePolygon>(const vec
                                                quat<OverlapReal>(b.orientation));
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__SHAPE_CONVEX_POLYGON_H__

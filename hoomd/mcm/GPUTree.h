@@ -21,7 +21,7 @@
 
 #include "hoomd/ManagedArray.h"
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -474,6 +474,6 @@ DEVICE inline bool traverseBinaryStack(const GPUTree& a, const GPUTree &b, unsig
 
 }; // end namespace detail
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif // __GPU_TREE_H__

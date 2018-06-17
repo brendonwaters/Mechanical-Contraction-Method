@@ -4,7 +4,7 @@
 #include "hoomd/HOOMDMath.h"
 
 /*! \file HPMCPrecisionSetup.h
-    \brief Setup for hpmc mixed precision
+    \brief Setup for mcm mixed precision
 */
 
 #ifndef __HPMC_PRECISION_SETUP_H__
@@ -18,7 +18,7 @@
 #define DEVICE
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 #ifdef SINGLE_PRECISION
@@ -68,6 +68,6 @@ DEVICE inline OverlapReal4 make_overlapreal4(OverlapReal x, OverlapReal y, Overl
     return result;
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__HPMC_PRECISION_SETUP_H__

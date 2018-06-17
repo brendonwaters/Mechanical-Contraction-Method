@@ -4,7 +4,7 @@
 """ Compute properties of hard particle configurations.
 """
 
-from . import _hpmc
+from . import _mcm
 from . import integrate
 
 from hoomd.analyze import _analyzer
@@ -14,7 +14,7 @@ class sdf(_analyzer):
     R""" Compute the scale distribution function.
 
     Args:
-        mc (:py:mod:`hoomd.hpmc.integrate`): MC integrator.
+        mc (:py:mod:`hoomd.mcm.integrate`): MC integrator.
         filename (str): Output file name.
         xmax (float): Maximum *x* value at the right hand side of the rightmost bin (distance units).
         dx (float): Bin width (distance units).
@@ -69,7 +69,7 @@ class sdf(_analyzer):
 
     Examples::
 
-        mc = hpmc.integrate.sphere(seed=415236)
+        mc = mcm.integrate.sphere(seed=415236)
         analyze.sdf(mc=mc, filename='sdf.dat', xmax=0.02, dx=1e-4, navg=100, period=100)
         analyze.sdf(mc=mc, filename='sdf.dat', xmax=0.002, dx=1e-5, navg=100, period=100)
     """
@@ -82,19 +82,19 @@ class sdf(_analyzer):
         # create the c++ mirror class
         cls = None;
         if isinstance(mc, integrate.sphere):
-            cls = _hpmc.AnalyzerSDFSphere;
+            cls = _mcm.AnalyzerSDFSphere;
         elif isinstance(mc, integrate.convex_polygon):
-            cls = _hpmc.AnalyzerSDFConvexPolygon;
+            cls = _mcm.AnalyzerSDFConvexPolygon;
         elif isinstance(mc, integrate.simple_polygon):
-            cls = _hpmc.AnalyzerSDFSimplePolygon;
+            cls = _mcm.AnalyzerSDFSimplePolygon;
         elif isinstance(mc, integrate.convex_polyhedron):
-            cls = _hpmc.AnalyzerSDFConvexPolyhedron;
+            cls = _mcm.AnalyzerSDFConvexPolyhedron;
         elif isinstance(mc, integrate.convex_spheropolyhedron):
-            cls = _hpmc.AnalyzerSDFSpheropolyhedron;
+            cls = _mcm.AnalyzerSDFSpheropolyhedron;
         elif isinstance(mc, integrate.ellipsoid):
-            cls = _hpmc.AnalyzerSDFEllipsoid;
+            cls = _mcm.AnalyzerSDFEllipsoid;
         elif isinstance(mc, integrate.convex_spheropolygon):
-            cls =_hpmc.AnalyzerSDFSpheropolygon;
+            cls =_mcm.AnalyzerSDFSpheropolygon;
         else:
             hoomd.context.msg.error("analyze.sdf: Unsupported integrator.\n");
             raise runtime_error("Error initializing analyze.sdf");

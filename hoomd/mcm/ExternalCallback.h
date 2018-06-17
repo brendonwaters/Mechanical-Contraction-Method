@@ -19,7 +19,7 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 template< class Shape>
@@ -153,6 +153,6 @@ void export_ExternalCallback(pybind11::module& m, const std::string& name)
     ;
     }
 
-} // namespace hpmc
+} // namespace mcm
 
 #endif // _EXTERNAL_FIELD_LATTICE_H_

@@ -46,14 +46,14 @@
 // uncomment for parallel overlap checks
 //#define LEAVES_AGAINST_TREE_TRAVERSAL
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 
 //! Data structure for general polytopes
-/*! \ingroup hpmc_data_structs */
+/*! \ingroup mcm_data_structs */
 
 struct poly3d_data : param_base
     {
@@ -845,7 +845,7 @@ DEVICE inline bool test_overlap(const vec3<Scalar>& r_ab,
         for (unsigned int cur_leaf_a = offset; cur_leaf_a < tree_a.getNumLeaves(); cur_leaf_a += stride)
             {
             unsigned int cur_node_a = tree_a.getLeafNode(cur_leaf_a);
-            hpmc::detail::OBB obb_a = tree_a.getOBB(cur_node_a);
+            mcm::detail::OBB obb_a = tree_a.getOBB(cur_node_a);
             // rotate and translate a's obb into b's body frame
             vec3<OverlapReal> dr_rot(rotate(conj(b.orientation),-r_ab));
             obb_a.affineTransform(conj(b.orientation)*a.orientation, dr_rot);
@@ -863,7 +863,7 @@ DEVICE inline bool test_overlap(const vec3<Scalar>& r_ab,
         for (unsigned int cur_leaf_b = offset; cur_leaf_b < tree_b.getNumLeaves(); cur_leaf_b += stride)
             {
             unsigned int cur_node_b = tree_b.getLeafNode(cur_leaf_b);
-            hpmc::detail::OBB obb_b = tree_b.getOBB(cur_node_b);
+            mcm::detail::OBB obb_b = tree_b.getOBB(cur_node_b);
 
             // rotate and translate b's obb into a's body frame
             vec3<OverlapReal> dr_rot(rotate(conj(a.orientation),r_ab));
@@ -1001,6 +1001,6 @@ DEVICE inline bool test_overlap(const vec3<Scalar>& r_ab,
     return false;
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__SHAPE_POLYHEDRON_H__

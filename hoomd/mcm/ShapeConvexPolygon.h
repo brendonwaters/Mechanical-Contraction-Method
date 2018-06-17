@@ -27,7 +27,7 @@
 #endif
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -35,11 +35,11 @@ namespace detail
 
 //! maximum number of vertices that can be stored (must be a multiple of 8)
 //! Note that vectorized methods using this struct will assume unused coordinates are set to zero.
-/*! \ingroup hpmc_data_structs */
+/*! \ingroup mcm_data_structs */
 const unsigned int MAX_POLY2D_VERTS=64;
 
 //! Data structure for polygon vertices
-/*! \ingroup hpmc_data_structs */
+/*! \ingroup mcm_data_structs */
 struct poly2d_verts : param_base
     {
     //! Default constructor initializes zero values.
@@ -518,6 +518,6 @@ DEVICE inline bool test_overlap<ShapeConvexPolygon,ShapeConvexPolygon>(const vec
     #endif
     }
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif //__SHAPE_CONVEX_POLYGON_H__

@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -28,10 +28,10 @@ namespace detail
     \param cli Cell list indexer
     \param cadji Cell adjacency indexer
 
-    gpu_hpmc_excell_kernel executes one thread per cell. It gathers the particle indices from all neighboring cells
+    gpu_mcm_excell_kernel executes one thread per cell. It gathers the particle indices from all neighboring cells
     into the output expanded cell.
 */
-__global__ void gpu_hpmc_excell_kernel(unsigned int *d_excell_idx,
+__global__ void gpu_mcm_excell_kernel(unsigned int *d_excell_idx,
                                        unsigned int *d_excell_size,
                                        const Index2D excli,
                                        const unsigned int *d_cell_idx,
@@ -77,8 +77,8 @@ __global__ void gpu_hpmc_excell_kernel(unsigned int *d_excell_idx,
     d_excell_size[my_cell] = my_cell_size;
     }
 
-//! Kernel driver for gpu_hpmc_excell_kernel()
-cudaError_t gpu_hpmc_excell(unsigned int *d_excell_idx,
+//! Kernel driver for gpu_mcm_excell_kernel()
+cudaError_t gpu_mcm_excell(unsigned int *d_excell_idx,
                             unsigned int *d_excell_size,
                             const Index2D& excli,
                             const unsigned int *d_cell_idx,
@@ -101,7 +101,7 @@ cudaError_t gpu_hpmc_excell(unsigned int *d_excell_idx,
     if (max_block_size == -1)
         {
         cudaFuncAttributes attr;
-        cudaFuncGetAttributes(&attr, gpu_hpmc_excell_kernel);
+        cudaFuncGetAttributes(&attr, gpu_mcm_excell_kernel);
         max_block_size = attr.maxThreadsPerBlock;
         sm = attr.binaryVersion;
         }
@@ -124,7 +124,7 @@ cudaError_t gpu_hpmc_excell(unsigned int *d_excell_idx,
     if (error != cudaSuccess)
         return error;
 
-    gpu_hpmc_excell_kernel<<<grid, threads>>>(d_excell_idx,
+    gpu_mcm_excell_kernel<<<grid, threads>>>(d_excell_idx,
                                               d_excell_size,
                                               excli,
                                               d_cell_idx,
@@ -147,9 +147,9 @@ cudaError_t gpu_hpmc_excell(unsigned int *d_excell_idx,
 
     Shift all the particles by a given vector.
 
-    \ingroup hpmc_kernels
+    \ingroup mcm_kernels
 */
-__global__ void gpu_hpmc_shift_kernel(Scalar4 *d_postype,
+__global__ void gpu_mcm_shift_kernel(Scalar4 *d_postype,
                                       int3 *d_image,
                                       const unsigned int N,
                                       const BoxDim box,
@@ -178,8 +178,8 @@ __global__ void gpu_hpmc_shift_kernel(Scalar4 *d_postype,
     d_image[my_pidx] = image;
     }
 
-//! Kernel driver for gpu_hpmc_shift_kernel()
-cudaError_t gpu_hpmc_shift(Scalar4 *d_postype,
+//! Kernel driver for gpu_mcm_shift_kernel()
+cudaError_t gpu_mcm_shift(Scalar4 *d_postype,
                            int3 *d_image,
                            const unsigned int N,
                            const BoxDim& box,
@@ -193,7 +193,7 @@ cudaError_t gpu_hpmc_shift(Scalar4 *d_postype,
     dim3 threads_shift(block_size, 1, 1);
     dim3 grid_shift(N / block_size + 1, 1, 1);
 
-    gpu_hpmc_shift_kernel<<<grid_shift, threads_shift>>>(d_postype,
+    gpu_mcm_shift_kernel<<<grid_shift, threads_shift>>>(d_postype,
                                                          d_image,
                                                          N,
                                                          box,
@@ -207,4 +207,4 @@ cudaError_t gpu_hpmc_shift(Scalar4 *d_postype,
 
 }; // end namespace detail
 
-} // end namespace hpmc
+} // end namespace mcm

@@ -8,26 +8,26 @@
 
 #include "ShapeEllipsoid.h"
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 
 //! HPMC kernels for ShapeEllipsoid
-template cudaError_t gpu_hpmc_free_volume<ShapeEllipsoid>(const hpmc_free_volume_args_t &args,
+template cudaError_t gpu_mcm_free_volume<ShapeEllipsoid>(const mcm_free_volume_args_t &args,
                                                        const typename ShapeEllipsoid::param_type *d_params);
-template cudaError_t gpu_hpmc_update<ShapeEllipsoid>(const hpmc_args_t& args,
+template cudaError_t gpu_mcm_update<ShapeEllipsoid>(const mcm_args_t& args,
                                                   const typename ShapeEllipsoid::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_count_overlaps<ShapeEllipsoid>(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_count_overlaps<ShapeEllipsoid>(const mcm_implicit_args_t& args,
                                                   const typename ShapeEllipsoid::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject<ShapeEllipsoid>(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject<ShapeEllipsoid>(const mcm_implicit_args_t& args,
                                                   const typename ShapeEllipsoid::param_type *d_params);
-template cudaError_t gpu_hpmc_insert_depletants_queue<ShapeEllipsoid>(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_insert_depletants_queue<ShapeEllipsoid>(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeEllipsoid::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject_new<ShapeEllipsoid>(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject_new<ShapeEllipsoid>(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeEllipsoid::param_type *d_params);
 
 }; // end namespace detail
 
-} // end namespace hpmc
+} // end namespace mcm

@@ -14,7 +14,7 @@ using namespace std;
     \brief Definition of common methods for HPMC integrators
 */
 
-namespace hpmc
+namespace mcm
 {
 
 IntegratorHPMC::IntegratorHPMC(std::shared_ptr<SystemDefinition> sysdef,
@@ -35,7 +35,7 @@ IntegratorHPMC::IntegratorHPMC(std::shared_ptr<SystemDefinition> sysdef,
             bcast(m_seed, 0, this->m_exec_conf->getMPICommunicator());
     #endif
 
-    GPUArray<hpmc_counters_t> counters(1, this->m_exec_conf);
+    GPUArray<mcm_counters_t> counters(1, this->m_exec_conf);
     m_count_total.swap(counters);
 
     GPUVector<Scalar> d(this->m_pdata->getNTypes(), this->m_exec_conf);
@@ -95,15 +95,15 @@ void IntegratorHPMC::slotNumTypesChange()
     }
 
 /*! IntegratorHPMC provides:
-    - hpmc_sweep (Number of sweeps completed)
-    - hpmc_translate_acceptance (Ratio of translation moves accepted in the last step)
-    - hpmc_rotate_acceptance (Ratio of rotation moves accepted in the last step)
-    - hpmc_d (maximum move displacement)
-    - hpmc_a (maximum rotation move)
-    - hpmc_d_<typename> (maximum move displacement by type)
-    - hpmc_a_<typename> (maximum rotation move by type)
-    - hpmc_move_ratio (ratio of translation moves to rotate moves)
-    - hpmc_overlap_count (count of the number of particle-particle overlaps)
+    - mcm_sweep (Number of sweeps completed)
+    - mcm_translate_acceptance (Ratio of translation moves accepted in the last step)
+    - mcm_rotate_acceptance (Ratio of rotation moves accepted in the last step)
+    - mcm_d (maximum move displacement)
+    - mcm_a (maximum rotation move)
+    - mcm_d_<typename> (maximum move displacement by type)
+    - mcm_a_<typename> (maximum rotation move by type)
+    - mcm_move_ratio (ratio of translation moves to rotate moves)
+    - mcm_overlap_count (count of the number of particle-particle overlaps)
 
     \returns a list of provided quantities
 */
@@ -112,21 +112,21 @@ std::vector< std::string > IntegratorHPMC::getProvidedLogQuantities()
     // start with the integrator provided quantities
     std::vector< std::string > result = Integrator::getProvidedLogQuantities();
     // then add ours
-    result.push_back("hpmc_sweep");
-    result.push_back("hpmc_translate_acceptance");
-    result.push_back("hpmc_rotate_acceptance");
-    result.push_back("hpmc_d");
-    result.push_back("hpmc_a");
-    result.push_back("hpmc_move_ratio");
-    result.push_back("hpmc_overlap_count");
+    result.push_back("mcm_sweep");
+    result.push_back("mcm_translate_acceptance");
+    result.push_back("mcm_rotate_acceptance");
+    result.push_back("mcm_d");
+    result.push_back("mcm_a");
+    result.push_back("mcm_move_ratio");
+    result.push_back("mcm_overlap_count");
     for (unsigned int typ=0; typ<m_pdata->getNTypes();typ++)
       {
       ostringstream tmp_str0;
-      tmp_str0<<"hpmc_d_"<<m_pdata->getNameByType(typ);
+      tmp_str0<<"mcm_d_"<<m_pdata->getNameByType(typ);
       result.push_back(tmp_str0.str());
 
       ostringstream tmp_str1;
-      tmp_str1<<"hpmc_a_"<<m_pdata->getNameByType(typ);
+      tmp_str1<<"mcm_a_"<<m_pdata->getNameByType(typ);
       result.push_back(tmp_str1.str());
       }
     return result;
@@ -138,36 +138,36 @@ std::vector< std::string > IntegratorHPMC::getProvidedLogQuantities()
 */
 Scalar IntegratorHPMC::getLogValue(const std::string& quantity, unsigned int timestep)
     {
-    hpmc_counters_t counters = getCounters(2);
+    mcm_counters_t counters = getCounters(2);
 
-    if (quantity == "hpmc_sweep")
+    if (quantity == "mcm_sweep")
         {
-        hpmc_counters_t counters_total = getCounters(0);
+        mcm_counters_t counters_total = getCounters(0);
         return double(counters_total.getNMoves()) / double(m_pdata->getNGlobal());
         }
-    else if (quantity == "hpmc_translate_acceptance")
+    else if (quantity == "mcm_translate_acceptance")
         {
         return counters.getTranslateAcceptance();
         }
-    else if (quantity == "hpmc_rotate_acceptance")
+    else if (quantity == "mcm_rotate_acceptance")
         {
         return counters.getRotateAcceptance();
         }
-    else if (quantity == "hpmc_d")
+    else if (quantity == "mcm_d")
         {
         ArrayHandle<Scalar> h_d(m_d, access_location::host, access_mode::read);
         return h_d.data[0];
         }
-    else if (quantity == "hpmc_a")
+    else if (quantity == "mcm_a")
         {
         ArrayHandle<Scalar> h_a(m_a, access_location::host, access_mode::read);
         return h_a.data[0];
         }
-    else if (quantity == "hpmc_move_ratio")
+    else if (quantity == "mcm_move_ratio")
         {
         return getMoveRatio();
         }
-    else if (quantity == "hpmc_overlap_count")
+    else if (quantity == "mcm_overlap_count")
         {
         return countOverlaps(timestep, false);
         }
@@ -177,7 +177,7 @@ Scalar IntegratorHPMC::getLogValue(const std::string& quantity, unsigned int tim
         for (unsigned int typ=0; typ<m_pdata->getNTypes();typ++)
           {
           ostringstream tmp_str0;
-          tmp_str0<<"hpmc_d_"<<m_pdata->getNameByType(typ);
+          tmp_str0<<"mcm_d_"<<m_pdata->getNameByType(typ);
           if (quantity==tmp_str0.str())
             {
             ArrayHandle<Scalar> h_d(m_d, access_location::host, access_mode::read);
@@ -185,7 +185,7 @@ Scalar IntegratorHPMC::getLogValue(const std::string& quantity, unsigned int tim
             }
 
           ostringstream tmp_str1;
-          tmp_str1<<"hpmc_a_"<<m_pdata->getNameByType(typ);
+          tmp_str1<<"mcm_a_"<<m_pdata->getNameByType(typ);
           if (quantity==tmp_str1.str())
             {
             ArrayHandle<Scalar> h_a(m_a, access_location::host, access_mode::read);
@@ -283,10 +283,10 @@ bool IntegratorHPMC::attemptBoxResize(unsigned int timestep, const BoxDim& new_b
     provides the current value. The parameter *mode* controls whether the returned counts are absolute, relative
     to the start of the run, or relative to the start of the last executed step.
 */
-hpmc_counters_t IntegratorHPMC::getCounters(unsigned int mode)
+mcm_counters_t IntegratorHPMC::getCounters(unsigned int mode)
     {
-    ArrayHandle<hpmc_counters_t> h_counters(m_count_total, access_location::host, access_mode::read);
-    hpmc_counters_t result;
+    ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::read);
+    mcm_counters_t result;
 
     if (mode == 0)
         result = h_counters.data[0];
@@ -333,16 +333,16 @@ void export_IntegratorHPMC(py::module& m)
     .def("disablePatchEnergyLogOnly", &IntegratorHPMC::disablePatchEnergyLogOnly)
     ;
 
-   py::class_< hpmc_counters_t >(m, "hpmc_counters_t")
-    .def_readwrite("translate_accept_count", &hpmc_counters_t::translate_accept_count)
-    .def_readwrite("translate_reject_count", &hpmc_counters_t::translate_reject_count)
-    .def_readwrite("rotate_accept_count", &hpmc_counters_t::rotate_accept_count)
-    .def_readwrite("rotate_reject_count", &hpmc_counters_t::rotate_reject_count)
-    .def_readwrite("overlap_checks", &hpmc_counters_t::overlap_checks)
-    .def("getTranslateAcceptance", &hpmc_counters_t::getTranslateAcceptance)
-    .def("getRotateAcceptance", &hpmc_counters_t::getRotateAcceptance)
-    .def("getNMoves", &hpmc_counters_t::getNMoves)
+   py::class_< mcm_counters_t >(m, "mcm_counters_t")
+    .def_readwrite("translate_accept_count", &mcm_counters_t::translate_accept_count)
+    .def_readwrite("translate_reject_count", &mcm_counters_t::translate_reject_count)
+    .def_readwrite("rotate_accept_count", &mcm_counters_t::rotate_accept_count)
+    .def_readwrite("rotate_reject_count", &mcm_counters_t::rotate_reject_count)
+    .def_readwrite("overlap_checks", &mcm_counters_t::overlap_checks)
+    .def("getTranslateAcceptance", &mcm_counters_t::getTranslateAcceptance)
+    .def("getRotateAcceptance", &mcm_counters_t::getRotateAcceptance)
+    .def("getNMoves", &mcm_counters_t::getNMoves)
     ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm

@@ -8,26 +8,26 @@
 
 #include "ShapeSpheropolyhedron.h"
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
 {
 
 //! HPMC kernels for ShapeSpheropolyhedron
-template cudaError_t gpu_hpmc_free_volume<ShapeSpheropolyhedron >(const hpmc_free_volume_args_t &args,
+template cudaError_t gpu_mcm_free_volume<ShapeSpheropolyhedron >(const mcm_free_volume_args_t &args,
                                                        const typename ShapeSpheropolyhedron ::param_type *d_params);
-template cudaError_t gpu_hpmc_update<ShapeSpheropolyhedron >(const hpmc_args_t& args,
+template cudaError_t gpu_mcm_update<ShapeSpheropolyhedron >(const mcm_args_t& args,
                                                   const typename ShapeSpheropolyhedron ::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_count_overlaps<ShapeSpheropolyhedron >(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_count_overlaps<ShapeSpheropolyhedron >(const mcm_implicit_args_t& args,
                                                   const typename ShapeSpheropolyhedron ::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject<ShapeSpheropolyhedron >(const hpmc_implicit_args_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject<ShapeSpheropolyhedron >(const mcm_implicit_args_t& args,
                                                   const typename ShapeSpheropolyhedron ::param_type *d_params);
-template cudaError_t gpu_hpmc_insert_depletants_queue<ShapeSpheropolyhedron >(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_insert_depletants_queue<ShapeSpheropolyhedron >(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeSpheropolyhedron ::param_type *d_params);
-template cudaError_t gpu_hpmc_implicit_accept_reject_new<ShapeSpheropolyhedron >(const hpmc_implicit_args_new_t& args,
+template cudaError_t gpu_mcm_implicit_accept_reject_new<ShapeSpheropolyhedron >(const mcm_implicit_args_new_t& args,
                                                   const typename ShapeSpheropolyhedron ::param_type *d_params);
 
 }; // end namespace detail
 
-} // end namespace hpmc
+} // end namespace mcm

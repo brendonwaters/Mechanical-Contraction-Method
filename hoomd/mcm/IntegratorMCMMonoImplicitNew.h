@@ -26,7 +26,7 @@
 #include <thread>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 //! Template class for HPMC update with implicit depletants
@@ -35,7 +35,7 @@ namespace hpmc
 
     The penetrable depletants model is simulated.
 
-    \ingroup hpmc_integrators
+    \ingroup mcm_integrators
 */
 template< class Shape >
 class IntegratorHPMCMonoImplicitNew : public IntegratorHPMCMono<Shape>
@@ -76,16 +76,16 @@ class IntegratorHPMCMonoImplicitNew : public IntegratorHPMCMono<Shape>
         virtual void resetStats()
             {
             IntegratorHPMCMono<Shape>::resetStats();
-            ArrayHandle<hpmc_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
+            ArrayHandle<mcm_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
             m_implicit_count_run_start = h_counters.data[0];
             }
 
-        //! Print statistics about the hpmc steps taken
+        //! Print statistics about the mcm steps taken
         virtual void printStats()
             {
             IntegratorHPMCMono<Shape>::printStats();
 
-            hpmc_implicit_counters_t result = getImplicitCounters(1);
+            mcm_implicit_counters_t result = getImplicitCounters(1);
 
             double cur_time = double(this->m_clock.getTime()) / Scalar(1e9);
 
@@ -95,7 +95,7 @@ class IntegratorHPMCMonoImplicitNew : public IntegratorHPMCMono<Shape>
             }
 
         //! Get the current counter values
-        hpmc_implicit_counters_t getImplicitCounters(unsigned int mode=0);
+        mcm_implicit_counters_t getImplicitCounters(unsigned int mode=0);
 
         /* \returns a list of provided quantities
         */
@@ -105,8 +105,8 @@ class IntegratorHPMCMonoImplicitNew : public IntegratorHPMCMono<Shape>
             std::vector< std::string > result = IntegratorHPMCMono<Shape>::getProvidedLogQuantities();
 
             // then add ours
-            result.push_back("hpmc_fugacity");
-            result.push_back("hpmc_insert_count");
+            result.push_back("mcm_fugacity");
+            result.push_back("mcm_insert_count");
 
             return result;
             }
@@ -130,9 +130,9 @@ class IntegratorHPMCMonoImplicitNew : public IntegratorHPMCMono<Shape>
         Scalar m_n_R;                                            //!< Average depletant number density in free volume
         unsigned int m_type;                                     //!< Type of depletant particle to generate
 
-        GPUArray<hpmc_implicit_counters_t> m_implicit_count;     //!< Counter of active cell cluster moves
-        hpmc_implicit_counters_t m_implicit_count_run_start;     //!< Counter of active cell cluster moves at run start
-        hpmc_implicit_counters_t m_implicit_count_step_start;    //!< Counter of active cell cluster moves at run start
+        GPUArray<mcm_implicit_counters_t> m_implicit_count;     //!< Counter of active cell cluster moves
+        mcm_implicit_counters_t m_implicit_count_run_start;     //!< Counter of active cell cluster moves at run start
+        mcm_implicit_counters_t m_implicit_count_step_start;    //!< Counter of active cell cluster moves at run start
 
         std::vector<std::poisson_distribution<unsigned int> > m_poisson;   //!< Poisson distribution
         std::vector<Scalar> m_lambda;                            //!< Poisson distribution parameters per type
@@ -174,7 +174,7 @@ IntegratorHPMCMonoImplicitNew< Shape >::IntegratorHPMCMonoImplicitNew(std::share
     {
     this->m_exec_conf->msg->notice(5) << "Constructing IntegratorHPMCImplicit" << std::endl;
 
-    GPUArray<hpmc_implicit_counters_t> implicit_count(1,this->m_exec_conf);
+    GPUArray<mcm_implicit_counters_t> implicit_count(1,this->m_exec_conf);
     m_implicit_count.swap(implicit_count);
 
     GPUArray<Scalar> d_min(this->m_pdata->getNTypes(), this->m_exec_conf);
@@ -313,11 +313,11 @@ void IntegratorHPMCMonoImplicitNew< Shape >::update(unsigned int timestep)
         }
 
     // get needed vars
-    ArrayHandle<hpmc_counters_t> h_counters(this->m_count_total, access_location::host, access_mode::readwrite);
-    hpmc_counters_t& counters = h_counters.data[0];
+    ArrayHandle<mcm_counters_t> h_counters(this->m_count_total, access_location::host, access_mode::readwrite);
+    mcm_counters_t& counters = h_counters.data[0];
 
-    ArrayHandle<hpmc_implicit_counters_t> h_implicit_counters(m_implicit_count, access_location::host, access_mode::readwrite);
-    hpmc_implicit_counters_t& implicit_counters = h_implicit_counters.data[0];
+    ArrayHandle<mcm_implicit_counters_t> h_implicit_counters(m_implicit_count, access_location::host, access_mode::readwrite);
+    mcm_implicit_counters_t& implicit_counters = h_implicit_counters.data[0];
 
     m_implicit_count_step_start = implicit_counters;
 
@@ -1100,10 +1100,10 @@ inline void IntegratorHPMCMonoImplicitNew<Shape>::generateDepletant(RNG& rng, ve
     to the start of the run, or relative to the start of the last executed step.
 */
 template<class Shape>
-hpmc_implicit_counters_t IntegratorHPMCMonoImplicitNew<Shape>::getImplicitCounters(unsigned int mode)
+mcm_implicit_counters_t IntegratorHPMCMonoImplicitNew<Shape>::getImplicitCounters(unsigned int mode)
     {
-    ArrayHandle<hpmc_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
-    hpmc_implicit_counters_t result;
+    ArrayHandle<mcm_implicit_counters_t> h_counters(m_implicit_count, access_location::host, access_mode::read);
+    mcm_implicit_counters_t result;
 
     if (mode == 0)
         result = h_counters.data[0];
@@ -1130,15 +1130,15 @@ hpmc_implicit_counters_t IntegratorHPMCMonoImplicitNew<Shape>::getImplicitCounte
 template<class Shape>
 Scalar IntegratorHPMCMonoImplicitNew<Shape>::getLogValue(const std::string& quantity, unsigned int timestep)
     {
-    if (quantity == "hpmc_fugacity")
+    if (quantity == "mcm_fugacity")
         {
         return (Scalar) m_n_R;
         }
 
-    hpmc_counters_t counters = IntegratorHPMC::getCounters(2);
-    hpmc_implicit_counters_t implicit_counters = getImplicitCounters(2);
+    mcm_counters_t counters = IntegratorHPMC::getCounters(2);
+    mcm_implicit_counters_t implicit_counters = getImplicitCounters(2);
 
-    if (quantity == "hpmc_insert_count")
+    if (quantity == "mcm_insert_count")
         {
         // return number of depletant insertions per colloid
         if (counters.getNMoves() > 0)
@@ -1164,7 +1164,7 @@ bool IntegratorHPMCMonoImplicitNew<Shape>::attemptBoxResize(unsigned int timeste
     throw std::runtime_error("Error during implicit depletant integration\n");
     }
 
-//! Export this hpmc integrator to python
+//! Export this mcm integrator to python
 /*! \param name Name of the class in the exported python module
     \tparam Shape An instantiation of IntegratorHPMCMono<Shape> will be exported
 */
@@ -1180,12 +1180,12 @@ template < class Shape > void export_IntegratorHPMCMonoImplicitNew(pybind11::mod
     }
 
 //! Export the counters for depletants
-//inline void export_hpmc_implicit_counters(pybind11::module& m)
+//inline void export_mcm_implicit_counters(pybind11::module& m)
 //    {
-//    pybind11::class_< hpmc_implicit_counters_t >(m, "hpmc_implicit_counters_t")
-//    .def_readwrite("insert_count", &hpmc_implicit_counters_t::insert_count)
+//    pybind11::class_< mcm_implicit_counters_t >(m, "mcm_implicit_counters_t")
+//    .def_readwrite("insert_count", &mcm_implicit_counters_t::insert_count)
 //    ;
 //    }
-} // end namespace hpmc
+} // end namespace mcm
 
 #endif // __HPMC_MONO_IMPLICIT_NEW_H__

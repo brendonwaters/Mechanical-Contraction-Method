@@ -36,11 +36,11 @@
 
 
 namespace py = pybind11;
-using namespace hpmc;
+using namespace mcm;
 
-using namespace hpmc::detail;
+using namespace mcm::detail;
 
-namespace hpmc
+namespace mcm
 {
 
 //! Export the base HPMCMono integrators

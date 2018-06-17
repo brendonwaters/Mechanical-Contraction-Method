@@ -5,14 +5,14 @@
 """
 
 import hoomd
-import hoomd.hpmc
-from hoomd.hpmc import _hpmc
+import hoomd.mcm
+from hoomd.mcm import _mcm
 import numpy
 
 class param_dict(dict):
     R""" Manage shape parameters.
 
-    The parameters for all hpmc integrator shapes (:py:mod:`hoomd.hpmc.integrate`) are specified using this class.
+    The parameters for all mcm integrator shapes (:py:mod:`hoomd.mcm.integrate`) are specified using this class.
     Parameters are specified per particle type. Every HPMC integrator has a member shape_param that can read and
     set parameters of the shapes.
 
@@ -21,7 +21,7 @@ class param_dict(dict):
 
     Example::
 
-        mc = hpmc.integrate.sphere();
+        mc = mcm.integrate.sphere();
         mc.shape_param['A'].set(diameter=2.0)
         mc.shape_param['B'].set(diameter=0.1)
         dA = mc.shape_param['A'].diameter
@@ -49,10 +49,10 @@ class param_dict(dict):
 
         Args:
             type (str): Particle type (string) or list of types
-            params: Named parameters (see specific integrator for required parameters - :py:mod:`hoomd.hpmc.integrate`)
+            params: Named parameters (see specific integrator for required parameters - :py:mod:`hoomd.mcm.integrate`)
 
         Calling set() results in one or more parameters being set for a shape. Types are identified
-        by name, and parameters are also added by name. Which parameters you need to specify depends on the hpmc
+        by name, and parameters are also added by name. Which parameters you need to specify depends on the mcm
         integrator you are setting these coefficients for, see the corresponding documentation.
 
         All possible particle types types defined in the simulation box must be specified before executing :py:func:`hoomd.run()`.
@@ -117,12 +117,12 @@ class _param(object):
 
         self.mc.cpp_integrator.setParam(self.typid, self.make_param(**params));
 
-class sphere_params(_hpmc.sphere_param_proxy, _param):
+class sphere_params(_mcm.sphere_param_proxy, _param):
     def __init__(self, mc, index):
-        _hpmc.sphere_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.sphere_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self._keys += ['diameter','orientable'];
-        self.make_fn = _hpmc.make_sph_params;
+        self.make_fn = _mcm.make_sph_params;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -131,12 +131,12 @@ class sphere_params(_hpmc.sphere_param_proxy, _param):
     def make_param(self, diameter, ignore_statistics=False,orientable=False):
         return self.make_fn(float(diameter)/2.0,ignore_statistics,orientable);
 
-class convex_polygon_params(_hpmc.convex_polygon_param_proxy, _param):
+class convex_polygon_params(_mcm.convex_polygon_param_proxy, _param):
     def __init__(self, mc, index):
-        _hpmc.convex_polygon_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.convex_polygon_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self._keys += ['vertices'];
-        self.make_fn = _hpmc.make_poly2d_verts;
+        self.make_fn = _mcm.make_poly2d_verts;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -148,12 +148,12 @@ class convex_polygon_params(_hpmc.convex_polygon_param_proxy, _param):
                             float(0.0),
                             ignore_statistics);
 
-class convex_spheropolygon_params(_hpmc.convex_spheropolygon_param_proxy, _param):
+class convex_spheropolygon_params(_mcm.convex_spheropolygon_param_proxy, _param):
     def __init__(self, mc, index):
-        _hpmc.convex_spheropolygon_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.convex_spheropolygon_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self._keys += ['vertices', 'sweep_radius'];
-        self.make_fn = _hpmc.make_poly2d_verts;
+        self.make_fn = _mcm.make_poly2d_verts;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -165,12 +165,12 @@ class convex_spheropolygon_params(_hpmc.convex_spheropolygon_param_proxy, _param
                             float(sweep_radius),
                             ignore_statistics);
 
-class simple_polygon_params(_hpmc.simple_polygon_param_proxy, _param):
+class simple_polygon_params(_mcm.simple_polygon_param_proxy, _param):
     def __init__(self, mc, index):
-        _hpmc.simple_polygon_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.simple_polygon_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self._keys += ['vertices'];
-        self.make_fn = _hpmc.make_poly2d_verts;
+        self.make_fn = _mcm.make_poly2d_verts;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -182,12 +182,12 @@ class simple_polygon_params(_hpmc.simple_polygon_param_proxy, _param):
                             float(0),
                             ignore_statistics);
 
-class convex_polyhedron_params(_hpmc.convex_polyhedron_param_proxy,_param):
+class convex_polyhedron_params(_mcm.convex_polyhedron_param_proxy,_param):
     def __init__(self, mc, index):
-        _hpmc.convex_polyhedron_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.convex_polyhedron_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self._keys += ['vertices'];
-        self.make_fn = _hpmc.make_poly3d_verts
+        self.make_fn = _mcm.make_poly3d_verts
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -200,12 +200,12 @@ class convex_polyhedron_params(_hpmc.convex_polyhedron_param_proxy,_param):
                             ignore_statistics,
                             hoomd.context.current.system_definition.getParticleData().getExecConf());
 
-class convex_spheropolyhedron_params(_hpmc.convex_spheropolyhedron_param_proxy,_param):
+class convex_spheropolyhedron_params(_mcm.convex_spheropolyhedron_param_proxy,_param):
     def __init__(self, mc, index):
-        _hpmc.convex_spheropolyhedron_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.convex_spheropolyhedron_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self._keys += ['vertices', 'sweep_radius'];
-        self.make_fn = _hpmc.make_poly3d_verts;
+        self.make_fn = _mcm.make_poly3d_verts;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -218,12 +218,12 @@ class convex_spheropolyhedron_params(_hpmc.convex_spheropolyhedron_param_proxy,_
                             ignore_statistics,
                             hoomd.context.current.system_definition.getParticleData().getExecConf());
 
-class polyhedron_params(_hpmc.polyhedron_param_proxy, _param):
+class polyhedron_params(_mcm.polyhedron_param_proxy, _param):
     def __init__(self, mc, index):
-        _hpmc.polyhedron_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.polyhedron_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self._keys += ['vertices', 'faces','overlap', 'colors', 'sweep_radius', 'capacity','origin','hull_only'];
-        self.make_fn = _hpmc.make_poly3d_data;
+        self.make_fn = _mcm.make_poly3d_data;
         self.__dict__.update(dict(colors=None));
 
     def __str__(self):
@@ -270,12 +270,12 @@ class polyhedron_params(_hpmc.polyhedron_param_proxy, _param):
                             int(hull_only),
                             hoomd.context.current.system_definition.getParticleData().getExecConf());
 
-class faceted_sphere_params(_hpmc.faceted_sphere_param_proxy, _param):
+class faceted_sphere_params(_mcm.faceted_sphere_param_proxy, _param):
     def __init__(self, mc, index):
-        _hpmc.faceted_sphere_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.faceted_sphere_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self._keys += ['vertices', 'normals', 'offsets', 'diameter', 'origin'];
-        self.make_fn = _hpmc.make_faceted_sphere;
+        self.make_fn = _mcm.make_faceted_sphere;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -291,13 +291,13 @@ class faceted_sphere_params(_hpmc.faceted_sphere_param_proxy, _param):
                             bool(ignore_statistics),
                             hoomd.context.current.system_definition.getParticleData().getExecConf());
 
-class sphinx_params(_hpmc.sphinx3d_param_proxy, _param):
+class sphinx_params(_mcm.sphinx3d_param_proxy, _param):
     def __init__(self, mc, index):
-        _hpmc.sphinx3d_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.sphinx3d_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self.__dict__.update(dict(colors=None));
         self._keys += ['diameters', 'centers', 'diameter', 'colors'];
-        self.make_fn = _hpmc.make_sphinx3d_params;
+        self.make_fn = _mcm.make_sphinx3d_params;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -310,12 +310,12 @@ class sphinx_params(_hpmc.sphinx3d_param_proxy, _param):
                             self.ensure_list(centers),
                             ignore_statistics);
 
-class ellipsoid_params(_hpmc.ell_param_proxy, _param):
+class ellipsoid_params(_mcm.ell_param_proxy, _param):
     def __init__(self, mc, index):
-        _hpmc.ell_param_proxy.__init__(self, mc.cpp_integrator, index);
+        _mcm.ell_param_proxy.__init__(self, mc.cpp_integrator, index);
         _param.__init__(self, mc, index);
         self._keys += ['a', 'b', 'c'];
-        self.make_fn = _hpmc.make_ell_params;
+        self.make_fn = _mcm.make_ell_params;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -327,13 +327,13 @@ class ellipsoid_params(_hpmc.ell_param_proxy, _param):
                             float(c),
                             ignore_statistics);
 
-class sphere_union_params(_hpmc.sphere_union_param_proxy,_param):
+class sphere_union_params(_mcm.sphere_union_param_proxy,_param):
     def __init__(self, mc, index):
-        _hpmc.sphere_union_param_proxy.__init__(self, mc.cpp_integrator, index); # we will add this base class later because of the size template
+        _mcm.sphere_union_param_proxy.__init__(self, mc.cpp_integrator, index); # we will add this base class later because of the size template
         _param.__init__(self, mc, index);
         self.__dict__.update(dict(colors=None));
         self._keys += ['centers', 'orientations', 'diameter', 'colors','overlap'];
-        self.make_fn = _hpmc.make_sphere_union_params;
+        self.make_fn = _mcm.make_sphere_union_params;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -360,7 +360,7 @@ class sphere_union_params(_hpmc.sphere_union_param_proxy,_param):
         if overlap is None:
             overlap = [1 for c in centers]
 
-        members = [_hpmc.make_sph_params(float(d)/2.0, False, False) for d in diameters];
+        members = [_mcm.make_sph_params(float(d)/2.0, False, False) for d in diameters];
         N = len(diameters)
         if len(centers) != N:
             raise RuntimeError("Lists of constituent particle parameters and centers must be equal length.")
@@ -373,13 +373,13 @@ class sphere_union_params(_hpmc.sphere_union_param_proxy,_param):
                             capacity,
                             hoomd.context.current.system_definition.getParticleData().getExecConf());
 
-class convex_polyhedron_union_params(_hpmc.convex_polyhedron_union_param_proxy,_param):
+class convex_polyhedron_union_params(_mcm.convex_polyhedron_union_param_proxy,_param):
     def __init__(self, mc, index):
-        _hpmc.convex_polyhedron_union_param_proxy.__init__(self, mc.cpp_integrator, index); # we will add this base class later because of the size templated
+        _mcm.convex_polyhedron_union_param_proxy.__init__(self, mc.cpp_integrator, index); # we will add this base class later because of the size templated
         _param.__init__(self, mc, index);
         self.__dict__.update(dict(colors=None));
         self._keys += ['centers', 'orientations', 'vertices', 'colors','overlap'];
-        self.make_fn = _hpmc.make_convex_polyhedron_union_params;
+        self.make_fn = _mcm.make_convex_polyhedron_union_params;
 
     def __str__(self):
         # should we put this in the c++ side?
@@ -408,7 +408,7 @@ class convex_polyhedron_union_params(_hpmc.convex_polyhedron_union_param_proxy,_
 
         members = []
         for i, verts in enumerate(vertices):
-            member_fn = _hpmc.make_poly3d_verts
+            member_fn = _mcm.make_poly3d_verts
             members.append(member_fn(self.ensure_list(verts), float(0), ignore_statistics, hoomd.context.current.system_definition.getParticleData().getExecConf()))
 
         N = len(vertices)
