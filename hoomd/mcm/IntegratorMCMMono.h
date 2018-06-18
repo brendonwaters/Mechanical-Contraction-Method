@@ -20,6 +20,7 @@
 #include "hoomd/AABBTree.h"
 #include "GSDMCMSchema.h"
 #include "hoomd/Index1D.h"
+#include "hoomd/VectorMath.h"
 
 #include "hoomd/managed_allocator.h"
 
@@ -107,7 +108,7 @@ class UpdateOrder
 }; // end namespace detail
 
 //! MCM on systems of mono-disperse shapes
-/*! Implement hard particle monte carlo for a single type of shape on the CPU.
+/*! Implement the Mechanical Contraction Method for a single type of shape on the CPU.
 
     TODO: I need better documentation
 
@@ -494,6 +495,8 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
     m_exec_conf->msg->notice(10) << "MCMMono update: " << timestep << std::endl;
     IntegratorMCM::update(timestep);
 
+    const vec3<real> defaultOrientation2D(0,1,0);
+
     // get needed vars
     ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
     mcm_counters_t& counters = h_counters.data[0];
@@ -536,9 +539,11 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         ArrayHandle<Scalar> h_diameter(m_pdata->getDiameters(), access_location::host, access_mode::read);
         ArrayHandle<Scalar> h_charge(m_pdata->getCharges(), access_location::host, access_mode::read);
 
-        //access move sizes
-        ArrayHandle<Scalar> h_d(m_d, access_location::host, access_mode::read);
-        ArrayHandle<Scalar> h_a(m_a, access_location::host, access_mode::read);
+        //Not needed for MCM
+
+        // //access move sizes
+        // ArrayHandle<Scalar> h_d(m_d, access_location::host, access_mode::read);
+        // ArrayHandle<Scalar> h_a(m_a, access_location::host, access_mode::read);
 
         // loop through N particles in a shuffled order
         for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
@@ -559,46 +564,48 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                 }
             #endif
 
-            // make a trial move for i
-            hoomd::detail::Saru rng_i(i, m_seed + m_exec_conf->getRank()*m_nselect + i_nselect, timestep);
-            int typ_i = __scalar_as_int(postype_i.w);
-            Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
-            unsigned int move_type_select = rng_i.u32() & 0xffff;
-            bool move_type_translate = !shape_i.hasOrientation() || (move_type_select < m_move_ratio);
+            //Not Needed for MCM
 
-            Shape shape_old(quat<Scalar>(orientation_i), m_params[typ_i]);
-            vec3<Scalar> pos_old = pos_i;
+            // // make a trial move for i
+            // hoomd::detail::Saru rng_i(i, m_seed + m_exec_conf->getRank()*m_nselect + i_nselect, timestep);
+            // int typ_i = __scalar_as_int(postype_i.w);
+            // Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
+            // unsigned int move_type_select = rng_i.u32() & 0xffff;
+            // bool move_type_translate = !shape_i.hasOrientation() || (move_type_select < m_move_ratio);
 
-            if (move_type_translate)
-                {
-                // skip if no overlap check is required
-                if (h_d.data[typ_i] == 0.0)
-                    {
-                    counters.translate_accept_count++;
-                    continue;
-                    }
+            // Shape shape_old(quat<Scalar>(orientation_i), m_params[typ_i]);
+            // vec3<Scalar> pos_old = pos_i;
 
-                move_translate(pos_i, rng_i, h_d.data[typ_i], ndim);
+            // if (move_type_translate)
+            //     {
+            //     // skip if no overlap check is required
+            //     if (h_d.data[typ_i] == 0.0)
+            //         {
+            //         counters.translate_accept_count++;
+            //         continue;
+            //         }
 
-                #ifdef ENABLE_MPI
-                if (m_comm)
-                    {
-                    // check if particle has moved into the ghost layer, and skip if it is
-                    if (!isActive(vec_to_scalar3(pos_i), box, ghost_fraction))
-                        continue;
-                    }
-                #endif
-                }
-            else
-                {
-                if (h_a.data[typ_i] == 0.0)
-                    {
-                    counters.rotate_accept_count++;
-                    continue;
-                    }
+            //     move_translate(pos_i, rng_i, h_d.data[typ_i], ndim);
 
-                move_rotate(shape_i.orientation, rng_i, h_a.data[typ_i], ndim);
-                }
+            //     #ifdef ENABLE_MPI
+            //     if (m_comm)
+            //         {
+            //         // check if particle has moved into the ghost layer, and skip if it is
+            //         if (!isActive(vec_to_scalar3(pos_i), box, ghost_fraction))
+            //             continue;
+            //         }
+            //     #endif
+            //     }
+            // else
+            //     {
+            //     if (h_a.data[typ_i] == 0.0)
+            //         {
+            //         counters.rotate_accept_count++;
+            //         continue;
+            //         }
+
+            //     move_rotate(shape_i.orientation, rng_i, h_a.data[typ_i], ndim);
+            //     }
 
 
             bool overlap=false;
@@ -679,7 +686,73 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                                     && test_overlap(r_ij, shape_i, shape_j, counters.overlap_err_count))
                                     {
                                     overlap = true;
-                                    break;
+                                    // break;  
+
+                                    if (ndim==2) 
+
+                                        vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
+
+                                        unsigned int type1=m_pdata->getType(i);
+                                        unsigned int type2=m_pdata->getType(j);
+
+                                        if (type1==1 && type2==1) //hardcoded for now, type 0=circles 1=rods, need to generalize
+
+                                            quat<real> or_i(orientation_i);
+                                            quat<real> or_j(orientation_j);
+
+                                            //return vectors along spherocylinder axis
+                                            vec3<real> or_vect_i=rotate(or_i,defaultOrientation2D);
+                                            vec3<real> or_vect_j=rotate(or_j,defaultOrientation2D);
+
+
+                                            //in case particles are paralel
+                                            double tol=1e-6;
+
+                                            double a11=(or_vect1.x-or_vect2.x)+tol;
+                                            double a22=(or_vect1.y-or_vect2.y)+tol;
+
+                                            double b1=pos_j.x-pos_i.x;
+                                            double b2=pos_j.y-pos_i.y;
+
+                                            double s1=b1/a11;
+                                            double s2=b2/a22;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                    //ADD REMOVE_OVERLAPS ROUTINE HERE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                                     }
                                 else if (m_patch && !m_patch_log && dot(r_ij,r_ij) <= rcut*rcut) // If there is no overlap and m_patch is not NULL, calculate energy
                                     {
