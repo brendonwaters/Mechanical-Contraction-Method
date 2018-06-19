@@ -21,6 +21,7 @@
 #include "GSDMCMSchema.h"
 #include "hoomd/Index1D.h"
 #include "hoomd/VectorMath.h"
+#include "UpdaterBoxMC.h"
 
 #include "hoomd/managed_allocator.h"
 
@@ -495,12 +496,29 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
     m_exec_conf->msg->notice(10) << "MCMMono update: " << timestep << std::endl;
     IntegratorMCM::update(timestep);
 
-    const vec3<real> defaultOrientation2D(0,1,0);
+    const vec3<real> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
+
+    double scale_factor=0.999; //factor to scale the box length by at each timestep, hardcoded for now, will add interface later
+
+    int attempt_cutoff=1000; //cutoff number of overlap removal attempts
+    int n_attempts=0;
 
     // get needed vars
     ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
     mcm_counters_t& counters = h_counters.data[0];
-    const BoxDim& box = m_pdata->getBox();
+    BoxDim& box = m_pdata->getBox();
+
+    scalar3& box_L = m_pdata->getL();
+
+    box_L.x=Lx;
+    box_L.y=Ly;
+    box_L.z=Lz;
+
+    Lx*=scale_factor;
+    Ly*=scale_factor;
+    Lz*=scale_factor;
+
+    box.setL(make_scalar3(Lx, Ly, Lz));
     unsigned int ndim = this->m_sysdef->getNDimensions();
 
     #ifdef ENABLE_MPI
@@ -530,9 +548,13 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
     // access interaction matrix
     ArrayHandle<unsigned int> h_overlaps(m_overlaps, access_location::host, access_mode::read);
 
-    // loop over local particles nselect times
-    for (unsigned int i_nselect = 0; i_nselect < m_nselect; i_nselect++)
+    // loop over all particles
+    for (unsigned int i_nselect = 0; i_nselect < m_pdata->getN(); i_nselect++)
         {
+
+        attempts++; //increment attempts counter
+
+
         // access particle data and system box
         ArrayHandle<Scalar4> h_postype(m_pdata->getPositions(), access_location::host, access_mode::readwrite);
         ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::readwrite);
@@ -688,34 +710,42 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                                     overlap = true;
                                     // break;  
 
-                                    if (ndim==2) 
+                                    while (overlap==true && n_attempts < attempt_cutoff)
+                                        {
 
-                                        vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
+                                        if (ndim==2)
+                                            { 
 
-                                        unsigned int type1=m_pdata->getType(i);
-                                        unsigned int type2=m_pdata->getType(j);
+                                            vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
 
-                                        if (type1==1 && type2==1) //hardcoded for now, type 0=circles 1=rods, need to generalize
+                                            unsigned int type1=m_pdata->getType(i);
+                                            unsigned int type2=m_pdata->getType(j);
 
-                                            quat<real> or_i(orientation_i);
-                                            quat<real> or_j(orientation_j);
+                                            if (type1==1 && type2==1) //hardcoded for now, type 0=circles 1=rods, need to generalize
 
-                                            //return vectors along spherocylinder axis
-                                            vec3<real> or_vect_i=rotate(or_i,defaultOrientation2D);
-                                            vec3<real> or_vect_j=rotate(or_j,defaultOrientation2D);
+                                                quat<real> or_i(orientation_i);
+                                                quat<real> or_j(orientation_j);
+
+                                                //return vectors along spherocylinder axis
+                                                vec3<real> or_vect_i=rotate(or_i,defaultOrientation2D);
+                                                vec3<real> or_vect_j=rotate(or_j,defaultOrientation2D);
 
 
-                                            //in case particles are paralel
-                                            double tol=1e-6;
+                                                //in case particles are paralel
+                                                double tol=1e-6;
 
-                                            double a11=(or_vect1.x-or_vect2.x)+tol;
-                                            double a22=(or_vect1.y-or_vect2.y)+tol;
+                                                double a11=(or_vect1.x-or_vect2.x)+tol;
+                                                double a22=(or_vect1.y-or_vect2.y)+tol;
 
-                                            double b1=pos_j.x-pos_i.x;
-                                            double b2=pos_j.y-pos_i.y;
+                                                double b1=pos_j.x-pos_i.x;
+                                                double b2=pos_j.y-pos_i.y;
 
-                                            double s1=b1/a11;
-                                            double s2=b2/a22;
+                                                //calculated distance along particle axis of closest approach
+                                                double s1=b1/a11;
+                                                double s2=b2/a22;
+                                            }
+
+                                        }
 
 
 
@@ -871,6 +901,8 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
             if (!overlap && rng_i.d() < slow::exp(patch_field_energy_diff))
                 {
                 // increment accept counter and assign new position
+
+                n_attempts=0;
                 if (!shape_i.ignoreStatistics())
                     {
                     if (move_type_translate)
