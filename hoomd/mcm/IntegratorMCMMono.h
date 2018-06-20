@@ -570,6 +570,8 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         // loop through N particles in a shuffled order
         for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
             {
+            unsigned int type1=m_pdata->getType(i);
+            
             unsigned int i = m_update_order[cur_particle];
 
             // read in the current position and orientation
@@ -718,7 +720,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
 
                                             vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
 
-                                            unsigned int type1=m_pdata->getType(i);
+                                            
                                             unsigned int type2=m_pdata->getType(j);
 
                                             if (type1==1 && type2==1) //hardcoded for now, type 0=circles 1=rods, need to generalize
