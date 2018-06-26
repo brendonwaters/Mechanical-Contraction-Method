@@ -782,6 +782,73 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                                                 //calculated distance along particle axis of closest approach
                                                 double s1=b1/a11;
                                                 double s2=b2/a22;
+
+                                                double maxl=1.0; //temporary, will pass parameter later
+                                                double cap_radius=1.0; //temporary, will pass later
+                                                double length=7.0; //temp
+                                                double sep_tol=1.0001; //temp
+
+                                                if (s1>maxl) //don't allow intersections beyond the ends of the rods
+                                                    {
+                                                    s1=maxl;
+                                                    }
+                                                if (s1 < -maxl)
+                                                    {
+                                                    s1=-maxl;
+                                                    }
+                                                if (s2>maxl)
+                                                    {
+                                                    s2=maxl;
+                                                    }
+                                                if (s2< -maxl)
+                                                    {
+                                                    s2=-maxl;
+                                                    }
+
+                                                double k_x=(pos_i.x+s1*or_vect_i.x)-(pos_j.x+s2*or_vect_j.x);
+                                                double k_y=(pos_i.y+s1*or_vect_i.y)-(pos_j.y+s2*or_vect_j.y);
+                                                double k_z=(pos_i.z+s1*or_vect_i.z)-(pos_j.z+s2*or_vect_j.z);
+
+                                                vec3<Scalar> k_vect(k_x,k_y,k_z);
+
+                                                double mag_k=sqrt(k_vect.x*k_vect.x+k_vect.y*k_vect.y+k_vect.z*k_vect.z);
+
+                                                double delta=2*cap_radius-mag_k;
+
+                                                if (delta>0) //if the particles are overlapping, remove overlap
+                                                    {
+                                                    double kz1=sqrt((1.0/(s1*s1))*(mag_k*mag_k/delta*delta)-k_vect.x*k_vect.x-k_vect.y*k_vect.y);
+                                                    double kz2=sqrt((1.0/(s2*s2))*(mag_k*mag_k/delta*delta)-k_vect.x*k_vect.x-k_vect.y*k_vect.y);
+
+                                                    double moment=(length*length)/12.0;
+
+                                                    double az1=(delta*s1/moment)*kz1/mag_k;
+                                                    double az2=(delta*s2/moment)*kz2/mag_k;
+
+                                                    double ax=delta*k_vect.x/mag_k;
+                                                    double ay=delta*k_vect.y/mag_k;
+
+                                                    pos_i.x=pos_i.x-ax*sep_tol*cap_radius;
+                                                    pos_j.x=pos_j.x+ax*sep_tol*cap_radius;
+
+                                                    pos_i.y=pos_i.y-ay*sep_tol*cap_radius;
+                                                    pos_j.y=pos_j.y+ay*sep_tol*cap_radius;
+
+                                                    double angle1=az1*sep_tol*cap_radius;
+                                                    double angle2=-az2*sep_tol*cap_radius;
+
+                                                    Scalar4 quat_i=make_scalar4(cos(angle1/2),0.0,0.0,sin(angle1/2));
+                                                    Scalar4 quat_j=make_scalar4(cos(angle2/2),0.0,0.0,sin(angle2/2));
+
+                                                    quat<Scalar> quat1(quat_i);
+                                                    quat<Scalar> quat2(quat_j);
+
+                                                    quat<Scalar> new_q1=quat1*or_i;
+                                                    quat<Scalar> new_q2=quat2*or_j;
+
+                                                    or_i=new_q1;
+                                                    or_j=new_q2;
+                                                    }
                                                 }
                                             }
 
