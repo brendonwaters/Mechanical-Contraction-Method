@@ -136,6 +136,8 @@ class IntegratorMCMMono : public IntegratorMCM
 
         virtual void printStats();
 
+        virtual bool attemptBoxResize(unsigned int timestep, const BoxDim& new_box);
+
         virtual void resetStats();
 
         //! Take one timestep forward
@@ -459,6 +461,44 @@ void IntegratorMCMMono<Shape>::printStats()
     }
 
 template <class Shape>
+bool IntegratorMCMMono<Shape>::attemptBoxResize(unsigned int timestep, const BoxDim& new_box)
+    {
+    unsigned int N = m_pdata->getN();
+
+    // Get old and new boxes;
+    BoxDim curBox = m_pdata->getGlobalBox();
+
+    // Use lexical scope block to make sure ArrayHandles get cleaned up
+        {
+        // Get particle positions
+        ArrayHandle<Scalar4> h_pos(m_pdata->getPositions(), access_location::host, access_mode::readwrite);
+
+        // move the particles to be inside the new box
+        for (unsigned int i = 0; i < N; i++)
+            {
+            Scalar3 old_pos = make_scalar3(h_pos.data[i].x, h_pos.data[i].y, h_pos.data[i].z);
+
+            // obtain scaled coordinates in the old global box
+            Scalar3 f = curBox.makeFraction(old_pos);
+
+            // scale particles
+            Scalar3 scaled_pos = new_box.makeCoordinates(f);
+            h_pos.data[i].x = scaled_pos.x;
+            h_pos.data[i].y = scaled_pos.y;
+            h_pos.data[i].z = scaled_pos.z;
+            }
+        } // end lexical scope
+
+    m_pdata->setGlobalBox(new_box);
+
+    // we have moved particles, communicate those changes
+    this->communicate(false);
+
+    // check overlaps
+    return !this->countOverlaps(timestep, true);
+    }
+
+template <class Shape>
 void IntegratorMCMMono<Shape>::resetStats()
     {
     IntegratorMCM::resetStats();
@@ -495,7 +535,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
     IntegratorMCM::update(timestep);
 
 
-    const vec3<real> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
+    const vec3<Scalar> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
 
     double scale_factor=0.999; //factor to scale the box length by at each timestep, hardcoded for now, will add interface later
 
@@ -508,7 +548,9 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
     const BoxDim& box = m_pdata->getBox();
     unsigned int ndim = this->m_sysdef->getNDimensions();
 
-    scalar3& box_L = m_pdata->getL();
+    const BoxDim& curBox = m_pdata->getGlobalBox();
+
+    const Scalar3& box_L = curBox.getL();
 
     double Lx=box_L.x;
     double Ly=box_L.y;
@@ -518,7 +560,13 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
     Ly*=scale_factor;
     Lz*=scale_factor;
 
-    box.setL(make_scalar3(Lx, Ly, Lz));
+    Scalar3 L=make_scalar3(Lx,Ly,Lz);
+
+    BoxDim newBox = m_pdata->getGlobalBox();
+
+    newBox.setL(L);
+
+    attemptBoxResize(timestep, newBox);
 
     #ifdef ENABLE_MPI
     // compute the width of the active region
@@ -551,7 +599,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
     for (unsigned int i_nselect = 0; i_nselect < m_pdata->getN(); i_nselect++)
         {
 
-        attempts++; //increment attempts counter
+        n_attempts++; //increment attempts counter
 
 
         // access particle data and system box
@@ -584,14 +632,14 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
             #endif
 
             // make a trial move for i
-            // hoomd::detail::Saru rng_i(i, m_seed + m_exec_conf->getRank()*m_nselect + i_nselect, timestep);
+            hoomd::detail::Saru rng_i(i, m_seed + m_exec_conf->getRank()*m_nselect + i_nselect, timestep);
             int typ_i = __scalar_as_int(postype_i.w);
             Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
             // unsigned int move_type_select = rng_i.u32() & 0xffff;
             // bool move_type_translate = !shape_i.hasOrientation() || (move_type_select < m_move_ratio);
 
-            // Shape shape_old(quat<Scalar>(orientation_i), m_params[typ_i]);
-            // vec3<Scalar> pos_old = pos_i;
+            Shape shape_old(quat<Scalar>(orientation_i), m_params[typ_i]);
+            vec3<Scalar> pos_old = pos_i;
 
             // if (move_type_translate)
             //     {
@@ -712,23 +760,21 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
 
                                             vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
 
-                                            unsigned int type2=m_pdata->getType(j);
-
-                                            if (type1==1 && type2==1) //hardcoded for now, type 0=circles 1=rods, need to generalize
-
-                                                quat<real> or_i(orientation_i);
-                                                quat<real> or_j(orientation_j);
+                                            if (typ_i==1 && typ_j==1) //hardcoded for now, type 0=circles 1=rods, need to generalize
+                                                {
+                                                quat<Scalar> or_i=quat<Scalar>(orientation_i);
+                                                quat<Scalar> or_j=quat<Scalar>(orientation_j);
 
                                                 //return vectors along spherocylinder axis
-                                                vec3<real> or_vect_i=rotate(or_i,defaultOrientation2D);
-                                                vec3<real> or_vect_j=rotate(or_j,defaultOrientation2D);
+                                                vec3<Scalar> or_vect_i=rotate(or_i,defaultOrientation2D);
+                                                vec3<Scalar> or_vect_j=rotate(or_j,defaultOrientation2D);
 
 
                                                 //in case particles are paralel
                                                 double tol=1e-6;
 
-                                                double a11=(or_vect1.x-or_vect2.x)+tol;
-                                                double a22=(or_vect1.y-or_vect2.y)+tol;
+                                                double a11=(or_vect_i.x-or_vect_j.x)+tol;
+                                                double a22=(or_vect_i.y-or_vect_j.y)+tol;
 
                                                 double b1=pos_j.x-pos_i.x;
                                                 double b2=pos_j.y-pos_i.y;
@@ -736,6 +782,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                                                 //calculated distance along particle axis of closest approach
                                                 double s1=b1/a11;
                                                 double s2=b2/a22;
+                                                }
                                             }
 
                                         }
@@ -860,13 +907,13 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
 
                 n_attempts=0;
 
-                if (!shape_i.ignoreStatistics())
-                    {
-                    if (move_type_translate)
-                        counters.translate_accept_count++;
-                    else
-                        counters.rotate_accept_count++;
-                    }
+                // if (!shape_i.ignoreStatistics())
+                //     {
+                //     if (move_type_translate)
+                //         counters.translate_accept_count++;
+                //     else
+                //         counters.rotate_accept_count++;
+                //     }
 
                 // update the position of the particle in the tree for future updates
                 detail::AABB aabb = aabb_i_local;
@@ -883,14 +930,14 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                 }
             else
                 {
-                if (!shape_i.ignoreStatistics())
-                    {
-                    // increment reject counter
-                    if (move_type_translate)
-                        counters.translate_reject_count++;
-                    else
-                        counters.rotate_reject_count++;
-                    }
+                // if (!shape_i.ignoreStatistics())
+                //     {
+                //     // increment reject counter
+                //     if (move_type_translate)
+                //         counters.translate_reject_count++;
+                //     else
+                //         counters.rotate_reject_count++;
+                //     }
                 }
             } // end loop over all particles
         } // end loop over nselect
