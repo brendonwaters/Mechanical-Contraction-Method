@@ -1,7 +1,7 @@
-# Test the helper functions in hpmc.util
+# Test the helper functions in mcm.util
 from __future__ import division, print_function
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import unittest
 import tempfile
 import os
@@ -38,9 +38,9 @@ class latticeToHoomd (unittest.TestCase):
         a2 = np.asarray([0.,2.,0.])
         a3 = np.asarray([0.,0.,3.])
         a1 = a1+a3
-        box, q = hpmc.util.latticeToHoomd(a1,a2,a3)
-        vecs = np.asarray(hpmc.util.matFromBox(box)).transpose()
-        v1 = hpmc.util.quatRot(q,a1)
+        box, q = mcm.util.latticeToHoomd(a1,a2,a3)
+        vecs = np.asarray(mcm.util.matFromBox(box)).transpose()
+        v1 = mcm.util.quatRot(q,a1)
         v2 = vecs[0]
         v = v2 - v1
         self.assertAlmostEqual(np.dot(v,v), 0, places=6)
@@ -53,9 +53,9 @@ class latticeToHoomd (unittest.TestCase):
         a2 = np.asarray([0.,2.,0.])
         a3 = np.asarray([0.,0.,3.])
         a1 = a1+a2
-        box, q = hpmc.util.latticeToHoomd(a1,a2,a3)
-        vecs = np.asarray(hpmc.util.matFromBox(box)).transpose()
-        v1 = hpmc.util.quatRot(q,a1)
+        box, q = mcm.util.latticeToHoomd(a1,a2,a3)
+        vecs = np.asarray(mcm.util.matFromBox(box)).transpose()
+        v1 = mcm.util.quatRot(q,a1)
         v2 = vecs[0]
         v = v2 - v1
         self.assertAlmostEqual(np.dot(v,v), 0, places=6)
@@ -68,9 +68,9 @@ class latticeToHoomd (unittest.TestCase):
         a2 = np.asarray([0.,2.,0.])
         a3 = np.asarray([0.,0.,3.])
         a2 = a2+2*a3
-        box, q = hpmc.util.latticeToHoomd(a1,a2,a3)
-        vecs = np.asarray(hpmc.util.matFromBox(box)).transpose()
-        v1 = hpmc.util.quatRot(q,a2)
+        box, q = mcm.util.latticeToHoomd(a1,a2,a3)
+        vecs = np.asarray(mcm.util.matFromBox(box)).transpose()
+        v1 = mcm.util.quatRot(q,a2)
         v2 = vecs[1]
         v = v2 - v1
         self.assertAlmostEqual(np.dot(v,v), 0, places=6)
@@ -83,9 +83,9 @@ class latticeToHoomd (unittest.TestCase):
         a2 = np.asarray([-1.,2.,0.])
         a3 = np.asarray([0.,0.,3.])
         a3 = a2-a3
-        box, q = hpmc.util.latticeToHoomd(a1,a2,a3)
-        vecs = np.asarray(hpmc.util.matFromBox(box)).transpose()
-        v1 = hpmc.util.quatRot(q,a3)
+        box, q = mcm.util.latticeToHoomd(a1,a2,a3)
+        vecs = np.asarray(mcm.util.matFromBox(box)).transpose()
+        v1 = mcm.util.quatRot(q,a3)
         v2 = vecs[2]
         v = v2 - v1
         self.assertAlmostEqual(np.dot(v,v), 0, places=6)
@@ -96,7 +96,7 @@ class latticeToHoomd (unittest.TestCase):
     def test_handedness(self):
         for i in range(1000):
             a1, a2, a3 = np.random.random((3,3))
-            box, q = hpmc.util.latticeToHoomd(a1,a2,a3)
+            box, q = mcm.util.latticeToHoomd(a1,a2,a3)
             b1 = box.get_lattice_vector(0)
             b2 = box.get_lattice_vector(1)
             b3 = box.get_lattice_vector(2)
@@ -111,7 +111,7 @@ class read_pos (unittest.TestCase):
         fh = open(self.fname, 'w')
         fh.write(sc2d_pos)
         fh.close()
-        input = hpmc.util.read_pos(self.fname, ndim=2)
+        input = mcm.util.read_pos(self.fname, ndim=2)
         self.assertEqual((input['positions'][0] == np.array([0,0,0])).all(), True)
         self.assertEqual(input['param_dict']['A']['shape'], 'sphere')
         self.assertEqual(input['param_dict']['A']['diameter'], 1.0)
@@ -121,7 +121,7 @@ class read_pos (unittest.TestCase):
         fh = open(self.fname, 'w')
         fh.write(Zr4Al3_pos)
         fh.close()
-        input = hpmc.util.read_pos(self.fname)
+        input = mcm.util.read_pos(self.fname)
         self.assertEqual(input['param_dict']['A2']['shape'], 'sphere')
         self.assertEqual(input['param_dict']['A1']['diameter'], 0.8)
         self.assertEqual(set(input['types']), set(['A1','A2']))
@@ -138,7 +138,7 @@ class read_pos (unittest.TestCase):
 
         # check that q rotates a1 to b1
         q = input['q']
-        v1 = hpmc.util.quatRot(q,a1)
+        v1 = mcm.util.quatRot(q,a1)
         v2 = b1
         v12 = v2-v1
         self.assertAlmostEqual(np.dot(v12,v12), 0.0, places=5)
@@ -155,7 +155,7 @@ class read_pos (unittest.TestCase):
         #print("len squared new r = {}".format(np.dot(r,r)))
         q = input['q']
         qconj = q * [1,-1,-1,-1]
-        r2 = hpmc.util.quatRot(qconj, r)
+        r2 = mcm.util.quatRot(qconj, r)
         r12 = r2-r1
         self.assertAlmostEqual(np.dot(r12,r12), 0.0, places=5)
     def tearDown(self):
@@ -178,13 +178,13 @@ class compressor (unittest.TestCase):
     # one sphere should compress easily
     def test_1sphere(self):
         system = create_empty(N=1, box=data.boxdim(L=3), particle_types=['A'])
-        mc = hpmc.integrate.sphere(seed=1)
+        mc = mcm.integrate.sphere(seed=1)
         mc.set_params(d=0.1)
         mc.shape_param.set('A', diameter=1.0)
-        npt = hpmc.update.boxmc(mc, betaP=5.0, seed=1)
+        npt = mcm.update.boxmc(mc, betaP=5.0, seed=1)
         npt.length(delta=0.1, weight=1)
         npt.shear(delta=0.1, weight=1, reduce=0.6)
-        compressor = hpmc.util.compress(mc=mc,
+        compressor = mcm.util.compress(mc=mc,
                                         npt_updater=npt,
                                         **self.args)
         etas, snaps = compressor.run(1)
@@ -209,13 +209,13 @@ class compressor (unittest.TestCase):
         self.args['relax'] = 1e3
         system = create_empty(N=2, box=data.boxdim(L=3), particle_types=['A'])
         system.particles[1].position = (0.9,0,0)
-        mc = hpmc.integrate.sphere(seed=1, nselect=1)
+        mc = mcm.integrate.sphere(seed=1, nselect=1)
         mc.set_params(d=0.1)
         mc.shape_param.set('A', diameter=1.0)
-        npt = hpmc.update.boxmc(mc, betaP=5.0, seed=1)
+        npt = mcm.update.boxmc(mc, betaP=5.0, seed=1)
         npt.length(delta=0.1, weight=1)
         npt.shear(delta=0.1, weight=1, reduce=0.6)
-        compressor = hpmc.util.compress(mc=mc,
+        compressor = mcm.util.compress(mc=mc,
                                         npt_updater=npt,
                                         **self.args)
         etas, snaps = compressor.run(2)
@@ -238,14 +238,14 @@ class compressor (unittest.TestCase):
         self.args['relax'] = 1e3
         system = create_empty(N=2, box=data.boxdim(L=3), particle_types=['A'])
         system.particles[1].position = (2.0,0,0)
-        mc = hpmc.integrate.convex_polyhedron(seed=1)
+        mc = mcm.integrate.convex_polyhedron(seed=1)
         mc.set_params(d=0.1, a=0.1)
         mc.shape_param.set('A', vertices=[ (1,1,1), (1,-1,1), (-1,-1,1), (-1,1,1),
            (1,1,-1), (1,-1,-1), (-1,-1,-1), (-1,1,-1) ])
-        npt = hpmc.update.boxmc(mc, betaP=5.0, seed=1)
+        npt = mcm.update.boxmc(mc, betaP=5.0, seed=1)
         npt.length(delta=0.1, weight=1)
         npt.shear(delta=0.1, weight=1, reduce=0.6)
-        compressor = hpmc.util.compress(mc=mc,
+        compressor = mcm.util.compress(mc=mc,
                                         npt_updater=npt,
                                         **self.args)
         etas, snaps = compressor.run(2)
@@ -270,7 +270,7 @@ class tune (unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=2, box=data.boxdim(L=4.5), particle_types=['A'])
         self.system.particles[1].position = (2.0,0,0)
-        self.mc = hpmc.integrate.convex_polyhedron(seed=1)
+        self.mc = mcm.integrate.convex_polyhedron(seed=1)
         self.mc.set_params(d=0.1, a=0.1)
         self.mc.shape_param.set('A', vertices=[ (1,1,1), (1,-1,1), (-1,-1,1), (-1,1,1),
            (1,1,-1), (1,-1,-1), (-1,-1,-1), (-1,1,-1) ])
@@ -284,7 +284,7 @@ class tune (unittest.TestCase):
         old_d = self.mc.get_d()
 
         # Create and run the tuner
-        tuner = hpmc.util.tune(self.mc, tunables=['d'], max_val=[2], target=target, gamma=0.0)
+        tuner = mcm.util.tune(self.mc, tunables=['d'], max_val=[2], target=target, gamma=0.0)
         for i in range(5):
                     run(2e2)
                     tuner.update()
@@ -304,7 +304,7 @@ class tune (unittest.TestCase):
         old_a = self.mc.get_a()
 
         # Create and run the tuner
-        tuner = hpmc.util.tune(self.mc, tunables=['a'], max_val=[2], target=target, gamma=0.0)
+        tuner = mcm.util.tune(self.mc, tunables=['a'], max_val=[2], target=target, gamma=0.0)
         for i in range(5):
                     run(2e2)
                     tuner.update()
@@ -326,7 +326,7 @@ class tune (unittest.TestCase):
         old_d = self.mc.get_d()
 
         # Create and run the tuner
-        tuner = hpmc.util.tune(self.mc, tunables=['d', 'a'], max_val=[1, 1], target=target, gamma=0.0)
+        tuner = mcm.util.tune(self.mc, tunables=['d', 'a'], max_val=[1, 1], target=target, gamma=0.0)
         for i in range(5):
             run(2e2)
             tuner.update()
@@ -344,9 +344,9 @@ class tune (unittest.TestCase):
     def test_npt_noshear(self):
         target = 0.5
         self.mc.set_params(d=0.1, a=0.01, move_ratio=0.5)
-        updater = hpmc.update.boxmc(self.mc, betaP=10.0, seed=1)
+        updater = mcm.update.boxmc(self.mc, betaP=10.0, seed=1)
         updater.length(delta=(0.01,0.01,0.01), weight=1)
-        tuner = hpmc.util.tune_npt(updater, tunables=['dLx', 'dLy', 'dLz'], target=target, gamma=0.0)
+        tuner = mcm.util.tune_npt(updater, tunables=['dLx', 'dLy', 'dLz'], target=target, gamma=0.0)
         for i in range(5):
             run(1e2)
             tuner.update()
@@ -361,10 +361,10 @@ class tune (unittest.TestCase):
     def test_npt_shear(self):
         target = 0.5
         self.mc.set_params(d=0.02, a=0.01, move_ratio=0.5)
-        updater = hpmc.update.boxmc(self.mc, seed=1, betaP=10)
+        updater = mcm.update.boxmc(self.mc, seed=1, betaP=10)
         updater.length(delta=(0.1, 0.1, 0.1), weight=1)
         updater.shear(delta=(0.1, 0.1, 0.1), weight=1)
-        tuner = hpmc.util.tune_npt(updater, tunables=['dxy', 'dyz', 'dxz'], target=target, gamma=0.5)
+        tuner = mcm.util.tune_npt(updater, tunables=['dxy', 'dyz', 'dxz'], target=target, gamma=0.5)
         for i in range(5):
             run(1e2)
             tuner.update()
@@ -378,9 +378,9 @@ class tune (unittest.TestCase):
     def test_npt_isotropic(self):
         target = 0.5
         self.mc.set_params(d=0.1, a=0.01, move_ratio=0.5)
-        updater = hpmc.update.boxmc(self.mc, seed=1, betaP=10)
+        updater = mcm.update.boxmc(self.mc, seed=1, betaP=10)
         updater.volume(delta=0.1, weight=1)
-        tuner = hpmc.util.tune_npt(updater, tunables=['dV'], target=target, gamma=0.0)
+        tuner = mcm.util.tune_npt(updater, tunables=['dV'], target=target, gamma=0.0)
         for i in range(5):
             run(1e2)
             tuner.update()
@@ -403,7 +403,7 @@ class tune_by_type(unittest.TestCase):
         self.system.particles[0].position = (1.0,0,0)
         self.system.particles[1].position = (-1.0,0,0)
         self.system.particles.types = ['A', 'B']
-        self.mc = hpmc.integrate.convex_polyhedron(seed=1)
+        self.mc = mcm.integrate.convex_polyhedron(seed=1)
         self.mc.set_params(d=0.5, a=0.5)
         self.mc.shape_param.set('A', vertices=[ (1,1,1), (1,-1,1), (-1,-1,1), (-1,1,1),
            (1,1,-1), (1,-1,-1), (-1,-1,-1), (-1,1,-1) ])
@@ -421,7 +421,7 @@ class tune_by_type(unittest.TestCase):
 
         # Create and run the tuner. Make sure to ignore statistics for the unused type
         self.mc.shape_param["B"].ignore_statistics = True
-        tuner = hpmc.util.tune(self.mc, type='A', tunables=['d'], max_val=[1], target=target, gamma=0.0)
+        tuner = mcm.util.tune(self.mc, type='A', tunables=['d'], max_val=[1], target=target, gamma=0.0)
         for i in range(5):
             run(2e2)
             tuner.update()
@@ -444,7 +444,7 @@ class tune_by_type(unittest.TestCase):
 
         # Create and run the tuner. Make sure to ignore statistics for the unused type
         self.mc.shape_param["B"].ignore_statistics = True
-        tuner = hpmc.util.tune(self.mc, type='A', tunables=['a'], max_val=[1], target=target, gamma=0.0)
+        tuner = mcm.util.tune(self.mc, type='A', tunables=['a'], max_val=[1], target=target, gamma=0.0)
         for i in range(5):
             run(2e2)
             tuner.update()
@@ -470,7 +470,7 @@ class tune_by_type(unittest.TestCase):
 
         # Create and run the tuner. Make sure to ignore statistics for the unused type
         self.mc.shape_param["B"].ignore_statistics = True
-        tuner = hpmc.util.tune(self.mc, type='A', tunables=['d', 'a'], max_val=[1, 1], target=target, gamma=0.0)
+        tuner = mcm.util.tune(self.mc, type='A', tunables=['d', 'a'], max_val=[1, 1], target=target, gamma=0.0)
         for i in range(5):
             run(2e2)
             tuner.update()
@@ -506,13 +506,13 @@ class tune_extreme (unittest.TestCase):
         positions *= 2.00001
         snapshot.particles.position[:] = positions
         self.system = init.read_snapshot(snapshot)
-        self.mc = hpmc.integrate.convex_polyhedron(seed=1)
+        self.mc = mcm.integrate.convex_polyhedron(seed=1)
         self.mc.set_params(d=0.1, a=0.1)
         self.mc.shape_param.set('A', vertices=[ (1,1,1), (1,-1,1), (-1,-1,1), (-1,1,1),
            (1,1,-1), (1,-1,-1), (-1,-1,-1), (-1,1,-1) ])
 
-        #tuner = hpmc.util.tune(mc, tunables=['d', 'a'], target=0.2, gamma=0.0)
-        tuner = hpmc.util.tune(self.mc, tunables=['d'], target=target, gamma=0.0)
+        #tuner = mcm.util.tune(mc, tunables=['d', 'a'], target=0.2, gamma=0.0)
+        tuner = mcm.util.tune(self.mc, tunables=['d'], target=target, gamma=0.0)
         for i in range(5):
                     run(2e2)
                     tuner.update()

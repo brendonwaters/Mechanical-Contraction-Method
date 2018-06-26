@@ -46,7 +46,7 @@ set(TEST_LIST_CPU
     small-box-2d.py
     small-box-3d.py
     stats_check.py
-    test_hpmc_util.py
+    test_mcm_util.py
     ignore_flag.py
     move_by_type.py
     shape_union.py
@@ -61,7 +61,7 @@ set(TEST_LIST_CPU
     shape_proxy.py
     external_lattice.py
     map_overlap.py
-    hpmc_gsd_state.py
+    mcm_gsd_state.py
     faceted_sphere.py
     test_clusters.py
     )
@@ -87,7 +87,7 @@ set(TEST_LIST_GPU
 set(EXCLUDE_FROM_MPI
     small-box-2d.py
     small-box-3d.py
-    test_hpmc_util.py
+    test_mcm_util.py
     ignore_flag.py
     test_boxMC.py
     image-list.py

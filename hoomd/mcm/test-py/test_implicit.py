@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import division
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import math
 import unittest
 
@@ -26,7 +26,7 @@ class implicit_test_sphere (unittest.TestCase):
             self.num_samples = 10
             self.steps = 1000
 
-        self.mc = hpmc.integrate.sphere(seed=123,implicit=True, depletant_mode='circumsphere')
+        self.mc = mcm.integrate.sphere(seed=123,implicit=True, depletant_mode='circumsphere')
         self.mc.set_params(d=0.1)
 
         q=1.0
@@ -40,12 +40,12 @@ class implicit_test_sphere (unittest.TestCase):
         self.mc.shape_param.set('B', diameter=q)
 
         import tempfile
-        tmp = tempfile.mkstemp(suffix='.hpmc-test-implicit');
+        tmp = tempfile.mkstemp(suffix='.mcm-test-implicit');
         self.tmp_file = tmp[1];
 
         nsample = 10000
-        self.free_volume = hpmc.compute.free_volume(mc=self.mc, seed=987, nsample=nsample, test_type='B')
-        self.log=analyze.log(filename=self.tmp_file, quantities=['volume','hpmc_free_volume'], overwrite=True,period=100)
+        self.free_volume = mcm.compute.free_volume(mc=self.mc, seed=987, nsample=nsample, test_type='B')
+        self.log=analyze.log(filename=self.tmp_file, quantities=['volume','mcm_free_volume'], overwrite=True,period=100)
 
     def test_implicit(self):
         # warm up
@@ -58,7 +58,7 @@ class implicit_test_sphere (unittest.TestCase):
             n_overlap = self.mc.count_overlaps()
             self.assertEqual(n_overlap,0)
             vol = self.log.query('volume')
-            free_vol = self.log.query('hpmc_free_volume')
+            free_vol = self.log.query('mcm_free_volume')
             eta_p = math.pi/6.0*free_vol/vol*self.nR
             avg_eta_p += eta_p/self.num_samples
 
@@ -79,7 +79,7 @@ class implicit_test_sphere (unittest.TestCase):
             n_overlap = self.mc.count_overlaps()
             self.assertEqual(n_overlap,0)
             vol = self.log.query('volume')
-            free_vol = self.log.query('hpmc_free_volume')
+            free_vol = self.log.query('mcm_free_volume')
             eta_p = math.pi/6.0*free_vol/vol*self.nR
             avg_eta_p += eta_p/self.num_samples
 
@@ -122,7 +122,7 @@ class implicit_test_cube(unittest.TestCase):
 
         self.system = init.create_lattice(lattice.sc(a=L_ini/float(n[0])),n=n)
 
-        self.mc = hpmc.integrate.convex_polyhedron(seed=123,implicit=True,depletant_mode='circumsphere')
+        self.mc = mcm.integrate.convex_polyhedron(seed=123,implicit=True,depletant_mode='circumsphere')
         self.mc.set_params(d=0.1,a=0.15)
 
         etap=1.0
@@ -136,15 +136,15 @@ class implicit_test_cube(unittest.TestCase):
         self.mc.shape_param.set('B', vertices=cube_verts)
 
         import tempfile
-        tmp = tempfile.mkstemp(suffix='.hpmc-test-implicit2');
+        tmp = tempfile.mkstemp(suffix='.mcm-test-implicit2');
         self.tmp_file = tmp[1];
 
         nsample = 10000
-        self.free_volume = hpmc.compute.free_volume(mc=self.mc, seed=987, nsample=nsample, test_type='B')
-        self.log=analyze.log(filename=self.tmp_file, quantities=['volume','hpmc_free_volume'], overwrite=True,period=100)
+        self.free_volume = mcm.compute.free_volume(mc=self.mc, seed=987, nsample=nsample, test_type='B')
+        self.log=analyze.log(filename=self.tmp_file, quantities=['volume','mcm_free_volume'], overwrite=True,period=100)
 
         if self.long:
-            mc_tune = hpmc.util.tune(self.mc, tunables=['d','a'],max_val=[4,0.5],gamma=1,target=0.4)
+            mc_tune = mcm.util.tune(self.mc, tunables=['d','a'],max_val=[4,0.5],gamma=1,target=0.4)
 
             # shrink the box to the target size (if needed)
             scale = 0.99;
@@ -182,7 +182,7 @@ class implicit_test_cube(unittest.TestCase):
             n_overlap = self.mc.count_overlaps()
             self.assertEqual(n_overlap,0)
             vol = self.log.query('volume')
-            free_vol = self.log.query('hpmc_free_volume')
+            free_vol = self.log.query('mcm_free_volume')
             eta_p = self.V_cube*free_vol/vol*self.nR
             avg_eta_p += eta_p/self.num_samples
 
@@ -207,7 +207,7 @@ class implicit_test_cube(unittest.TestCase):
             n_overlap = self.mc.count_overlaps()
             self.assertEqual(n_overlap,0)
             vol = self.log.query('volume')
-            free_vol = self.log.query('hpmc_free_volume')
+            free_vol = self.log.query('mcm_free_volume')
             eta_p = self.V_cube*free_vol/vol*self.nR
             avg_eta_p += eta_p/self.num_samples
 
@@ -236,7 +236,7 @@ class implicit_test_sphere_new (unittest.TestCase):
         self.num_samples = 0
         self.steps = 10
 
-        self.mc = hpmc.integrate.sphere(seed=123,implicit=True, depletant_mode='overlap_regions')
+        self.mc = mcm.integrate.sphere(seed=123,implicit=True, depletant_mode='overlap_regions')
         self.mc.set_params(d=0.1)
 
         q=1.0
@@ -250,12 +250,12 @@ class implicit_test_sphere_new (unittest.TestCase):
         self.mc.shape_param.set('B', diameter=q)
 
         import tempfile
-        tmp = tempfile.mkstemp(suffix='.hpmc-test-implicit');
+        tmp = tempfile.mkstemp(suffix='.mcm-test-implicit');
         self.tmp_file = tmp[1];
 
         nsample = 10000
-        self.free_volume = hpmc.compute.free_volume(mc=self.mc, seed=987, nsample=nsample, test_type='B')
-        self.log=analyze.log(filename=self.tmp_file, quantities=['volume','hpmc_free_volume'], overwrite=True,period=100)
+        self.free_volume = mcm.compute.free_volume(mc=self.mc, seed=987, nsample=nsample, test_type='B')
+        self.log=analyze.log(filename=self.tmp_file, quantities=['volume','mcm_free_volume'], overwrite=True,period=100)
 
     def test_implicit(self):
         # warm up
@@ -268,7 +268,7 @@ class implicit_test_sphere_new (unittest.TestCase):
             n_overlap = self.mc.count_overlaps()
             self.assertEqual(n_overlap,0)
             vol = self.log.query('volume')
-            free_vol = self.log.query('hpmc_free_volume')
+            free_vol = self.log.query('mcm_free_volume')
             eta_p = math.pi/6.0*free_vol/vol*self.nR
             avg_eta_p += eta_p/self.num_samples
 

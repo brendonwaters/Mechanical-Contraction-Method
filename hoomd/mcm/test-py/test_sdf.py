@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import division
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import numpy
 import math
 import sys
@@ -139,12 +139,12 @@ class sdf_test1 (unittest.TestCase):
             (i, j) = (p.tag % l, p.tag//l % l);
             p.position = (lox + i*ax + ax/2, loy + j*ay + ay/2, 0);
 
-        self.mc = hpmc.integrate.convex_polygon(seed=10, d=0.1);
+        self.mc = mcm.integrate.convex_polygon(seed=10, d=0.1);
         self.mc.set_params(deterministic=True)
         self.mc.shape_param.set('A', vertices=[(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)]);
 
         if comm.get_rank() == 0:
-            tmp = tempfile.mkstemp(suffix='.hpmc-test-sdf');
+            tmp = tempfile.mkstemp(suffix='.mcm-test-sdf');
             self.tmp_file = tmp[1];
         else:
             self.tmp_file = "invalid";
@@ -153,7 +153,7 @@ class sdf_test1 (unittest.TestCase):
         # setup SDF logging
         xmax=0.02
         dx=1e-4
-        hpmc.analyze.sdf(mc=self.mc, filename=self.tmp_file, xmax=xmax, dx=dx, navg=200, period=10, phase=0)
+        mcm.analyze.sdf(mc=self.mc, filename=self.tmp_file, xmax=xmax, dx=dx, navg=200, period=10, phase=0)
 
         # run
         run(6000);

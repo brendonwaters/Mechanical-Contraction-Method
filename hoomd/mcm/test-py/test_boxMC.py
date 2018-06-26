@@ -1,7 +1,7 @@
 # Test npt updater for basic sanity. Proper validation requires thermodynamic data from much longer runs.
 from __future__ import division, print_function
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import unittest
 import numpy as np
 
@@ -20,9 +20,9 @@ class boxMC_sanity_checks (unittest.TestCase):
         L=20
         self.snapshot = data.make_snapshot(N=N, box=data.boxdim(L=L, dimensions=2), particle_types=['A'])
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.convex_polygon(seed=1, d=0.1, a=0.1)
+        self.mc = mcm.integrate.convex_polygon(seed=1, d=0.1, a=0.1)
         self.mc.set_params(deterministic=True)
-        self.boxMC = hpmc.update.boxmc(self.mc, betaP=1000, seed=1)
+        self.boxMC = mcm.update.boxmc(self.mc, betaP=1000, seed=1)
         self.boxMC.volume(delta=0.1, weight=1)
         self.mc.shape_param.set('A', vertices=[(-1,-1), (1,-1), (1,1), (-1,1)])
 
@@ -55,9 +55,9 @@ class boxMC_sanity_checks (unittest.TestCase):
     def test_rejects_overlaps(self):
         self.snapshot = data.make_snapshot(N=2, box=data.boxdim(L=4), particle_types=['A'])
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.convex_polyhedron(seed=1, d=0.1, a=0.1)
+        self.mc = mcm.integrate.convex_polyhedron(seed=1, d=0.1, a=0.1)
         self.mc.set_params(deterministic=True)
-        self.boxMC = hpmc.update.boxmc(self.mc, betaP=1000, seed=1)
+        self.boxMC = mcm.update.boxmc(self.mc, betaP=1000, seed=1)
         self.boxMC.volume(delta=0.1, weight=1)
         self.mc.shape_param.set('A', vertices=[  (1,1,1), (1,-1,1), (-1,-1,1), (-1,1,1),
                                             (1,1,-1), (1,-1,-1), (-1,-1,-1), (-1,1,-1) ])
@@ -85,9 +85,9 @@ class boxMC_sanity_checks (unittest.TestCase):
     def test_rejects_overlaps_lnV(self):
         self.snapshot = data.make_snapshot(N=2, box=data.boxdim(L=4), particle_types=['A'])
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.convex_polyhedron(seed=1, d=0.1, a=0.1)
+        self.mc = mcm.integrate.convex_polyhedron(seed=1, d=0.1, a=0.1)
         self.mc.set_params(deterministic=True)
-        self.boxMC = hpmc.update.boxmc(self.mc, betaP=1000, seed=1)
+        self.boxMC = mcm.update.boxmc(self.mc, betaP=1000, seed=1)
         self.boxMC.ln_volume(delta=0.01, weight=1)
         self.mc.shape_param.set('A', vertices=[  (1,1,1), (1,-1,1), (-1,-1,1), (-1,1,1),
                                             (1,1,-1), (1,-1,-1), (-1,-1,-1), (-1,1,-1) ])
@@ -114,8 +114,8 @@ class boxMC_sanity_checks (unittest.TestCase):
     def test_VolumeMove_box_aspect_ratio(self):
         for i in range(1):
             self.system = init.create_lattice(lattice.sc(a = 1), n = [1, 2, 3])
-            self.mc = hpmc.integrate.sphere(seed=i, d=0.0)
-            self.boxMC = hpmc.update.boxmc(self.mc, betaP=100, seed=1)
+            self.mc = mcm.integrate.sphere(seed=i, d=0.0)
+            self.boxMC = mcm.update.boxmc(self.mc, betaP=100, seed=1)
             self.boxMC.volume(delta=1.0, weight=1)
             self.mc.shape_param.set('A', diameter=0.0)
 
@@ -141,9 +141,9 @@ class boxMC_sanity_checks (unittest.TestCase):
             self.snapshot = data.make_snapshot(N=1, box=data.boxdim(L=0.1), particle_types=['A'])
             self.snapshot.particles.position[:] = (0,0,0)
             self.system = init.read_snapshot(self.snapshot)
-            self.mc = hpmc.integrate.sphere(seed=i, d=0.0)
+            self.mc = mcm.integrate.sphere(seed=i, d=0.0)
             self.mc.set_params(deterministic=True)
-            self.boxMC = hpmc.update.boxmc(self.mc, betaP=100, seed=1)
+            self.boxMC = mcm.update.boxmc(self.mc, betaP=100, seed=1)
             self.boxMC.volume(delta=1.0, weight=1)
             self.mc.shape_param.set('A', diameter=0.0)
 
@@ -164,9 +164,9 @@ class boxMC_sanity_checks (unittest.TestCase):
             self.snapshot = data.make_snapshot(N=1, box=data.boxdim(L=0.1), particle_types=['A'])
             self.snapshot.particles.position[:] = (0,0,0)
             self.system = init.read_snapshot(self.snapshot)
-            self.mc = hpmc.integrate.sphere(seed=i, d=0.0)
+            self.mc = mcm.integrate.sphere(seed=i, d=0.0)
             self.mc.set_params(deterministic=True)
-            self.boxMC = hpmc.update.boxmc(self.mc, betaP=100, seed=1)
+            self.boxMC = mcm.update.boxmc(self.mc, betaP=100, seed=1)
             self.boxMC.length(delta=[1.0, 1.0, 1.0], weight=1)
             self.mc.shape_param.set('A', diameter=0.0)
 
@@ -187,9 +187,9 @@ class boxMC_sanity_checks (unittest.TestCase):
             self.snapshot = data.make_snapshot(N=1, box=data.boxdim(L=0.1), particle_types=['A'])
             self.snapshot.particles.position[:] = (0,0,0)
             self.system = init.read_snapshot(self.snapshot)
-            self.mc = hpmc.integrate.sphere(seed=i, d=0.0)
+            self.mc = mcm.integrate.sphere(seed=i, d=0.0)
             self.mc.set_params(deterministic=True)
-            self.boxMC = hpmc.update.boxmc(self.mc, betaP=100, seed=1)
+            self.boxMC = mcm.update.boxmc(self.mc, betaP=100, seed=1)
             self.boxMC.aspect(delta=0.5, weight=1)
             self.mc.shape_param.set('A', diameter=0.05)
 
@@ -211,10 +211,10 @@ class boxMC_test_methods (unittest.TestCase):
         snapshot = data.make_snapshot(N=1, box=data.boxdim(L=4), particle_types=['A'])
         snapshot.particles.position[0] = (0, 0, 0)
         self.system = init.read_snapshot(snapshot)
-        self.mc = hpmc.integrate.sphere(seed=1)
+        self.mc = mcm.integrate.sphere(seed=1)
         self.mc.set_params(deterministic=True)
         self.mc.shape_param.set('A', diameter = 1.0)
-        self.boxMC = hpmc.update.boxmc(self.mc, betaP=100, seed=1)
+        self.boxMC = mcm.update.boxmc(self.mc, betaP=100, seed=1)
 
     def tearDown(self):
         del self.boxMC
@@ -284,8 +284,8 @@ class boxMC_test_methods (unittest.TestCase):
 #             def get_volumes(self):
 #                 return self.volumes[:self.i]
 #         self.system = create_empty(N=N, box=data.boxdim(L=L, dimensions=3), particle_types=['A'])
-#         self.mc = hpmc.integrate.sphere(seed=1, d=0.0)
-#         npt = hpmc.update.boxMC(self.mc, betaP=N, seed=1)
+#         self.mc = mcm.integrate.sphere(seed=1, d=0.0)
+#         npt = mcm.update.boxMC(self.mc, betaP=N, seed=1)
 #         npt.setVolumeMove(delta=0.2, weight=1)
 #         self.mc.shape_param.set('A', diameter=0.0)
 

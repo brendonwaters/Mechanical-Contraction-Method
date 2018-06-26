@@ -8,13 +8,13 @@
 #include "hoomd/HOOMDMPI.h"
 
 #include "Moves.h"
-#include "IntegratorHPMCMono.h"
+#include "IntegratorMCMMono.h"
 
 #ifndef NVCC
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 /*!
@@ -28,7 +28,7 @@ class UpdaterMuVT : public Updater
     public:
         //! Constructor
         UpdaterMuVT(std::shared_ptr<SystemDefinition> sysdef,
-            std::shared_ptr<IntegratorHPMCMono<Shape> > mc,
+            std::shared_ptr<IntegratorMCMMono<Shape> > mc,
             unsigned int seed,
             unsigned int npartition);
         virtual ~UpdaterMuVT();
@@ -89,8 +89,8 @@ class UpdaterMuVT : public Updater
         //! Print statistics about the muVT ensemble
         void printStats()
             {
-            hpmc_muvt_counters_t counters = getCounters(1);
-            m_exec_conf->msg->notice(2) << "-- HPMC muVT stats:" << std::endl;
+            mcm_muvt_counters_t counters = getCounters(1);
+            m_exec_conf->msg->notice(2) << "-- MCM muVT stats:" << std::endl;
             if (counters.insert_accept_count + counters.insert_reject_count > 0)
                 {
                 m_exec_conf->msg->notice(2) << "Average insert acceptance: " << counters.getInsertAcceptance() << std::endl;
@@ -116,14 +116,14 @@ class UpdaterMuVT : public Updater
             {
             std::vector< std::string > result;
 
-            result.push_back("hpmc_muvt_insert_acceptance");
-            result.push_back("hpmc_muvt_remove_acceptance");
-            result.push_back("hpmc_muvt_exchange_acceptance");
-            result.push_back("hpmc_muvt_volume_acceptance");
+            result.push_back("mcm_muvt_insert_acceptance");
+            result.push_back("mcm_muvt_remove_acceptance");
+            result.push_back("mcm_muvt_exchange_acceptance");
+            result.push_back("mcm_muvt_volume_acceptance");
 
             for (unsigned int i = 0; i < m_pdata->getNTypes(); ++i)
                 {
-                result.push_back("hpmc_muvt_N_"+m_pdata->getNameByType(i));
+                result.push_back("mcm_muvt_N_"+m_pdata->getNameByType(i));
                 }
             return result;
             }
@@ -138,11 +138,11 @@ class UpdaterMuVT : public Updater
             }
 
         //! Get the current counter values
-        hpmc_muvt_counters_t getCounters(unsigned int mode=0);
+        mcm_muvt_counters_t getCounters(unsigned int mode=0);
 
     protected:
         std::vector<std::shared_ptr<Variant> > m_fugacity;  //!< Reservoir concentration per particle-type
-        std::shared_ptr<IntegratorHPMCMono<Shape> > m_mc;   //!< The MC Integrator this Updater is associated with
+        std::shared_ptr<IntegratorMCMMono<Shape> > m_mc;   //!< The MC Integrator this Updater is associated with
         unsigned int m_seed;                                  //!< RNG seed
         unsigned int m_npartition;                            //!< The number of partitions to use for Gibbs ensemble
         bool m_gibbs;                                         //!< True if we simulate a Gibbs ensemble
@@ -155,9 +155,9 @@ class UpdaterMuVT : public Updater
 
         unsigned int m_gibbs_other;                           //!< The root-rank of the other partition
 
-        hpmc_muvt_counters_t m_count_total;          //!< Accept/reject total count
-        hpmc_muvt_counters_t m_count_run_start;      //!< Count saved at run() start
-        hpmc_muvt_counters_t m_count_step_start;     //!< Count saved at the start of the last step
+        mcm_muvt_counters_t m_count_total;          //!< Accept/reject total count
+        mcm_muvt_counters_t m_count_run_start;      //!< Count saved at run() start
+        mcm_muvt_counters_t m_count_step_start;     //!< Count saved at the start of the last step
 
         std::vector<std::vector<unsigned int> > m_type_map;   //!< Local list of particle tags per type
         std::vector<unsigned int> m_transfer_types;  //!< List of types being insert/removed/transfered between boxes
@@ -241,7 +241,7 @@ class UpdaterMuVT : public Updater
 template < class Shape > void export_UpdaterMuVT(pybind11::module& m, const std::string& name)
     {
     pybind11::class_< UpdaterMuVT<Shape>, std::shared_ptr< UpdaterMuVT<Shape> > >(m, name.c_str(), pybind11::base<Updater>())
-          .def( pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr< IntegratorHPMCMono<Shape> >, unsigned int, unsigned int>())
+          .def( pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr< IntegratorMCMMono<Shape> >, unsigned int, unsigned int>())
           .def("setFugacity", &UpdaterMuVT<Shape>::setFugacity)
           .def("setMaxVolumeRescale", &UpdaterMuVT<Shape>::setMaxVolumeRescale)
           .def("setMoveRatio", &UpdaterMuVT<Shape>::setMoveRatio)
@@ -252,13 +252,13 @@ template < class Shape > void export_UpdaterMuVT(pybind11::module& m, const std:
 
 /*! Constructor
     \param sysdef The system definition
-    \param mc The HPMC integrator
+    \param mc The MCM integrator
     \param seed RNG seed
     \param npartition How many partitions to use in parallel for Gibbs ensemble (n=1 == grand canonical)
  */
 template<class Shape>
 UpdaterMuVT<Shape>::UpdaterMuVT(std::shared_ptr<SystemDefinition> sysdef,
-    std::shared_ptr<IntegratorHPMCMono< Shape > > mc,
+    std::shared_ptr<IntegratorMCMMono< Shape > > mc,
     unsigned int seed,
     unsigned int npartition)
     : Updater(sysdef), m_mc(mc), m_seed(seed), m_npartition(npartition), m_gibbs(false),
@@ -1757,29 +1757,29 @@ bool UpdaterMuVT<Shape>::trySwitchType(unsigned int timestep, unsigned int tag, 
 template<class Shape>
 Scalar UpdaterMuVT<Shape>::getLogValue(const std::string& quantity, unsigned int timestep)
     {
-    hpmc_muvt_counters_t counters = getCounters(1);
+    mcm_muvt_counters_t counters = getCounters(1);
 
     for (unsigned int i = 0; i < m_pdata->getNTypes(); ++i)
         {
-        std::string q = "hpmc_muvt_N_"+m_pdata->getNameByType(i);
+        std::string q = "mcm_muvt_N_"+m_pdata->getNameByType(i);
         if (quantity == q)
             {
             return getNumParticlesType(i);
             }
         }
-    if (quantity == "hpmc_muvt_insert_acceptance")
+    if (quantity == "mcm_muvt_insert_acceptance")
         {
         return counters.getInsertAcceptance();
         }
-    else if (quantity == "hpmc_muvt_remove_acceptance")
+    else if (quantity == "mcm_muvt_remove_acceptance")
         {
         return counters.getRemoveAcceptance();
         }
-    else if (quantity == "hpmc_muvt_exchange_acceptance")
+    else if (quantity == "mcm_muvt_exchange_acceptance")
         {
         return counters.getExchangeAcceptance();
         }
-    else if (quantity == "hpmc_muvt_volume_acceptance")
+    else if (quantity == "mcm_muvt_volume_acceptance")
         {
         return counters.getVolumeAcceptance();
         }
@@ -1799,9 +1799,9 @@ Scalar UpdaterMuVT<Shape>::getLogValue(const std::string& quantity, unsigned int
     to the start of the run, or relative to the start of the last executed step.
 */
 template<class Shape>
-hpmc_muvt_counters_t UpdaterMuVT<Shape>::getCounters(unsigned int mode)
+mcm_muvt_counters_t UpdaterMuVT<Shape>::getCounters(unsigned int mode)
     {
-    hpmc_muvt_counters_t result;
+    mcm_muvt_counters_t result;
 
     if (mode == 0)
         result = m_count_total;

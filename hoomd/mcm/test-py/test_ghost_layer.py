@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import division
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import math
 import unittest
 
@@ -12,7 +12,7 @@ class test_ghost_layer(unittest.TestCase):
         # setup the MC integration
         system = init.read_snapshot(data.make_snapshot(N=2,box=data.boxdim(Lx=100,Ly=50,Lz=50),particle_types=['A','B']))
 
-        mc = hpmc.integrate.convex_polyhedron(seed=123,implicit=True)
+        mc = mcm.integrate.convex_polyhedron(seed=123,implicit=True)
         mc.set_params(d=0,a=0)
 
         mc.set_params(nR=0,depletant_type='B')
@@ -32,7 +32,7 @@ class test_ghost_layer(unittest.TestCase):
         # setup the MC integration
         system = init.read_snapshot(data.make_snapshot(N=2,box=data.boxdim(Lx=100,Ly=50,Lz=50),particle_types=['A']))
 
-        mc = hpmc.integrate.convex_polyhedron(seed=123)
+        mc = mcm.integrate.convex_polyhedron(seed=123)
         mc.set_params(d=0,a=0)
 
         cube_verts=[(-1, -1, -1), (-1, -1, 1), (-1, 1, -1), (-1, 1, 1), (1, -1, -1), (1, -1, 1), (1, 1, -1), (1, 1, 1)]

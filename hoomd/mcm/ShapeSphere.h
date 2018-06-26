@@ -6,7 +6,7 @@
 #include "MCMPrecisionSetup.h"
 #include "hoomd/VectorMath.h"
 #include "Moves.h"
-#include "hoomd/AABB.h"
+#include "AABB.h"
 
 #include <stdexcept>
 

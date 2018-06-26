@@ -3,7 +3,7 @@ from __future__ import print_function
 
 import hoomd
 from hoomd import context, data, init
-from hoomd import hpmc
+from hoomd import mcm
 
 import unittest
 import numpy as np
@@ -21,7 +21,7 @@ class map_overlaps_test(unittest.TestCase):
         snap.particles.position[2] = [1.0, 0.25, 0.0]
 
         self.system = init.read_snapshot(snap)
-        self.mc = hpmc.integrate.sphere(seed=123)
+        self.mc = mcm.integrate.sphere(seed=123)
 
     def tearDown(self):
         context.initialize()

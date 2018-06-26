@@ -1,6 +1,6 @@
 from __future__ import division
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 
 import unittest
 
@@ -21,7 +21,7 @@ class gibbs_ensemble_test(unittest.TestCase):
         self.system = init.create_lattice(unitcell=unitcell, n=5)
 
         self.system.particles.types.add('B')
-        self.mc = hpmc.integrate.sphere(seed=123+p,implicit=True)
+        self.mc = mcm.integrate.sphere(seed=123+p,implicit=True)
         self.mc.set_params(d=0.1)
 
     def tearDown(self):
@@ -44,7 +44,7 @@ class gibbs_ensemble_test(unittest.TestCase):
         self.mc.shape_param.set('B', diameter=q)
 
         # needs to be run with 2 partitions
-        muvt=hpmc.update.muvt(mc=self.mc,seed=456,ngibbs=2,transfer_types=['A'])
+        muvt=mcm.update.muvt(mc=self.mc,seed=456,ngibbs=2,transfer_types=['A'])
 
         muvt.set_params(dV=0.01)
         muvt.set_params(move_ratio=.01)

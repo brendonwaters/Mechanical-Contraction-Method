@@ -9,11 +9,11 @@ namespace py = pybind11;
     \brief Definition of UpdaterBoxMC
 */
 
-namespace hpmc
+namespace mcm
 {
 
 UpdaterBoxMC::UpdaterBoxMC(std::shared_ptr<SystemDefinition> sysdef,
-                             std::shared_ptr<IntegratorHPMC> mc,
+                             std::shared_ptr<IntegratorMCM> mc,
                              std::shared_ptr<Variant> P,
                              const Scalar frequency,
                              const unsigned int seed)
@@ -62,12 +62,12 @@ UpdaterBoxMC::~UpdaterBoxMC()
     m_pdata->getMaxParticleNumberChangeSignal().disconnect<UpdaterBoxMC, &UpdaterBoxMC::slotMaxNChange>(this);
     }
 
-/*! hpmc::UpdaterBoxMC provides:
-    - hpmc_boxmc_trial_delta (Number of MC box changes attempted during logger interval)
-    - hpmc_boxmc_volume_acceptance (Ratio of volume change trials accepted during logger interval)
-    - hpmc_boxmc_shear_acceptance (Ratio of shear trials accepted during logger interval)
-    - hpmc_boxmc_aspect_acceptance (Ratio of aspect trials accepted during logger interval)
-    - hpmc_boxmc_betaP (Current value of beta*p parameter for the box updater)
+/*! mcm::UpdaterBoxMC provides:
+    - mcm_boxmc_trial_delta (Number of MC box changes attempted during logger interval)
+    - mcm_boxmc_volume_acceptance (Ratio of volume change trials accepted during logger interval)
+    - mcm_boxmc_shear_acceptance (Ratio of shear trials accepted during logger interval)
+    - mcm_boxmc_aspect_acceptance (Ratio of aspect trials accepted during logger interval)
+    - mcm_boxmc_betaP (Current value of beta*p parameter for the box updater)
 
     \returns a list of provided quantities
 */
@@ -77,12 +77,12 @@ std::vector< std::string > UpdaterBoxMC::getProvidedLogQuantities()
     std::vector< std::string > result = Updater::getProvidedLogQuantities();
 
     // then add ours
-    result.push_back("hpmc_boxmc_trial_count");
-    result.push_back("hpmc_boxmc_volume_acceptance");
-    result.push_back("hpmc_boxmc_ln_volume_acceptance");
-    result.push_back("hpmc_boxmc_shear_acceptance");
-    result.push_back("hpmc_boxmc_aspect_acceptance");
-    result.push_back("hpmc_boxmc_betaP");
+    result.push_back("mcm_boxmc_trial_count");
+    result.push_back("mcm_boxmc_volume_acceptance");
+    result.push_back("mcm_boxmc_ln_volume_acceptance");
+    result.push_back("mcm_boxmc_shear_acceptance");
+    result.push_back("mcm_boxmc_aspect_acceptance");
+    result.push_back("mcm_boxmc_betaP");
     return result;
     }
 
@@ -94,42 +94,42 @@ std::vector< std::string > UpdaterBoxMC::getProvidedLogQuantities()
 */
 Scalar UpdaterBoxMC::getLogValue(const std::string& quantity, unsigned int timestep)
     {
-    hpmc_boxmc_counters_t counters = getCounters(1);
+    mcm_boxmc_counters_t counters = getCounters(1);
 
     // return requested log value
-    if (quantity == "hpmc_boxmc_trial_count")
+    if (quantity == "mcm_boxmc_trial_count")
         {
         return counters.getNMoves();
         }
-    else if (quantity == "hpmc_boxmc_volume_acceptance")
+    else if (quantity == "mcm_boxmc_volume_acceptance")
         {
         if (counters.volume_reject_count + counters.volume_accept_count == 0)
             return 0;
         else
             return counters.getVolumeAcceptance();
         }
-    else if (quantity == "hpmc_boxmc_ln_volume_acceptance")
+    else if (quantity == "mcm_boxmc_ln_volume_acceptance")
         {
         if (counters.ln_volume_reject_count + counters.ln_volume_accept_count == 0)
             return 0;
         else
             return counters.getLogVolumeAcceptance();
         }
-    else if (quantity == "hpmc_boxmc_shear_acceptance")
+    else if (quantity == "mcm_boxmc_shear_acceptance")
         {
         if (counters.shear_reject_count + counters.shear_accept_count == 0)
             return 0;
         else
             return counters.getShearAcceptance();
         }
-    else if (quantity == "hpmc_boxmc_aspect_acceptance")
+    else if (quantity == "mcm_boxmc_aspect_acceptance")
         {
         if (counters.aspect_reject_count + counters.aspect_accept_count == 0)
             return 0;
         else
             return counters.getAspectAcceptance();
         }
-    else if (quantity == "hpmc_boxmc_betaP")
+    else if (quantity == "mcm_boxmc_betaP")
         {
         return m_P->getValue(timestep);
         }
@@ -845,9 +845,9 @@ void UpdaterBoxMC::update_aspect(unsigned int timestep, hoomd::detail::Saru& rng
     provides the current value. The parameter *mode* controls whether the returned counts are absolute, relative
     to the start of the run, or relative to the start of the last executed step.
 */
-hpmc_boxmc_counters_t UpdaterBoxMC::getCounters(unsigned int mode)
+mcm_boxmc_counters_t UpdaterBoxMC::getCounters(unsigned int mode)
     {
-    hpmc_boxmc_counters_t result;
+    mcm_boxmc_counters_t result;
 
     if (mode == 0)
         result = m_count_total;
@@ -864,7 +864,7 @@ void export_UpdaterBoxMC(py::module& m)
     {
    py::class_< UpdaterBoxMC, std::shared_ptr< UpdaterBoxMC > >(m, "UpdaterBoxMC", py::base<Updater>())
     .def(py::init< std::shared_ptr<SystemDefinition>,
-                         std::shared_ptr<IntegratorHPMC>,
+                         std::shared_ptr<IntegratorMCM>,
                          std::shared_ptr<Variant>,
                          Scalar,
                          const unsigned int >())
@@ -889,21 +889,21 @@ void export_UpdaterBoxMC(py::module& m)
     .def("getCounters", &UpdaterBoxMC::getCounters)
     ;
 
-   py::class_< hpmc_boxmc_counters_t >(m, "hpmc_boxmc_counters_t")
-    .def_readwrite("volume_accept_count", &hpmc_boxmc_counters_t::volume_accept_count)
-    .def_readwrite("volume_reject_count", &hpmc_boxmc_counters_t::volume_reject_count)
-    .def_readwrite("ln_volume_accept_count", &hpmc_boxmc_counters_t::ln_volume_accept_count)
-    .def_readwrite("ln_volume_reject_count", &hpmc_boxmc_counters_t::ln_volume_reject_count)
-    .def_readwrite("shear_accept_count", &hpmc_boxmc_counters_t::shear_accept_count)
-    .def_readwrite("shear_reject_count", &hpmc_boxmc_counters_t::shear_reject_count)
-    .def_readwrite("aspect_accept_count", &hpmc_boxmc_counters_t::aspect_accept_count)
-    .def_readwrite("aspect_reject_count", &hpmc_boxmc_counters_t::aspect_reject_count)
-    .def("getVolumeAcceptance", &hpmc_boxmc_counters_t::getVolumeAcceptance)
-    .def("getLogVolumeAcceptance", &hpmc_boxmc_counters_t::getLogVolumeAcceptance)
-    .def("getShearAcceptance", &hpmc_boxmc_counters_t::getShearAcceptance)
-    .def("getAspectAcceptance", &hpmc_boxmc_counters_t::getAspectAcceptance)
-    .def("getNMoves", &hpmc_boxmc_counters_t::getNMoves)
+   py::class_< mcm_boxmc_counters_t >(m, "mcm_boxmc_counters_t")
+    .def_readwrite("volume_accept_count", &mcm_boxmc_counters_t::volume_accept_count)
+    .def_readwrite("volume_reject_count", &mcm_boxmc_counters_t::volume_reject_count)
+    .def_readwrite("ln_volume_accept_count", &mcm_boxmc_counters_t::ln_volume_accept_count)
+    .def_readwrite("ln_volume_reject_count", &mcm_boxmc_counters_t::ln_volume_reject_count)
+    .def_readwrite("shear_accept_count", &mcm_boxmc_counters_t::shear_accept_count)
+    .def_readwrite("shear_reject_count", &mcm_boxmc_counters_t::shear_reject_count)
+    .def_readwrite("aspect_accept_count", &mcm_boxmc_counters_t::aspect_accept_count)
+    .def_readwrite("aspect_reject_count", &mcm_boxmc_counters_t::aspect_reject_count)
+    .def("getVolumeAcceptance", &mcm_boxmc_counters_t::getVolumeAcceptance)
+    .def("getLogVolumeAcceptance", &mcm_boxmc_counters_t::getLogVolumeAcceptance)
+    .def("getShearAcceptance", &mcm_boxmc_counters_t::getShearAcceptance)
+    .def("getAspectAcceptance", &mcm_boxmc_counters_t::getAspectAcceptance)
+    .def("getNMoves", &mcm_boxmc_counters_t::getNMoves)
     ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm

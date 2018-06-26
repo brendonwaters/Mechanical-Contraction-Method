@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import unittest
 import os
 import numpy
@@ -42,7 +42,7 @@ class faceted_sphere(unittest.TestCase):
         # decrease initialization time with smaller grid for Hilbert curve
         context.current.sorter.set_params(grid=8)
 
-        mc = hpmc.integrate.faceted_sphere(seed=123,d=0,a=0)
+        mc = mcm.integrate.faceted_sphere(seed=123,d=0,a=0)
         mc.shape_param.set('A',diameter=d, offsets=offsets, vertices=vertices, normals=normals,origin=(0,0,0))
 
         run(1)

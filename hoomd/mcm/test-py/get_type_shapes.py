@@ -1,5 +1,5 @@
 import hoomd
-from hoomd import hpmc
+from hoomd import mcm
 import unittest
 hoomd.context.initialize()
 print(hoomd.__file__)
@@ -14,7 +14,7 @@ class test_type_shapes(unittest.TestCase):
         snap.particles.types = ['A']
         self.system = hoomd.init.read_snapshot(snap)
 
-        self.mc = hpmc.integrate.convex_polygon(seed=10);
+        self.mc = mcm.integrate.convex_polygon(seed=10);
         test_verts = [(1, 0), (0, 1), (-1, -1)]
         self.mc.shape_param.set('A', vertices=test_verts)
 
@@ -30,7 +30,7 @@ class test_type_shapes(unittest.TestCase):
         snap.particles.types = ['A']
         self.system = hoomd.init.read_snapshot(snap)
 
-        self.mc = hpmc.integrate.simple_polygon(seed=10);
+        self.mc = mcm.integrate.simple_polygon(seed=10);
         test_verts = [(1, 0), (0, 1), (-1, -1)]
         self.mc.shape_param.set('A', vertices=test_verts)
 
@@ -46,7 +46,7 @@ class test_type_shapes(unittest.TestCase):
         snap.particles.types = ['A']
         self.system = hoomd.init.read_snapshot(snap)
 
-        self.mc = hpmc.integrate.sphere(seed=10);
+        self.mc = mcm.integrate.sphere(seed=10);
         test_diam = 1
         self.mc.shape_param.set('A', diameter = test_diam)
 
@@ -62,7 +62,7 @@ class test_type_shapes(unittest.TestCase):
         snap.particles.types = ['A']
         self.system = hoomd.init.read_snapshot(snap)
 
-        self.mc = hpmc.integrate.sphere(seed=10);
+        self.mc = mcm.integrate.sphere(seed=10);
         test_diam = 1
         self.mc.shape_param.set('A', diameter = test_diam)
 
@@ -78,7 +78,7 @@ class test_type_shapes(unittest.TestCase):
         snap.particles.types = ['A']
         self.system = hoomd.init.read_snapshot(snap)
 
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10);
+        self.mc = mcm.integrate.convex_polyhedron(seed=10);
         test_verts = [(1, 0, 0), (0, 1, 0), (-1, -1, 0)]
         self.mc.shape_param.set('A', vertices=test_verts)
 

@@ -19,13 +19,13 @@
 
 #include "hoomd/Updater.h"
 #include "ExternalFieldLattice.h"
-#include "IntegratorHPMCMono.h"
+#include "IntegratorMCMMono.h"
 
 #ifndef NVCC
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc {
+namespace mcm {
 // (if you really don't want to include the whole hoomd.h, you can include individual files IF AND ONLY IF
 // hoomd_config.h is included first)
 // For example:
@@ -45,7 +45,7 @@ class RemoveDriftUpdater : public Updater
         //! Constructor
         RemoveDriftUpdater( std::shared_ptr<SystemDefinition> sysdef,
                             std::shared_ptr<ExternalFieldLattice<Shape> > externalLattice,
-                            std::shared_ptr<IntegratorHPMCMono<Shape> > mc
+                            std::shared_ptr<IntegratorMCMMono<Shape> > mc
                           ) : Updater(sysdef), m_externalLattice(externalLattice), m_mc(mc)
             {
             }
@@ -97,7 +97,7 @@ class RemoveDriftUpdater : public Updater
             }
     protected:
                 std::shared_ptr<ExternalFieldLattice<Shape> > m_externalLattice;
-                std::shared_ptr<IntegratorHPMCMono<Shape> > m_mc;
+                std::shared_ptr<IntegratorMCMMono<Shape> > m_mc;
     };
 
 //! Export the ExampleUpdater class to python
@@ -108,7 +108,7 @@ void export_RemoveDriftUpdater(pybind11::module& m, std::string name)
    pybind11::class_<RemoveDriftUpdater<Shape>, std::shared_ptr<RemoveDriftUpdater<Shape> > >(m, name.c_str(), pybind11::base<Updater>())
    .def(pybind11::init<     std::shared_ptr<SystemDefinition>,
                             std::shared_ptr<ExternalFieldLattice<Shape> >,
-                            std::shared_ptr<IntegratorHPMCMono<Shape> > >())
+                            std::shared_ptr<IntegratorMCMMono<Shape> > >())
     ;
     }
 }

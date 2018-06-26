@@ -17,11 +17,9 @@
 #include "MCMPrecisionSetup.h"
 #include "IntegratorMCM.h"
 #include "Moves.h"
-#include "hoomd/AABBTree.h"
+#include "AABBTree.h"
 #include "GSDMCMSchema.h"
 #include "hoomd/Index1D.h"
-#include "hoomd/VectorMath.h"
-#include "UpdaterBoxMC.h"
 
 #include "hoomd/managed_allocator.h"
 
@@ -109,7 +107,7 @@ class UpdateOrder
 }; // end namespace detail
 
 //! MCM on systems of mono-disperse shapes
-/*! Implement the Mechanical Contraction Method for a single type of shape on the CPU.
+/*! Implement hard particle monte carlo for a single type of shape on the CPU.
 
     TODO: I need better documentation
 
@@ -496,30 +494,31 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
     m_exec_conf->msg->notice(10) << "MCMMono update: " << timestep << std::endl;
     IntegratorMCM::update(timestep);
 
+
     const vec3<real> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
 
     double scale_factor=0.999; //factor to scale the box length by at each timestep, hardcoded for now, will add interface later
 
     int attempt_cutoff=1000; //cutoff number of overlap removal attempts
-    int n_attempts=0;
+    int n_attempts=0;  //counter for compression attempts
 
     // get needed vars
     ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
     mcm_counters_t& counters = h_counters.data[0];
-    BoxDim& box = m_pdata->getBox();
+    const BoxDim& box = m_pdata->getBox();
+    unsigned int ndim = this->m_sysdef->getNDimensions();
 
     scalar3& box_L = m_pdata->getL();
 
-    box_L.x=Lx;
-    box_L.y=Ly;
-    box_L.z=Lz;
+    double Lx=box_L.x;
+    double Ly=box_L.y;
+    double Lz=box_L.z;
 
     Lx*=scale_factor;
     Ly*=scale_factor;
     Lz*=scale_factor;
 
     box.setL(make_scalar3(Lx, Ly, Lz));
-    unsigned int ndim = this->m_sysdef->getNDimensions();
 
     #ifdef ENABLE_MPI
     // compute the width of the active region
@@ -561,17 +560,13 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         ArrayHandle<Scalar> h_diameter(m_pdata->getDiameters(), access_location::host, access_mode::read);
         ArrayHandle<Scalar> h_charge(m_pdata->getCharges(), access_location::host, access_mode::read);
 
-        //Not needed for MCM
-
-        // //access move sizes
+        //access move sizes
         // ArrayHandle<Scalar> h_d(m_d, access_location::host, access_mode::read);
         // ArrayHandle<Scalar> h_a(m_a, access_location::host, access_mode::read);
 
         // loop through N particles in a shuffled order
         for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
             {
-            unsigned int type1=m_pdata->getType(i);
-            
             unsigned int i = m_update_order[cur_particle];
 
             // read in the current position and orientation
@@ -588,12 +583,10 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                 }
             #endif
 
-            //Not Needed for MCM
-
-            // // make a trial move for i
+            // make a trial move for i
             // hoomd::detail::Saru rng_i(i, m_seed + m_exec_conf->getRank()*m_nselect + i_nselect, timestep);
-            // int typ_i = __scalar_as_int(postype_i.w);
-            // Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
+            int typ_i = __scalar_as_int(postype_i.w);
+            Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
             // unsigned int move_type_select = rng_i.u32() & 0xffff;
             // bool move_type_translate = !shape_i.hasOrientation() || (move_type_select < m_move_ratio);
 
@@ -710,17 +703,15 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                                     && test_overlap(r_ij, shape_i, shape_j, counters.overlap_err_count))
                                     {
                                     overlap = true;
-                                    // break;  
-
+                                    // break;
                                     while (overlap==true && n_attempts < attempt_cutoff)
                                         {
 
                                         if (ndim==2)
-                                            { 
+                                            {
 
                                             vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
 
-                                            
                                             unsigned int type2=m_pdata->getType(j);
 
                                             if (type1==1 && type2==1) //hardcoded for now, type 0=circles 1=rods, need to generalize
@@ -748,43 +739,6 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                                             }
 
                                         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                                    //ADD REMOVE_OVERLAPS ROUTINE HERE
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                                     }
                                 else if (m_patch && !m_patch_log && dot(r_ij,r_ij) <= rcut*rcut) // If there is no overlap and m_patch is not NULL, calculate energy
                                     {
@@ -905,6 +859,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                 // increment accept counter and assign new position
 
                 n_attempts=0;
+
                 if (!shape_i.ignoreStatistics())
                     {
                     if (move_type_translate)

@@ -3,19 +3,19 @@
 ###################################
 ## Setup all of the test executables in a for loop
 set(TEST_LIST
-    test_aabb_tree
-    test_convex_polygon
-    test_convex_polyhedron
-    test_ellipsoid
-    test_faceted_sphere
-    test_moves
-    test_polyhedron
-    test_simple_polygon
-    test_sphere
-    test_sphere_union
-    test_spheropolygon
-    test_spheropolyhedron
-    test_sphinx
+    mcm_test_aabb_tree
+    mcm_test_convex_polygon
+    mcm_test_convex_polyhedron
+    mcm_test_ellipsoid
+    mcm_test_faceted_sphere
+    mcm_test_moves
+    mcm_test_polyhedron
+    mcm_test_simple_polygon
+    mcm_test_sphere
+    mcm_test_sphere_union
+    mcm_test_spheropolygon
+    mcm_test_spheropolyhedron
+    mcm_test_sphinx
     )
 
 foreach (CUR_TEST ${TEST_LIST})
@@ -30,7 +30,7 @@ foreach (CUR_TEST ${TEST_LIST})
 
     add_dependencies(test_all ${CUR_TEST})
 
-    target_link_libraries(${CUR_TEST} _hpmc ${HOOMD_LIBRARIES} ${PYTHON_LIBRARIES})
+    target_link_libraries(${CUR_TEST} _mcm ${HOOMD_LIBRARIES} ${PYTHON_LIBRARIES})
     fix_cudart_rpath(${CUR_TEST})
 
     if (ENABLE_MPI)

@@ -1,6 +1,6 @@
 // inclusion guard
-#ifndef _UPDATER_HPMC_CLUSTERS_
-#define _UPDATER_HPMC_CLUSTERS_
+#ifndef _UPDATER_MCM_CLUSTERS_
+#define _UPDATER_MCM_CLUSTERS_
 
 /*! \file UpdaterBoxClusters.h
     \brief Declaration of UpdaterBoxClusters
@@ -14,15 +14,15 @@
 #include <list>
 
 #include "Moves.h"
-#include "HPMCCounters.h"
-#include "IntegratorHPMCMono.h"
+#include "MCMCounters.h"
+#include "IntegratorMCMMono.h"
 
 #ifdef ENABLE_TBB
 #include <tbb/tbb.h>
 #include <atomic>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -258,11 +258,11 @@ class UpdaterClusters : public Updater
     public:
         //! Constructor
         /*! \param sysdef System definition
-            \param mc HPMC integrator
+            \param mc MCM integrator
             \param seed PRNG seed
         */
         UpdaterClusters(std::shared_ptr<SystemDefinition> sysdef,
-                        std::shared_ptr<IntegratorHPMCMono<Shape> > mc,
+                        std::shared_ptr<IntegratorMCMMono<Shape> > mc,
                         unsigned int seed);
 
         //! Destructor
@@ -271,26 +271,26 @@ class UpdaterClusters : public Updater
         //! Get the value of a logged quantity
         virtual Scalar getLogValue(const std::string& quantity, unsigned int timestep)
             {
-            hpmc_clusters_counters_t counters = getCounters(2);
+            mcm_clusters_counters_t counters = getCounters(2);
 
-            if (quantity == "hpmc_clusters_moves")
+            if (quantity == "mcm_clusters_moves")
                 {
-                hpmc_clusters_counters_t counters_total = getCounters(0);
+                mcm_clusters_counters_t counters_total = getCounters(0);
                 return double(counters_total.getNParticlesMoved()) / double(m_pdata->getNGlobal());
                 }
-            else if (quantity == "hpmc_clusters_pivot_acceptance")
+            else if (quantity == "mcm_clusters_pivot_acceptance")
                 {
                 return counters.getPivotAcceptance();
                 }
-            else if (quantity == "hpmc_clusters_reflection_acceptance")
+            else if (quantity == "mcm_clusters_reflection_acceptance")
                 {
                 return counters.getReflectionAcceptance();
                 }
-            else if (quantity == "hpmc_clusters_swap_acceptance")
+            else if (quantity == "mcm_clusters_swap_acceptance")
                 {
                 return counters.getSwapAcceptance();
                 }
-            else if (quantity == "hpmc_clusters_avg_size")
+            else if (quantity == "mcm_clusters_avg_size")
                 {
                 return counters.getAverageClusterSize();
                 }
@@ -305,11 +305,11 @@ class UpdaterClusters : public Updater
             // start with the integrator provided quantities
             std::vector< std::string > result;
             // then add ours
-            result.push_back("hpmc_clusters_moves");
-            result.push_back("hpmc_clusters_pivot_acceptance");
-            result.push_back("hpmc_clusters_reflection_acceptance");
-            result.push_back("hpmc_clusters_swap_acceptance");
-            result.push_back("hpmc_clusters_avg_size");
+            result.push_back("mcm_clusters_moves");
+            result.push_back("mcm_clusters_pivot_acceptance");
+            result.push_back("mcm_clusters_reflection_acceptance");
+            result.push_back("mcm_clusters_swap_acceptance");
+            result.push_back("mcm_clusters_avg_size");
             return result;
             }
 
@@ -366,8 +366,8 @@ class UpdaterClusters : public Updater
          */
         void printStats()
             {
-            hpmc_clusters_counters_t counters = getCounters(1);
-            m_exec_conf->msg->notice(2) << "-- HPMC cluster move stats:" << std::endl;
+            mcm_clusters_counters_t counters = getCounters(1);
+            m_exec_conf->msg->notice(2) << "-- MCM cluster move stats:" << std::endl;
             if (counters.pivot_accept_count + counters.pivot_reject_count != 0)
                 {
                 m_exec_conf->msg->notice(2) << "Average pivot acceptance:      " << counters.getPivotAcceptance() << std::endl;
@@ -388,9 +388,9 @@ class UpdaterClusters : public Updater
             /*! \param mode 0 -> Absolute count, 1 -> relative to the start of the run, 2 -> relative to the last executed step
                 \return The current state of the acceptance counters
             */
-            hpmc_clusters_counters_t getCounters(unsigned int mode)
+            mcm_clusters_counters_t getCounters(unsigned int mode)
                 {
-                hpmc_clusters_counters_t result;
+                mcm_clusters_counters_t result;
 
                 if (mode == 0)
                     result = m_count_total;
@@ -418,7 +418,7 @@ class UpdaterClusters : public Updater
 
 
     protected:
-        std::shared_ptr< IntegratorHPMCMono<Shape> > m_mc; //!< HPMC integrator
+        std::shared_ptr< IntegratorMCMMono<Shape> > m_mc; //!< MCM integrator
         unsigned int m_seed;                        //!< RNG seed
         Scalar m_move_ratio;                        //!< Pivot/Reflection move ratio
         Scalar m_swap_move_ratio;                   //!< Type swap / geometric move ratio
@@ -477,9 +477,9 @@ class UpdaterClusters : public Updater
         std::vector<unsigned int> m_ab_types;          //!< Two types used for swap move
         Scalar m_delta_mu;                             //!< Difference in chemical potential
 
-        hpmc_clusters_counters_t m_count_total;                 //!< Total count since initialization
-        hpmc_clusters_counters_t m_count_run_start;             //!< Count saved at run() start
-        hpmc_clusters_counters_t m_count_step_start;            //!< Count saved at the start of the last step
+        mcm_clusters_counters_t m_count_total;                 //!< Total count since initialization
+        mcm_clusters_counters_t m_count_run_start;             //!< Count saved at run() start
+        mcm_clusters_counters_t m_count_step_start;            //!< Count saved at the start of the last step
 
         //! Find interactions between particles due to overlap and depletion interaction
         /*! \param timestep Current time step
@@ -512,7 +512,7 @@ class UpdaterClusters : public Updater
 
 template< class Shape >
 UpdaterClusters<Shape>::UpdaterClusters(std::shared_ptr<SystemDefinition> sysdef,
-                                 std::shared_ptr<IntegratorHPMCMono<Shape> > mc,
+                                 std::shared_ptr<IntegratorMCMMono<Shape> > mc,
                                  unsigned int seed)
         : Updater(sysdef), m_mc(mc), m_seed(seed), m_move_ratio(0.5), m_swap_move_ratio(0.5),
             m_flip_probability(0.5), m_n_particles_old(0), m_delta_mu(0.0)
@@ -1017,7 +1017,7 @@ void UpdaterClusters<Shape>::update(unsigned int timestep)
     // if no particles, exit early
     if (! m_pdata->getNGlobal()) return;
 
-    if (m_prof) m_prof->push(m_exec_conf,"HPMC Clusters");
+    if (m_prof) m_prof->push(m_exec_conf,"MCM Clusters");
 
     // save a copy of the old configuration
     m_n_particles_old = m_pdata->getN();
@@ -1231,7 +1231,7 @@ void UpdaterClusters<Shape>::update(unsigned int timestep)
     // update ghosts & signal that AABB tree is invalid
     m_mc->communicate(true);
 
-    if (m_prof) m_prof->push(m_exec_conf,"HPMC Clusters");
+    if (m_prof) m_prof->push(m_exec_conf,"MCM Clusters");
 
     // determine which particles interact
     findInteractions(timestep, pivot, q, swap, line, map);
@@ -1821,7 +1821,7 @@ template < class Shape> void export_UpdaterClusters(pybind11::module& m, const s
     {
     pybind11::class_< UpdaterClusters<Shape>, std::shared_ptr< UpdaterClusters<Shape> > >(m, name.c_str(), pybind11::base<Updater>())
           .def( pybind11::init< std::shared_ptr<SystemDefinition>,
-                         std::shared_ptr< IntegratorHPMCMono<Shape> >,
+                         std::shared_ptr< IntegratorMCMMono<Shape> >,
                          unsigned int >())
         .def("getCounters", &UpdaterClusters<Shape>::getCounters)
         .def("setMoveRatio", &UpdaterClusters<Shape>::setMoveRatio)
@@ -1832,16 +1832,16 @@ template < class Shape> void export_UpdaterClusters(pybind11::module& m, const s
     ;
     }
 
-inline void export_hpmc_clusters_counters(pybind11::module &m)
+inline void export_mcm_clusters_counters(pybind11::module &m)
     {
-    pybind11::class_< hpmc_clusters_counters_t >(m, "hpmc_clusters_counters_t")
-        .def("getPivotAcceptance", &hpmc_clusters_counters_t::getPivotAcceptance)
-        .def("getReflectionAcceptance", &hpmc_clusters_counters_t::getReflectionAcceptance)
-        .def("getSwapAcceptance", &hpmc_clusters_counters_t::getSwapAcceptance)
-        .def("getNParticlesMoved", &hpmc_clusters_counters_t::getNParticlesMoved)
-        .def("getNParticlesInClusters", &hpmc_clusters_counters_t::getNParticlesInClusters);
+    pybind11::class_< mcm_clusters_counters_t >(m, "mcm_clusters_counters_t")
+        .def("getPivotAcceptance", &mcm_clusters_counters_t::getPivotAcceptance)
+        .def("getReflectionAcceptance", &mcm_clusters_counters_t::getReflectionAcceptance)
+        .def("getSwapAcceptance", &mcm_clusters_counters_t::getSwapAcceptance)
+        .def("getNParticlesMoved", &mcm_clusters_counters_t::getNParticlesMoved)
+        .def("getNParticlesInClusters", &mcm_clusters_counters_t::getNParticlesInClusters);
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
-#endif // _UPDATER_HPMC_CLUSTERS_
+#endif // _UPDATER_MCM_CLUSTERS_

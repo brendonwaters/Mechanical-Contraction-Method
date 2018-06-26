@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import unittest
 import os
 import numpy as np
@@ -215,7 +215,7 @@ class imagelist2d_test1 (unittest.TestCase):
             box, q = latticeToHoomd(b1, b2, b3, ndim=2)
             self.system = create_empty(N=1, box=box, particle_types=['A'])
 
-            self.mc = hpmc.integrate.sphere(seed=10, d=0.0);
+            self.mc = mcm.integrate.sphere(seed=10, d=0.0);
             self.mc.shape_param.set("A", diameter=1.0);
 
             # verify that overlaps are detected
@@ -236,7 +236,7 @@ class imagelist2d_test1 (unittest.TestCase):
             box, q = latticeToHoomd(b1, b2, b3, ndim=2)
             self.system = create_empty(N=1, box=box, particle_types=['A'])
 
-            self.mc = hpmc.integrate.sphere(seed=10, d=0.0);
+            self.mc = mcm.integrate.sphere(seed=10, d=0.0);
             self.mc.shape_param.set("A", diameter=1.0);
 
             # verify that overlaps aren't detected
@@ -260,7 +260,7 @@ class imagelist2d_test2 (unittest.TestCase):
             self.system = create_empty(N=1, box=box, particle_types=['A'])
             self.system.particles[0].orientation = q
 
-            self.mc = hpmc.integrate.convex_polygon(seed=10, d=0.0);
+            self.mc = mcm.integrate.convex_polygon(seed=10, d=0.0);
             self.mc.shape_param.set("A", vertices=rectangle);
 
             # verify that overlaps are detected
@@ -283,7 +283,7 @@ class imagelist2d_test3 (unittest.TestCase):
             self.system = create_empty(N=1, box=box, particle_types=['A'])
             self.system.particles[0].orientation = q
 
-            self.mc = hpmc.integrate.convex_polygon(seed=10, d=0.0);
+            self.mc = mcm.integrate.convex_polygon(seed=10, d=0.0);
             self.mc.shape_param.set("A", vertices=rectangle);
 
             # verify that overlaps are detected
@@ -315,7 +315,7 @@ class imagelist2d_test4 (unittest.TestCase):
             self.system = create_empty(N=1, box=box, particle_types=['A'])
             self.system.particles[0].orientation = q
 
-            self.mc = hpmc.integrate.convex_polygon(seed=10, d=0.0);
+            self.mc = mcm.integrate.convex_polygon(seed=10, d=0.0);
             self.mc.shape_param.set("A", vertices=verts);
 
             # verify that no overlaps are detected
@@ -347,7 +347,7 @@ class imagelist2d_test5 (unittest.TestCase):
             self.system = create_empty(N=1, box=box, particle_types=['A'])
             self.system.particles[0].orientation = q
 
-            self.mc = hpmc.integrate.convex_polygon(seed=10, d=0.0);
+            self.mc = mcm.integrate.convex_polygon(seed=10, d=0.0);
             self.mc.shape_param.set("A", vertices=verts);
 
             # verify that overlaps are detected
@@ -372,7 +372,7 @@ class imagelist3d_test1 (unittest.TestCase):
             box, q = latticeToHoomd(b1, b2, b3, ndim=3)
             self.system = create_empty(N=1, box=box, particle_types=['A'])
 
-            self.mc = hpmc.integrate.sphere(seed=10, d=0.0);
+            self.mc = mcm.integrate.sphere(seed=10, d=0.0);
             self.mc.shape_param.set("A", diameter=1.0);
 
             # verify that overlaps are detected
@@ -396,7 +396,7 @@ class imagelist3d_test3 (unittest.TestCase):
             self.system.particles[0].orientation = q
 
             verts = np.array(poly)
-            self.mc = hpmc.integrate.convex_polyhedron(seed=10, d=0.0);
+            self.mc = mcm.integrate.convex_polyhedron(seed=10, d=0.0);
             self.mc.shape_param.set("A", vertices=verts);
 
             # verify that overlaps are detected
@@ -420,7 +420,7 @@ class imagelist3d_test3 (unittest.TestCase):
             self.system.particles[0].orientation = q
 
             verts = np.array(poly)
-            self.mc = hpmc.integrate.convex_polyhedron(seed=10, d=0.0);
+            self.mc = mcm.integrate.convex_polyhedron(seed=10, d=0.0);
             self.mc.shape_param.set("A", vertices=verts);
 
             # verify that overlaps are detected
@@ -452,7 +452,7 @@ class imagelist3d_test4 (unittest.TestCase):
             self.system = create_empty(N=1, box=box, particle_types=['A'])
             self.system.particles[0].orientation = q
 
-            self.mc = hpmc.integrate.convex_polyhedron(seed=10, d=0.0);
+            self.mc = mcm.integrate.convex_polyhedron(seed=10, d=0.0);
             self.mc.shape_param.set("A", vertices=verts);
 
             self.verts = verts
@@ -487,7 +487,7 @@ class imagelist3d_test5 (unittest.TestCase):
             self.system = create_empty(N=1, box=box, particle_types=['A'])
             self.system.particles[0].orientation = q
 
-            self.mc = hpmc.integrate.convex_polyhedron(seed=10, d=0.0);
+            self.mc = mcm.integrate.convex_polyhedron(seed=10, d=0.0);
             self.mc.shape_param.set("A", vertices=verts);
 
             # verify that overlaps are detected

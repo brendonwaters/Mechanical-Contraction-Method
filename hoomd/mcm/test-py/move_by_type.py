@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import hoomd
 import unittest
 import os
@@ -27,7 +27,7 @@ class pair_move_some(unittest.TestCase):
     def setUp(self) :
         self.system  = create_empty(N=1000, box=data.boxdim(Lx=11,Ly=5.5, Lz=5.5, dimensions=3), particle_types=['A','B'])
 
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10,a=0.0,d={'A':0.1,'B':0.0});
+        self.mc = mcm.integrate.convex_polyhedron(seed=10,a=0.0,d={'A':0.1,'B':0.0});
         self.mc.set_params(deterministic=True)
         rverts= numpy.array( [(-2,-1,-1),
                              (-2,1,-1),
@@ -105,7 +105,7 @@ class pair_rot_some(unittest.TestCase):
     def setUp(self) :
         self.system  = create_empty(N=1000, box=data.boxdim(Lx=11,Ly=5.5, Lz=5.5, dimensions=3), particle_types=['A','B'])
 
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10,d=0.0,a={'A':0.05,'B':0.0});
+        self.mc = mcm.integrate.convex_polyhedron(seed=10,d=0.0,a={'A':0.05,'B':0.0});
         self.mc.set_params(deterministic=True)
         rverts= numpy.array( [(-2,-1,-1),
                              (-2,1,-1),

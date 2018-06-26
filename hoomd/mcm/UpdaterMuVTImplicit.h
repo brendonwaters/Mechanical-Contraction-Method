@@ -5,7 +5,7 @@
 #define __UPDATER_MUVT_IMPLICIT_H__
 
 #include "UpdaterMuVT.h"
-#include "IntegratorHPMCMonoImplicit.h"
+#include "IntegratorMCMMonoImplicit.h"
 #include "ComputeFreeVolume.h"
 #include "Moves.h"
 
@@ -15,7 +15,7 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 /*!
@@ -164,7 +164,7 @@ void export_UpdaterMuVTImplicit(pybind11::module& m, const std::string& name)
 
 /*! Constructor
     \param sysdef The system defintion
-    \param mc_implict The HPMC integrator
+    \param mc_implict The MCM integrator
     \param seed RNG seed
     \param npartition How many partitions to use in parallel for Gibbs ensemble (n=1 == grand canonical)
 */
@@ -1402,7 +1402,7 @@ bool UpdaterMuVTImplicit<Shape,Integrator>::boxResizeAndScale(unsigned int times
         // update the image list
         const std::vector<vec3<Scalar> >&image_list = this->m_mc->updateImageList();
 
-        if (this->m_prof) this->m_prof->push(this->m_exec_conf, "HPMC implicit volume move ");
+        if (this->m_prof) this->m_prof->push(this->m_exec_conf, "MCM implicit volume move ");
 
         // access particle data and system box
         ArrayHandle<Scalar4> h_postype(this->m_pdata->getPositions(), access_location::host, access_mode::read);

@@ -2,7 +2,7 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 #include "hoomd/HOOMDMath.h"
-#include "HPMCPrecisionSetup.h"
+#include "MCMPrecisionSetup.h"
 #include "hoomd/VectorMath.h"
 #include <stdio.h>
 
@@ -22,7 +22,7 @@
 #include <iostream>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 namespace detail
@@ -245,6 +245,6 @@ DEVICE inline bool xenocollide_2d(const SupportFuncA& sa,
 
 }; // end namespace detail
 
-}; // end namespace hpmc
+}; // end namespace mcm
 
 #endif // __XENOCOLLIDE_2D_H__

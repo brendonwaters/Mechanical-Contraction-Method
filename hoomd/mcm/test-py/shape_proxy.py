@@ -3,7 +3,7 @@ from __future__ import print_function
 
 import hoomd
 from hoomd import context, data, init
-from hoomd import hpmc
+from hoomd import mcm
 
 import unittest
 import os
@@ -26,7 +26,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         # sphere
         diam = 1.125;
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.sphere(seed=2398, d=0.0)
+        self.mc = mcm.integrate.sphere(seed=2398, d=0.0)
         self.mc.shape_param.set('A', diameter=diam)
         self.assertAlmostEqual(self.mc.shape_param['A'].diameter, diam);
         del self.mc
@@ -37,7 +37,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         b = 0.238;
         c = 2.25;
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.ellipsoid(seed=2398, d=0.0)
+        self.mc = mcm.integrate.ellipsoid(seed=2398, d=0.0)
         self.mc.shape_param.set('A', a=a, b=b, c=c)
         self.assertAlmostEqual(self.mc.shape_param['A'].a, a);
         self.assertAlmostEqual(self.mc.shape_param['A'].b, b);
@@ -50,7 +50,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         # convex_polygon
         v = [(-1,-1), (1,-1), (1,1), (-1,1)];
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.convex_polygon(seed=2398, d=0.1, a=0.1)
+        self.mc = mcm.integrate.convex_polygon(seed=2398, d=0.1, a=0.1)
         self.mc.shape_param.set('A', vertices=v)
         diff = (np.array(v) - np.array(self.mc.shape_param['A'].vertices)).flatten();
         self.assertAlmostEqual(diff.dot(diff), 0);
@@ -62,7 +62,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         v = [(-1,-1), (1,-1), (1,1), (-1,1)];
         r = 0.1234;
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.convex_spheropolygon(seed=2398, d=0.1, a=0.1)
+        self.mc = mcm.integrate.convex_spheropolygon(seed=2398, d=0.1, a=0.1)
         self.mc.shape_param.set('A', vertices=v, sweep_radius=r)
         diff = (np.array(v) - np.array(self.mc.shape_param['A'].vertices)).flatten();
         self.assertAlmostEqual(diff.dot(diff), 0);
@@ -74,7 +74,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         #simple_polygon
         v = [(-1,-1), (1,-1), (1,1), (-1,1)];
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.simple_polygon(seed=2398, d=0.1, a=0.1)
+        self.mc = mcm.integrate.simple_polygon(seed=2398, d=0.1, a=0.1)
         self.mc.shape_param.set('A', vertices=v)
         diff = (np.array(v) - np.array(self.mc.shape_param['A'].vertices)).flatten();
         self.assertAlmostEqual(diff.dot(diff), 0);
@@ -88,7 +88,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         f = [(0,4,1),(1,4,2),(2,4,3),(3,4,0),(0,5,1),(1,5,2),(2,5,3),(3,5,0)]
         r = 0.0;
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.polyhedron(seed=10);
+        self.mc = mcm.integrate.polyhedron(seed=10);
         self.mc.shape_param.set('A', vertices=v, faces =f, sweep_radius=r);
         diff = (np.array(v) - np.array(self.mc.shape_param['A'].vertices)).flatten();
         self.assertAlmostEqual(diff.dot(diff), 0);
@@ -102,7 +102,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         # convex_polyhedron
         v = [(1,1,1), (1,-1,1), (-1,-1,1), (-1,1,1),(1,1,-1), (1,-1,-1), (-1,-1,-1), (-1,1,-1)];
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.convex_polyhedron(seed=2398, d=0.1, a=0.1)
+        self.mc = mcm.integrate.convex_polyhedron(seed=2398, d=0.1, a=0.1)
         self.mc.shape_param.set('A', vertices=v)
         diff = (np.array(v) - np.array(self.mc.shape_param['A'].vertices)).flatten();
         self.assertAlmostEqual(diff.dot(diff), 0);
@@ -114,7 +114,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         v = [(1,1,1), (1,-1,1), (-1,-1,1), (-1,1,1),(1,1,-1), (1,-1,-1), (-1,-1,-1), (-1,1,-1)];
         r = 0.1234;
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.convex_spheropolyhedron(seed=2398, d=0.1, a=0.1)
+        self.mc = mcm.integrate.convex_spheropolyhedron(seed=2398, d=0.1, a=0.1)
         self.mc.shape_param.set('A', vertices=v, sweep_radius=r)
         diff = (np.array(v) - np.array(self.mc.shape_param['A'].vertices)).flatten();
         self.assertAlmostEqual(diff.dot(diff), 0);
@@ -130,7 +130,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         diam = 2;
         orig = (0,0,0);
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.faceted_sphere(seed=10);
+        self.mc = mcm.integrate.faceted_sphere(seed=10);
         self.mc.shape_param.set('A', normals=norms,
                                     offsets=offs,
                                     vertices=v,
@@ -156,7 +156,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
             cent = [(0,0,0), (0,0,1.15), (0,0,-1.15)]
             diams = [2,-2.2,-2.2];
             self.system = init.read_snapshot(self.snapshot)
-            self.mc = hpmc.integrate.sphinx(seed=10);
+            self.mc = mcm.integrate.sphinx(seed=10);
             self.mc.shape_param.set('A', diameters=diams, centers=cent);
             diff = (np.array(cent) - np.array(self.mc.shape_param['A'].centers)).flatten();
             self.assertAlmostEqual(diff.dot(diff), 0);
@@ -170,7 +170,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         cent = [(0,0,0), (0,0,1.15), (0,0,-1.15)]
         diams = [2,2.2,1.75];
         self.system = init.read_snapshot(self.snapshot)
-        self.mc = hpmc.integrate.sphere_union(seed=10);
+        self.mc = mcm.integrate.sphere_union(seed=10);
         self.mc.shape_param.set('A', diameters=diams, centers=cent);
         diff = (np.array(cent) - np.array(self.mc.shape_param['A'].centers)).flatten();
         self.assertAlmostEqual(diff.dot(diff), 0);
@@ -182,7 +182,7 @@ class shape_proxy_sanity_checks (unittest.TestCase):
         context.initialize()
 
     def test_ensurelist(self):
-        enlist = hpmc.data._param.ensure_list;
+        enlist = mcm.data._param.ensure_list;
         li = [1,2,3];
         self.assertEqual(enlist(li) == li , True);
         li = ["1","2","3"];

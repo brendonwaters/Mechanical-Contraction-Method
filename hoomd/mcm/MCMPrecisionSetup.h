@@ -33,7 +33,7 @@ typedef float4 OverlapReal4;
 #else
 
 // in double precision, mixed mode enables floats for OverlapReal, otherwise it is double
-#ifdef ENABLE_MCM_MIXED_PRECISION
+#ifdef ENABLE_HPMC_MIXED_PRECISION
 typedef float OverlapReal;
 typedef float3 OverlapReal3;
 typedef float4 OverlapReal4;

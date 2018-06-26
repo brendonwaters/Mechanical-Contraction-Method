@@ -1,5 +1,5 @@
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 
 import math
 
@@ -36,22 +36,22 @@ class sphereEOS_test(unittest.TestCase):
 
         self.system = init.create_lattice(unitcell=lattice.sc(a=a), n=n);
 
-        self.mc = hpmc.integrate.sphere(seed=p)
+        self.mc = mcm.integrate.sphere(seed=p)
 
         self.mc.shape_param.set('A',diameter=1.0)
         self.mc.set_params(d=0.1,a=0.5)
 
-        mc_tune = hpmc.util.tune(self.mc, tunables=['d','a'],max_val=[4,0.5],gamma=1,target=0.3)
+        mc_tune = mcm.util.tune(self.mc, tunables=['d','a'],max_val=[4,0.5],gamma=1,target=0.3)
 
-        self.log = analyze.log(filename=None, quantities = ['hpmc_overlap_count','volume','phi_p', 'hpmc_d','hpmc_a','time'], overwrite=True, period=100)
+        self.log = analyze.log(filename=None, quantities = ['mcm_overlap_count','volume','phi_p', 'mcm_d','mcm_a','time'], overwrite=True, period=100)
         self.log.register_callback('phi_p', lambda timestep: len(self.system.particles)*V/self.system.box.get_volume())
 
         tunables = []
-        boxmc = hpmc.update.boxmc(self.mc,betaP=P,seed=123)
+        boxmc = mcm.update.boxmc(self.mc,betaP=P,seed=123)
         boxmc.ln_volume(delta=0.001,weight=1)
         tunables = ['dlnV']
 
-        npt_tune = hpmc.util.tune_npt(boxmc, tunables = tunables, target = 0.2, gamma=1)
+        npt_tune = mcm.util.tune_npt(boxmc, tunables = tunables, target = 0.2, gamma=1)
 
         for i in range(10):
             run(1000, quiet=True)

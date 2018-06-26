@@ -92,9 +92,10 @@ struct ShapeSpheropolygon
         {
         }
 
+
     //! Is this a spherocylinder?
     DEVICE bool isSpherocylinder() const{
-        if (verts.N=2)
+        if (verts.N==2)
             {
             return true;
             }
@@ -114,7 +115,7 @@ struct ShapeSpheropolygon
             {
             return false;
             }
-        }
+}
 
     //! Does this shape have an orientation
     DEVICE bool hasOrientation() const {

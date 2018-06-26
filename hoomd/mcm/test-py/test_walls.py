@@ -2,7 +2,7 @@ from __future__ import division
 from __future__ import print_function
 
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 
 import unittest
 import os
@@ -17,10 +17,10 @@ def create_empty(**kwargs):
 class sphere_wall_sphere_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.sphere(seed=10)
+        self.mc = mcm.integrate.sphere(seed=10)
         self.mc.shape_param.set('A', diameter=1.0)
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         self.ext_wall.add_sphere_wall(5.0, origin=[0,0,0], inside=True)
 
 
@@ -67,7 +67,7 @@ class sphere_wall_sphere_test(unittest.TestCase):
 class sphere_wall_convex_polyhedron_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10)
+        self.mc = mcm.integrate.convex_polyhedron(seed=10)
         self.mc.shape_param.set('A', vertices = [(-0.5,-0.5,-0.5),
                                                 (-0.5,0.5,-0.5),
                                                 (-0.5,-0.5,0.5),
@@ -77,7 +77,7 @@ class sphere_wall_convex_polyhedron_test(unittest.TestCase):
                                                 (0.5,-0.5,0.5),
                                                 (0.5,0.5,0.5)])
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         self.ext_wall.add_sphere_wall(5.0, origin=[0,0,0], inside=True)
 
 
@@ -138,7 +138,7 @@ class sphere_wall_convex_polyhedron_test(unittest.TestCase):
 class sphere_wall_convex_spheropolyhedron_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.convex_spheropolyhedron(seed=10)
+        self.mc = mcm.integrate.convex_spheropolyhedron(seed=10)
         self.mc.shape_param.set('A', vertices = [(-0.5,-0.5,-0.5),
                                                 (-0.5,0.5,-0.5),
                                                 (-0.5,-0.5,0.5),
@@ -149,7 +149,7 @@ class sphere_wall_convex_spheropolyhedron_test(unittest.TestCase):
                                                 (0.5,0.5,0.5)],
                                                 sweep_radius=0.5)
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         self.ext_wall.add_sphere_wall(5.0, origin=[0,0,0], inside=True)
 
 
@@ -209,10 +209,10 @@ class sphere_wall_convex_spheropolyhedron_sphere_test(unittest.TestCase):
     """Test that pure spheres work for the spheropolyhedron integrator"""
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.convex_spheropolyhedron(seed=10)
+        self.mc = mcm.integrate.convex_spheropolyhedron(seed=10)
         self.mc.shape_param.set('A', vertices = [], sweep_radius=1)
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         self.ext_wall.add_sphere_wall(5.0, origin=[0,0,0], inside=True)
 
 
@@ -255,10 +255,10 @@ class sphere_wall_convex_spheropolyhedron_sphere_test(unittest.TestCase):
 class cylinder_wall_sphere_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.sphere(seed=10)
+        self.mc = mcm.integrate.sphere(seed=10)
         self.mc.shape_param.set('A', diameter=1.0)
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         self.ext_wall.add_cylinder_wall(5.0, [0,0,0], [0,0,1], inside=True)
 
 
@@ -295,7 +295,7 @@ class cylinder_wall_sphere_test(unittest.TestCase):
 class cylinder_wall_convex_polyhedron_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10)
+        self.mc = mcm.integrate.convex_polyhedron(seed=10)
         self.mc.shape_param.set('A', vertices = [(-0.5,-0.5,-0.5),
                                                 (-0.5,0.5,-0.5),
                                                 (-0.5,-0.5,0.5),
@@ -305,7 +305,7 @@ class cylinder_wall_convex_polyhedron_test(unittest.TestCase):
                                                 (0.5,-0.5,0.5),
                                                 (0.5,0.5,0.5)])
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         self.ext_wall.add_cylinder_wall(5.0, [0,0,0], [0,0,1], inside=True)
 
 
@@ -364,10 +364,10 @@ class cylinder_wall_convex_polyhedron_test(unittest.TestCase):
 class plane_wall_sphere_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.sphere(seed=10)
+        self.mc = mcm.integrate.sphere(seed=10)
         self.mc.shape_param.set('A', diameter=1.0)
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         # this establishes the planar wall parallel to the yz plane, centered at (5,0,0).
         # the normal vector pointing along the (-) x axis means that
         # a particle to the left of the wall will be "inside" it, and
@@ -408,7 +408,7 @@ class plane_wall_sphere_test(unittest.TestCase):
 class plane_wall_convex_polyhedron_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10)
+        self.mc = mcm.integrate.convex_polyhedron(seed=10)
         self.mc.shape_param.set('A', vertices = [(-0.5,-0.5,-0.5),
                                                 (-0.5,0.5,-0.5),
                                                 (-0.5,-0.5,0.5),
@@ -418,7 +418,7 @@ class plane_wall_convex_polyhedron_test(unittest.TestCase):
                                                 (0.5,-0.5,0.5),
                                                 (0.5,0.5,0.5)])
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         # this establishes the planar wall parallel to the yz plane, centered at (5,0,0).
         # the normal vector pointing along the (-) x axis means that
         # a particle to the left of the wall will be "inside" it, and
@@ -476,7 +476,7 @@ class plane_wall_convex_polyhedron_test(unittest.TestCase):
 class plane_wall_convex_spheropolyhedron_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.convex_spheropolyhedron(seed=10)
+        self.mc = mcm.integrate.convex_spheropolyhedron(seed=10)
         self.mc.shape_param.set('A', vertices = [(-0.5,-0.5,-0.5),
                                                 (-0.5,0.5,-0.5),
                                                 (-0.5,-0.5,0.5),
@@ -487,7 +487,7 @@ class plane_wall_convex_spheropolyhedron_test(unittest.TestCase):
                                                 (0.5,0.5,0.5)],
                                                 sweep_radius=0.5)
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         # this establishes the planar wall parallel to the yz plane, centered at (5,0,0).
         # the normal vector pointing along the (-) x axis means that
         # a particle to the left of the wall will be "inside" it, and
@@ -562,13 +562,13 @@ class plane_wall_convex_spheropolyhedron_test(unittest.TestCase):
 class sphere_wall_tetrahedron_specific_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=30, dimensions=3), particle_types=['A'])
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10)
+        self.mc = mcm.integrate.convex_polyhedron(seed=10)
         self.mc.shape_param.set('A', vertices = [( np.sqrt(3)/3.,  np.sqrt(3)/3.,  np.sqrt(3)/3.),
                                                 (-np.sqrt(3)/3., -np.sqrt(3)/3.,  np.sqrt(3)/3.),
                                                 ( np.sqrt(3)/3., -np.sqrt(3)/3., -np.sqrt(3)/3.),
                                                 (-np.sqrt(3)/3.,  np.sqrt(3)/3., -np.sqrt(3)/3.)])
 
-        self.ext_wall = hpmc.field.wall(self.mc)
+        self.ext_wall = mcm.field.wall(self.mc)
         self.ext_wall.add_sphere_wall(0.2, origin=[0,0,0], inside=False)
 
 

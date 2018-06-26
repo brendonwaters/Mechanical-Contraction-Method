@@ -2,8 +2,8 @@
 // This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
 // inclusion guard
-#ifndef _UPDATER_HPMC_BOX_MC_
-#define _UPDATER_HPMC_BOX_MC_
+#ifndef _UPDATER_MCM_BOX_MC_
+#define _UPDATER_MCM_BOX_MC_
 
 /*! \file UpdaterBoxMC.h
     \brief Declaration of UpdaterBoxMC
@@ -17,16 +17,16 @@
 // Need Moves.h for rand_select
 #include "Moves.h"
 
-#include "IntegratorHPMC.h"
+#include "IntegratorMCM.h"
 
 #ifndef NVCC
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
-//! Update box for HPMC simulation in the NPT ensemble, etc.
+//! Update box for MCM simulation in the NPT ensemble, etc.
 /*! The pressure parameter is beta*P. For a unitless reduced pressure, the user must adopt and apply the
     convention of their choice externally. E.g. \f$ P^* \equiv \frac{P \sigma^3}{k_B T} \f$ implies a user should pass
     \f$ P^* / \sigma^3 \f$ as the UpdaterBoxMC P parameter.
@@ -36,7 +36,7 @@ class UpdaterBoxMC : public Updater
     public:
         //! Constructor
         /*! \param sysdef System definition
-            \param mc HPMC integrator object
+            \param mc MCM integrator object
             \param P Pressure times thermodynamic beta to apply in isobaric ensembles
             \param frequency average number of box updates per particle super-move
             \param seed PRNG seed
@@ -44,7 +44,7 @@ class UpdaterBoxMC : public Updater
             Variant parameters are possible, but changing MC parameters violates detailed balance.
         */
         UpdaterBoxMC(std::shared_ptr<SystemDefinition> sysdef,
-                      std::shared_ptr<IntegratorHPMC> mc,
+                      std::shared_ptr<IntegratorMCM> mc,
                       std::shared_ptr<Variant> P,
                       const Scalar frequency,
                       const unsigned int seed);
@@ -160,8 +160,8 @@ class UpdaterBoxMC : public Updater
         //! Print statistics about the MC box update steps taken
         void printStats()
             {
-            hpmc_boxmc_counters_t counters = getCounters(1);
-            m_exec_conf->msg->notice(2) << "-- HPMC box change stats:" << std::endl;
+            mcm_boxmc_counters_t counters = getCounters(1);
+            m_exec_conf->msg->notice(2) << "-- MCM box change stats:" << std::endl;
 
             if (counters.shear_accept_count + counters.shear_reject_count > 0)
                 {
@@ -210,7 +210,7 @@ class UpdaterBoxMC : public Updater
         virtual void update(unsigned int timestep);
 
         //! Get the current counter values
-        hpmc_boxmc_counters_t getCounters(unsigned int mode=0);
+        mcm_boxmc_counters_t getCounters(unsigned int mode=0);
 
         //! Perform box update in NpT box length distribution
         /*! \param timestep timestep at which update is being evaluated
@@ -276,9 +276,9 @@ class UpdaterBoxMC : public Updater
 
 
     private:
-        std::shared_ptr<IntegratorHPMC> m_mc;     //!< HPMC integrator object
+        std::shared_ptr<IntegratorMCM> m_mc;     //!< MCM integrator object
         std::shared_ptr<Variant> m_P;             //!< Reduced pressure in isobaric ensembles
-        Scalar m_frequency;                         //!< Frequency of BoxMC moves versus HPMC integrator moves
+        Scalar m_frequency;                         //!< Frequency of BoxMC moves versus MCM integrator moves
 
         Scalar m_Volume_delta;                      //!< Amount by which to change parameter during box-change
         float m_Volume_weight;                     //!< relative weight of volume moves
@@ -299,9 +299,9 @@ class UpdaterBoxMC : public Updater
 
         GPUArray<Scalar4> m_pos_backup;             //!< hold backup copy of particle positions
 
-        hpmc_boxmc_counters_t m_count_total;          //!< Accept/reject total count
-        hpmc_boxmc_counters_t m_count_run_start;      //!< Count saved at run() start
-        hpmc_boxmc_counters_t m_count_step_start;     //!< Count saved at the start of the last step
+        mcm_boxmc_counters_t m_count_total;          //!< Accept/reject total count
+        mcm_boxmc_counters_t m_count_run_start;      //!< Count saved at run() start
+        mcm_boxmc_counters_t m_count_step_start;     //!< Count saved at the start of the last step
 
         unsigned int m_seed;                        //!< Seed for pseudo-random number generator
 
@@ -333,6 +333,6 @@ class UpdaterBoxMC : public Updater
 //! Export UpdaterBoxMC to Python
 void export_UpdaterBoxMC(pybind11::module& m);
 
-} // end namespace hpmc
+} // end namespace mcm
 
-#endif // _UPDATER_HPMC_BOX_MC_
+#endif // _UPDATER_MCM_BOX_MC_

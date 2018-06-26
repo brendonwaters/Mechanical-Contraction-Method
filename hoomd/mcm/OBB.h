@@ -5,7 +5,7 @@
 
 #include "hoomd/HOOMDMath.h"
 #include "hoomd/VectorMath.h"
-#include "hoomd/AABB.h"
+#include "AABB.h"
 #include "ShapeSphere.h"
 
 #include <algorithm>

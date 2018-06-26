@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import unittest
 import os
 import numpy
@@ -20,7 +20,7 @@ def create_empty(**kwargs):
 # are created and none during the run(). Some moves should be accepted and some should be rejected.
 #
 # Failure mode 1: If the box size is between 1 and 2 diameters and the cell list code path activates, it is an error
-# This is now unused. HPMC always runs a small box capable path on the CPU.
+# This is now unused. MCM always runs a small box capable path on the CPU.
 #
 # Failure mode 2: If the small box trial move code path does not correctly check the updated orientation when checking
 # particles vs its own image - some number of overlaps will show up during the run().
@@ -33,7 +33,7 @@ class pair_smallbox3d_test1 (unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=1.9, dimensions=3), particle_types=['A'])
 
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10);
+        self.mc = mcm.integrate.convex_polyhedron(seed=10);
         self.mc.set_params(deterministic=True)
         self.mc.shape_param.set("A", vertices=[(-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5), (-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5), (0.5, -0.5, -0.5), (0.5, -0.5, 0.5), (0.5, 0.5, -0.5), (0.5, 0.5, 0.5)]);
 
@@ -60,7 +60,7 @@ class pair_smallbox3d_test2 (unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=1.2, dimensions=3), particle_types=['A'])
 
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10);
+        self.mc = mcm.integrate.convex_polyhedron(seed=10);
         self.mc.set_params(deterministic=True)
         self.mc.shape_param.set("A", vertices=[(-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5), (-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5), (0.5, -0.5, -0.5), (0.5, -0.5, 0.5), (0.5, 0.5, -0.5), (0.5, 0.5, 0.5)]);
 
@@ -86,7 +86,7 @@ class pair_smallbox3d_test2 (unittest.TestCase):
         self.system.particles[0].position = (0,0,0);
         self.system.particles[0].orientation = (1,0,0,0);
 
-        analyze.log(filename='small-box-3d.log', quantities=['hpmc_overlap_count'], period=1, overwrite=True);
+        analyze.log(filename='small-box-3d.log', quantities=['mcm_overlap_count'], period=1, overwrite=True);
         run(50000);
 
         # check 3 - verify that trial moves were both accepted and rejected

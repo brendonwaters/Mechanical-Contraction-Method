@@ -11,7 +11,7 @@
 #include "hoomd/Saru.h"
 #include "hoomd/VectorMath.h"
 
-#include "IntegratorHPMCMono.h"
+#include "IntegratorMCMMono.h"
 #include "ExternalField.h"
 #include "ExternalFieldWall.h" // do we need anything else?
 
@@ -19,7 +19,7 @@
 #include <hoomd/extern/pybind/include/pybind11/pybind11.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 template< class Shape >
@@ -28,13 +28,13 @@ class __attribute__ ((visibility ("hidden"))) UpdaterExternalFieldWall : public 
     public:
         //! Constructor
         /*! \param sysdef System definition
-            \param mc HPMC integrator object
+            \param mc MCM integrator object
             \param py_updater Python call back for wall update. Actually UPDATES the wall.
             \param move_ratio Probability of attempting wall update move
             \param seed PRNG seed
         */
         UpdaterExternalFieldWall( std::shared_ptr<SystemDefinition> sysdef,
-                      std::shared_ptr< IntegratorHPMCMono<Shape> > mc,
+                      std::shared_ptr< IntegratorMCMMono<Shape> > mc,
                       std::shared_ptr< ExternalFieldWall<Shape> > external,
                       pybind11::object py_updater,
                       Scalar move_ratio,
@@ -89,14 +89,14 @@ class __attribute__ ((visibility ("hidden"))) UpdaterExternalFieldWall : public 
             std::vector< std::string > result = Updater::getProvidedLogQuantities();
 
             // then add ours
-            result.push_back("hpmc_wall_acceptance_ratio");
+            result.push_back("mcm_wall_acceptance_ratio");
             return result;
             }
 
         //! Get the value of a logged quantity
         virtual Scalar getLogValue(const std::string& quantity, unsigned int timestep)
             {
-            if (quantity == "hpmc_wall_acceptance_ratio")
+            if (quantity == "mcm_wall_acceptance_ratio")
                 {
                 return m_count_total_rel ? Scalar(m_count_accepted_rel)/Scalar(m_count_total_rel) : 0;
                 }
@@ -174,7 +174,7 @@ class __attribute__ ((visibility ("hidden"))) UpdaterExternalFieldWall : public 
             }
 
     private:
-        std::shared_ptr< IntegratorHPMCMono<Shape> > m_mc;      //!< Integrator
+        std::shared_ptr< IntegratorMCMMono<Shape> > m_mc;      //!< Integrator
         std::shared_ptr< ExternalFieldWall<Shape> > m_external; //!< External field wall object
         pybind11::object m_py_updater;                       //!< Python call back for external field update
         Scalar m_move_ratio;                                      //!< Ratio of lattice vector length versus shearing move
@@ -192,7 +192,7 @@ template< class Shape >
 void export_UpdaterExternalFieldWall(pybind11::module& m, std::string name)
     {
    pybind11::class_< UpdaterExternalFieldWall<Shape>, std::shared_ptr< UpdaterExternalFieldWall<Shape> > >(m, name.c_str(), pybind11::base< Updater >())
-    .def(pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr< IntegratorHPMCMono<Shape> >, std::shared_ptr< ExternalFieldWall<Shape> >, pybind11::object, Scalar, unsigned int >())
+    .def(pybind11::init< std::shared_ptr<SystemDefinition>, std::shared_ptr< IntegratorMCMMono<Shape> >, std::shared_ptr< ExternalFieldWall<Shape> >, pybind11::object, Scalar, unsigned int >())
     .def("getAcceptedCount", &UpdaterExternalFieldWall<Shape>::getAcceptedCount)
     .def("getTotalCount", &UpdaterExternalFieldWall<Shape>::getTotalCount)
     .def("resetStats", &UpdaterExternalFieldWall<Shape>::resetStats)

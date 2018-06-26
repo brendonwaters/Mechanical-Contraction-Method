@@ -1,7 +1,7 @@
 # Copyright (c) 2009-2018 The Regents of the University of Michigan
 # This file is part of the HOOMD-blue project, released under the BSD 3-Clause License.
 
-R""" HPMC utilities
+R""" MCM utilities
 """
 
 from __future__ import print_function
@@ -230,23 +230,23 @@ def read_pos(fname, ndim=3):
     f_in.close()
     return {'positions':positions, 'orientations':orientations, 'types':types, 'param_dict':t_params, 'box':box, 'q':q}
 
-## Given an HPMC NPT system as input, perform compression to search for dense packings
+## Given an MCM NPT system as input, perform compression to search for dense packings
 # This class conveniently encapsulates the scripting and heuristics to search
 # for densest packings.
 # The read_pos() module may also be of use.
 # (requires numpy)
 class compress:
-    ## Construct a hpmc.util.compress object.
-    # Attach to a hoomd hpmc integrator instance with an existing hpmc.update.npt object.
-    # \param mc hpmc integrator object
-    # \param npt_updater hpmc.update.npt object
+    ## Construct a mcm.util.compress object.
+    # Attach to a hoomd mcm integrator instance with an existing mcm.update.npt object.
+    # \param mc mcm integrator object
+    # \param npt_updater mcm.update.npt object
     # \param ptypes list of particle type names
     # \param pnums list of number of particles of each type
     # \param pvolumes list of particle volumes for each type
     # \param pverts list of sets of vertices for each particle type (set empty list for spheres, etc)
     # \param num_comp_steps number of steps over which to ramps up pressure (default 1e6)
     # \param refine_steps number of steps between checking eta at high pressure (default num_comp_steps/10)
-    # \param log_file file in which to log hpmc stuff
+    # \param log_file file in which to log mcm stuff
     # \param pmin low pressure end of pressure schedule (default 10)
     # \param pmax high pressure end of pressure schedule (default 1e6)
     # \param pf_tol tolerance allowed in checking for convergence
@@ -355,12 +355,12 @@ class compress:
         #
 
         log_values = [
-                    'hpmc_boxmc_betaP',
+                    'mcm_boxmc_betaP',
                     'volume',
-                    'hpmc_d',
-                    'hpmc_a',
-                    'hpmc_boxmc_volume_acceptance',
-                    'hpmc_boxmc_shear_acceptance',
+                    'mcm_d',
+                    'mcm_a',
+                    'mcm_boxmc_volume_acceptance',
+                    'mcm_boxmc_shear_acceptance',
                     ]
         self.mclog = hoomd.analyze.log(filename=self.log_file, quantities=log_values , period=self.tuner_period, header_prefix='#', overwrite=True)
         self.mclog.disable() # will be enabled and disabled by call to run()
@@ -527,10 +527,10 @@ class compress:
 # \par Quick Example
 # \code
 # system = init.initmethod(...);
-# mc = hpmc.integrate.shape(...);
+# mc = mcm.integrate.shape(...);
 # mc.shape_param[name].set(...);
 # run(...);
-# mysnap = hpmc.util.snapshot();
+# mysnap = mcm.util.snapshot();
 # mc.setup_pos_writer(mysnap, colors=dict(A='ff5984ff'));
 # mysnap.to_pos(filename);
 # \endcode
@@ -605,16 +605,16 @@ class snapshot:
 class tune(object):
     R""" Tune mc parameters.
 
-    ``hoomd.hpmc.util.tune`` provides a general tool to observe Monte Carlo move
+    ``hoomd.mcm.util.tune`` provides a general tool to observe Monte Carlo move
     acceptance rates and adjust the move sizes when called by a user script. By
     default, it understands how to read and adjust the trial move domain for
-    translation moves and rotation moves for an ``hpmc.integrate`` instance.
+    translation moves and rotation moves for an ``mcm.integrate`` instance.
     Other move types for integrators or updaters can be handled with a customized
     tunable map passed when creating the tuner or in a subclass definition. E.g.
     see use an implementation of :py:class:`.tune_npt`
 
     Args:
-        obj: HPMC Integrator or Updater instance
+        obj: MCM Integrator or Updater instance
         tunables (list): list of strings naming parameters to tune. By default,
             allowed element values are 'd' and 'a'.
         max_val (list): maximum allowed values for corresponding tunables
@@ -629,9 +629,9 @@ class tune(object):
 
     Example::
 
-        mc = hpmc.integrate.convex_polyhedron()
+        mc = mcm.integrate.convex_polyhedron()
         mc.set_params(d=0.01, a=0.01, move_ratio=0.5)
-        tuner = hpmc.util.tune(mc, tunables=['d', 'a'], target=0.2, gamma=0.5)
+        tuner = mcm.util.tune(mc, tunables=['d', 'a'], target=0.2, gamma=0.5)
         for i in range(10):
             run(1e4)
             tuner.update()
@@ -673,7 +673,7 @@ class tune(object):
     * maximum (:py:class:`float`): maximum value the tuner may set for the tunable parameter
 
     The default ``tunable_map`` defines the :py:obj:`callable` for 'set' to call
-    :py:meth:`hoomd.hpmc.integrate.mode_hpmc.set_params` with ``tunable={type: newval}``
+    :py:meth:`hoomd.mcm.integrate.mode_mcm.set_params` with ``tunable={type: newval}``
     instead of ``tunable=newval`` if the ``type`` argument is given when creating
     the ``tune`` object.
 
@@ -783,24 +783,24 @@ class tune(object):
         hoomd.util.unquiet_status();
 
 class tune_npt(tune):
-    R""" Tune the HPMC :py:class:`hoomd.hpmc.update.boxmc` using :py:class:`.tune`.
+    R""" Tune the MCM :py:class:`hoomd.mcm.update.boxmc` using :py:class:`.tune`.
 
     This is a thin wrapper to ``tune`` that simply defines an alternative
     ``tunable_map`` dictionary. In this case, the ``obj`` argument must be an instance of
-    :py:class:`hoomd.hpmc.update.boxmc`. Several tunables are defined.
+    :py:class:`hoomd.mcm.update.boxmc`. Several tunables are defined.
 
     'dLx', 'dLy', and 'dLz' use the acceptance rate of volume moves to set
-    ``delta[0]``, ``delta[1]``, and ``delta[2]``, respectively in a call to :py:meth:`hoomd.hpmc.update.boxmc.length`.
+    ``delta[0]``, ``delta[1]``, and ``delta[2]``, respectively in a call to :py:meth:`hoomd.mcm.update.boxmc.length`.
 
-    'dV' uses the volume acceptance to call :py:meth:`hoomd.hpmc.update.boxmc.volume`.
+    'dV' uses the volume acceptance to call :py:meth:`hoomd.mcm.update.boxmc.volume`.
 
-    'dlnV' uses the ln_volume acceptance to call :py:meth:`hoomd.hpmc.update.boxmc.ln_volume`.
+    'dlnV' uses the ln_volume acceptance to call :py:meth:`hoomd.mcm.update.boxmc.ln_volume`.
 
     'dxy', 'dxz', and 'dyz' tunables use the shear acceptance to set
     ``delta[0]``, ``delta[1]``, and ``delta[2]``, respectively in a call to
-    :py:meth:`hoomd.hpmc.update.boxmc.shear`.
+    :py:meth:`hoomd.mcm.update.boxmc.shear`.
 
-    Refer to the documentation for :py:class:`hoomd.hpmc.update.boxmc` for
+    Refer to the documentation for :py:class:`hoomd.mcm.update.boxmc` for
     information on how these parameters are used, since they are not all
     applicable for a given use of ``boxmc``.
 
@@ -810,11 +810,11 @@ class tune_npt(tune):
 
     Example::
 
-        mc = hpmc.integrate.convex_polyhedron()
+        mc = mcm.integrate.convex_polyhedron()
         mc.set_params(d=0.01, a=0.01, move_ratio=0.5)
-        updater = hpmc.update.boxmc(mc, betaP=10)
+        updater = mcm.update.boxmc(mc, betaP=10)
         updater.length(0.1, weight=1)
-        tuner = hpmc.util.tune_npt(updater, tunables=['dLx', 'dLy', 'dLz'], target=0.3, gamma=1.0)
+        tuner = mcm.util.tune_npt(updater, tunables=['dLx', 'dLy', 'dLz'], target=0.3, gamma=1.0)
         for i in range(10):
             run(1e4)
             tuner.update()

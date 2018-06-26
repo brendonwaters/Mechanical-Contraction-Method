@@ -1,7 +1,7 @@
 from __future__ import print_function
 from __future__ import division
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import math
 import unittest
 
@@ -11,10 +11,10 @@ class test_clusters_spheres (unittest.TestCase):
     def setUp(self):
         # setup the MC integration
         self.system = init.create_lattice(lattice.sc(a=1.3782337338022654),n=[5,5,5]) #target a packing fraction of 0.2
-        self.mc = hpmc.integrate.sphere(seed=123)
+        self.mc = mcm.integrate.sphere(seed=123)
 
         self.mc.shape_param.set('A', diameter=1.0)
-        self.clusters = hpmc.update.clusters(self.mc, seed=54321, period=1)
+        self.clusters = mcm.update.clusters(self.mc, seed=54321, period=1)
 
     def test_set_params(self):
         self.clusters.set_params(move_ratio=0.2)

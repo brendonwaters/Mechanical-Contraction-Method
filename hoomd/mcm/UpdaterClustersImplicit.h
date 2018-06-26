@@ -1,6 +1,6 @@
 // inclusion guard
-#ifndef _UPDATER_HPMC_CLUSTERS_IMPLICIT_
-#define _UPDATER_HPMC_CLUSTERS_IMPLICIT_
+#ifndef _UPDATER_MCM_CLUSTERS_IMPLICIT_
+#define _UPDATER_MCM_CLUSTERS_IMPLICIT_
 
 /*! \file UpdaterBoxClusters.h
     \brief Declaration of UpdaterBoxClusters
@@ -12,7 +12,7 @@
 #include <tbb/tbb.h>
 #endif
 
-namespace hpmc
+namespace mcm
 {
 
 /*! A generic cluster move for integrators with implicit depletants.
@@ -20,7 +20,7 @@ namespace hpmc
     The algorithm has been simplified to not perform any detailed overlap
     checks with depletants, only circumsphere overlap checks. This choice does not affect
     correctness (only ergodicity). Therefore the cluster move should
-    be combined with a local move, that is, IntegratorHPMCMono(Implicit).
+    be combined with a local move, that is, IntegratorMCMMono(Implicit).
 */
 
 template< class Shape, class Integrator >
@@ -425,6 +425,6 @@ template < class Shape, class Integrator > void export_UpdaterClustersImplicit(p
     ;
     }
 
-} // end namespace hpmc
+} // end namespace mcm
 
-#endif // _UPDATER_HPMC_CLUSTERS_IMPLICIT_
+#endif // _UPDATER_MCM_CLUSTERS_IMPLICIT_

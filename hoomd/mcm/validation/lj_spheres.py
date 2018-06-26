@@ -1,5 +1,5 @@
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 
 context.initialize()
 
@@ -53,9 +53,9 @@ class nvt_lj_sphere_energy(unittest.TestCase):
         N = len(system.particles);
 
         if use_depletants:
-            mc = hpmc.integrate.sphere(d=0.3,seed=321,implicit=True,depletant_mode=depletant_mode);
+            mc = mcm.integrate.sphere(d=0.3,seed=321,implicit=True,depletant_mode=depletant_mode);
         else:
-            mc = hpmc.integrate.sphere(d=0.3,seed=321);
+            mc = mcm.integrate.sphere(d=0.3,seed=321);
 
         mc.shape_param.set('A',diameter=diameter)
 
@@ -87,19 +87,19 @@ class nvt_lj_sphere_energy(unittest.TestCase):
 
         jit.patch.user(mc,r_cut=rcut, code=lennard_jones);
 
-        log = analyze.log(filename=None, quantities=['hpmc_overlap_count','hpmc_patch_energy'],period=100,overwrite=True);
+        log = analyze.log(filename=None, quantities=['mcm_overlap_count','mcm_patch_energy'],period=100,overwrite=True);
 
         energy_val = [];
         def accumulate_energy(timestep):
-            energy = log.query('hpmc_patch_energy') / float(N) / eps;
+            energy = log.query('mcm_patch_energy') / float(N) / eps;
             energy_val.append(energy);
             if (timestep % 1000 == 0): context.msg.notice(1,'energy = {:.5f}\n'.format(energy));
 
         if use_clusters:
             mc.set_params(d=0, a=0)
-            clusters = hpmc.update.clusters(mc, seed=312)
+            clusters = mcm.update.clusters(mc, seed=312)
         else:
-            mc_tune = hpmc.util.tune(mc, tunables=['d','a'],max_val=[4,0.5],gamma=0.5,target=0.4);
+            mc_tune = mcm.util.tune(mc, tunables=['d','a'],max_val=[4,0.5],gamma=0.5,target=0.4);
 
             for i in range(5):
                 run(100,quiet=True);

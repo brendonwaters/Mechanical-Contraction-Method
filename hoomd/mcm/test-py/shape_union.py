@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import unittest
 import os
 import numpy
@@ -45,7 +45,7 @@ def dimer_overlap_manual(system, verts, Ap, Aq, Bp, Bq):
     # for restoration later
     backup = system.take_snapshot()
 
-    mc = hpmc.integrate.convex_polyhedron(seed=27)
+    mc = mcm.integrate.convex_polyhedron(seed=27)
     mc.shape_param.set('A', vertices=verts)
 
     result = False
@@ -88,7 +88,7 @@ def dimer_overlap_union(system, verts, Ap, Aq, Bp, Bq):
     # for restoration later
     backup = system.take_snapshot()
 
-    mc = hpmc.integrate.convex_polyhedron_union(seed=27);
+    mc = mcm.integrate.convex_polyhedron_union(seed=27);
     mc.shape_param.set("A", vertices=[verts, verts], centers=Ap, orientations=Aq);
     mc.shape_param.set("B", vertices=[verts, verts], centers=Bp, orientations=Bq);
 
@@ -286,7 +286,7 @@ class shape_union(unittest.TestCase):
         # use fixed seed
         numpy.random.seed(self.seed)
 
-        self.mc = hpmc.integrate.sphere_union(seed=self.seed);
+        self.mc = mcm.integrate.sphere_union(seed=self.seed);
         self.mc.shape_param.set("A", diameters=[1.0, 1.0], centers=spheres);
 
         num_iter = 50 # number of times to generate new configurations
@@ -312,7 +312,7 @@ class shape_union(unittest.TestCase):
                     break
             sphere_overlaps = overlaps
 
-            # use HPMC overlap check
+            # use MCM overlap check
             for p, r, q in zip(self.system.particles, positions, orientations):
                 p.position = r
                 p.orientation = q
@@ -390,10 +390,10 @@ class shape_union(unittest.TestCase):
             #self.system.restore_snapshot(backup)
             cube_overlaps = overlaps
 
-            self.mc = hpmc.integrate.convex_polyhedron_union(seed=self.seed);
+            self.mc = mcm.integrate.convex_polyhedron_union(seed=self.seed);
             self.mc.shape_param.set("A", vertices=[cube_verts, cube_verts], centers=cubes, orientations=cube_ors);
 
-            # use HPMC overlap check
+            # use MCM overlap check
             for p, r, q in zip(self.system.particles, positions, orientations):
                 p.position = r
                 p.orientation = q

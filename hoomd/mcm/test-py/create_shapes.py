@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import unittest
 import os
 import numpy
@@ -17,7 +17,7 @@ class validate_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=2, box=data.boxdim(L=10, dimensions=2), particle_types=['A', 'B'])
 
-        self.mc = hpmc.integrate.convex_polygon(seed=10);
+        self.mc = mcm.integrate.convex_polygon(seed=10);
         self.mc.shape_param.set('A', vertices=[(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)]);
 
         context.current.sorter.set_params(grid=8)
@@ -47,7 +47,7 @@ class convex_polygon_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.convex_polygon(seed=10);
+        self.mc = mcm.integrate.convex_polygon(seed=10);
         self.mc.shape_param.set('A', vertices=[(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)]);
 
         context.current.sorter.set_params(grid=8)
@@ -72,7 +72,7 @@ class simple_polygon_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.simple_polygon(seed=10);
+        self.mc = mcm.integrate.simple_polygon(seed=10);
         self.mc.shape_param.set('A', vertices=[(-0.5, -0.5), (0.5, -0.5), (0.0, 0.0), (0.5, 0.5), (-0.5, 0.5)]);
 
         context.current.sorter.set_params(grid=8)
@@ -97,7 +97,7 @@ class convex_polyhedron_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.convex_polyhedron(seed=10);
+        self.mc = mcm.integrate.convex_polyhedron(seed=10);
         self.mc.shape_param.set('A', vertices=[(-2,-1,-1),
                                                (-2,1,-1),
                                                (-2,-1,1),
@@ -129,7 +129,7 @@ class sphere_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.sphere(seed=10);
+        self.mc = mcm.integrate.sphere(seed=10);
         self.mc.shape_param.set('A', diameter=1.0)
 
         context.current.sorter.set_params(grid=8)
@@ -154,7 +154,7 @@ class sphere_union_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=3), particle_types=['A'])
 
-        self.mc = hpmc.integrate.sphere_union(seed=10);
+        self.mc = mcm.integrate.sphere_union(seed=10);
         self.mc.shape_param.set('A', diameters=[1.0, 1.0], centers=[(-0.25, 0, 0), (0.25, 0, 0)], capacity=16);
 
         context.current.sorter.set_params(grid=8)
@@ -204,7 +204,7 @@ class convex_polyhedron_union_test(unittest.TestCase):
         context.current.sorter.set_params(grid=8)
 
     def test_convexpolyhedron_union(self):
-        self.mc = hpmc.integrate.convex_polyhedron_union(seed=10);
+        self.mc = mcm.integrate.convex_polyhedron_union(seed=10);
         self.mc.shape_param.set('A', vertices=[self.cube_verts, self.cube_verts], centers=self.cubes, orientations=self.cube_ors);
         self.mc.shape_param.set('B', vertices=[self.cube_verts], centers=[(0,0,0)], orientations=[(1,0,0,0)]);
 
@@ -215,7 +215,7 @@ class convex_polyhedron_union_test(unittest.TestCase):
         self.assertEqual(self.mc.count_overlaps(), 0);
 
     def test_convexpolyhedron_union_implicit(self):
-        self.mc = hpmc.integrate.convex_polyhedron_union(seed=10,implicit=True);
+        self.mc = mcm.integrate.convex_polyhedron_union(seed=10,implicit=True);
         self.mc.shape_param.set('A', vertices=[self.cube_verts, self.cube_verts], centers=self.cubes, orientations=self.cube_ors);
         self.mc.shape_param.set('B', vertices=[self.cube_verts], centers=[(0,0,0)], orientations=[(1,0,0,0)]);
         self.mc.set_params(nR=0, depletant_type='B')
@@ -227,7 +227,7 @@ class convex_polyhedron_union_test(unittest.TestCase):
         self.assertEqual(self.mc.count_overlaps(), 0);
 
     def test_convexpolyhedron_union_implicit_new(self):
-        self.mc = hpmc.integrate.convex_polyhedron_union(seed=10,implicit=True, depletant_mode='overlap_regions');
+        self.mc = mcm.integrate.convex_polyhedron_union(seed=10,implicit=True, depletant_mode='overlap_regions');
         self.mc.shape_param.set('A', vertices=[self.cube_verts, self.cube_verts], centers=self.cubes, orientations=self.cube_ors);
         self.mc.shape_param.set('B', vertices=[self.cube_verts], centers=[(0,0,0)], orientations=[(1,0,0,0)]);
         self.mc.set_params(nR=0, depletant_type='B')
@@ -247,7 +247,7 @@ class convex_spheropolygon_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.convex_spheropolygon(seed=10);
+        self.mc = mcm.integrate.convex_spheropolygon(seed=10);
         self.mc.shape_param.set('A', vertices=[(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)]);
 
         context.current.sorter.set_params(grid=8)
@@ -272,7 +272,7 @@ class polyhedron_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.polyhedron(seed=10);
+        self.mc = mcm.integrate.polyhedron(seed=10);
         import math
         v = [(-0.5, -0.5, 0), (-0.5, 0.5, 0), (0.5, -0.5, 0), (0.5, 0.5, 0), (0,0, 1.0/math.sqrt(2)),(0,0,-1.0/math.sqrt(2))];
         f = [(0,4,1),(1,4,2),(2,4,3),(3,4,0),(0,5,1),(1,5,2),(2,5,3),(3,5,0)]
@@ -302,7 +302,7 @@ class faceted_sphere_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.faceted_sphere(seed=10);
+        self.mc = mcm.integrate.faceted_sphere(seed=10);
         self.mc.shape_param.set('A', normals=[(-1,0,0),
                                               (1,0,0),
                                               (0,1,0,),
@@ -336,7 +336,7 @@ class convex_spheropolyhedron_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.convex_spheropolyhedron(seed=10);
+        self.mc = mcm.integrate.convex_spheropolyhedron(seed=10);
         self.mc.shape_param.set('A', vertices=[(-2,-1,-1),
                                                (-2,1,-1),
                                                (-2,-1,1),
@@ -368,7 +368,7 @@ class ellipsoid_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.ellipsoid(seed=10);
+        self.mc = mcm.integrate.ellipsoid(seed=10);
         self.mc.shape_param.set('A', a=0.5, b=0.25, c=0.125);
 
         context.current.sorter.set_params(grid=8)
@@ -393,7 +393,7 @@ class sphinx_test(unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1, box=data.boxdim(L=10, dimensions=2), particle_types=['A'])
 
-        self.mc = hpmc.integrate.sphinx(seed=10);
+        self.mc = mcm.integrate.sphinx(seed=10);
         self.mc.shape_param.set('A', diameters=[2,-2.2,-2.2], centers=[(0,0,0), (0,0,1.15), (0,0,-1.15)], \
                            colors=['ff','ffff00','ffff00']);
 

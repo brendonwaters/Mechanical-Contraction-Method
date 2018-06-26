@@ -1,5 +1,5 @@
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 
 context.initialize()
 
@@ -63,7 +63,7 @@ class npt_wca_dimer_eos(unittest.TestCase):
         N = len(system.particles)
 
         seed = 1234
-        mc = hpmc.integrate.sphere_union(d=0.1,a=0.1,seed=seed)
+        mc = mcm.integrate.sphere_union(d=0.1,a=0.1,seed=seed)
 
         mc.shape_param.set('A',diameters=[sigma]*2,centers=[(0,0,-len_cyl/2),(0,0,len_cyl/2)],overlap=[0]*2,colors=['ff5984ff']*2)
 
@@ -112,13 +112,13 @@ class npt_wca_dimer_eos(unittest.TestCase):
 
         from hoomd import jit
         jit.patch.user(mc,r_cut=rcut, code=dumbbell)
-        boxmc = hpmc.update.boxmc(mc,betaP=P_star/d_eff**3.0, seed=seed+1)
+        boxmc = mcm.update.boxmc(mc,betaP=P_star/d_eff**3.0, seed=seed+1)
         boxmc.ln_volume(delta=0.001,weight=1)
 
-        mc_tune = hpmc.util.tune(mc, tunables=['d','a'],max_val=[4,0.5],gamma=1,target=0.3)
-        npt_tune = hpmc.util.tune_npt(boxmc, tunables = ['dlnV'], target=0.3,gamma=1)
+        mc_tune = mcm.util.tune(mc, tunables=['d','a'],max_val=[4,0.5],gamma=1,target=0.3)
+        npt_tune = mcm.util.tune_npt(boxmc, tunables = ['dlnV'], target=0.3,gamma=1)
 
-        log = analyze.log(filename=None, quantities=['hpmc_overlap_count','volume'],period=100,overwrite=True)
+        log = analyze.log(filename=None, quantities=['mcm_overlap_count','volume'],period=100,overwrite=True)
 
         rho_val = []
         def accumulate_rho(timestep):
@@ -132,7 +132,7 @@ class npt_wca_dimer_eos(unittest.TestCase):
             npt_tune.update()
 
         if use_clusters:
-            hpmc.update.clusters(mc,period=1,seed=seed+2)
+            mcm.update.clusters(mc,period=1,seed=seed+2)
 
         run(1e4,callback=accumulate_rho, callback_period=100)
 

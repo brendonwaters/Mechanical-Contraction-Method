@@ -53,7 +53,7 @@ namespace detail
 {
 
 //! Data structure for general polytopes
-/*! \ingroup mcm_data_structs */
+/*! \ingroup hpmc_data_structs */
 
 struct poly3d_data : param_base
     {

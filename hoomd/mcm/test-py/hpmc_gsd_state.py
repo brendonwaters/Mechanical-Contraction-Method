@@ -3,7 +3,7 @@ from __future__ import print_function
 
 import hoomd
 from hoomd import context, data, init
-from hoomd import hpmc
+from hoomd import mcm
 
 import unittest
 import os
@@ -17,7 +17,7 @@ def create_empty(**kwargs):
     snap = data.make_snapshot(**kwargs);
     return init.read_snapshot(snap);
 
-class hpmc_gsd_state(unittest.TestCase):
+class mcm_gsd_state(unittest.TestCase):
     def setUp(self):
         self._name = None;
         hexuc = hoomd.lattice.hex(a=2.0);
@@ -63,7 +63,7 @@ class hpmc_gsd_state(unittest.TestCase):
 
     def run_test_1(self, name, dim):
         filename = "{}.gsd".format(name)
-        mc_cls = hoomd.hpmc.integrate.__dict__[name]
+        mc_cls = hoomd.mcm.integrate.__dict__[name]
         if dim == 3:
             self.system = init.read_snapshot(self.snapshot3d)
         else:
@@ -83,7 +83,7 @@ class hpmc_gsd_state(unittest.TestCase):
 
     def run_test_2(self, name, dim):
         filename = "{}.gsd".format(name)
-        mc_cls = hoomd.hpmc.integrate.__dict__[name]
+        mc_cls = hoomd.mcm.integrate.__dict__[name]
         self.system = init.read_gsd(filename=filename, frame = 9);
         self.mc = mc_cls(seed=2398, d=0.0)
         self.mc.shape_param.set('A', **self.params[name]['first'])
@@ -92,7 +92,7 @@ class hpmc_gsd_state(unittest.TestCase):
 
     def run_test_3(self, name, dim):
         filename = "{}.gsd".format(name)
-        mc_cls = hoomd.hpmc.integrate.__dict__[name]
+        mc_cls = hoomd.mcm.integrate.__dict__[name]
         self.system = init.read_gsd(filename=filename, frame = 2);
         self.mc = mc_cls(seed=2398, d=0.0, restore_state=True)
         # self.mc.restore_state();
@@ -215,7 +215,7 @@ class hpmc_gsd_state(unittest.TestCase):
         # v = 0.33*np.array([(-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5), (-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5), (0.5, -0.5, -0.5), (0.5, -0.5, 0.5), (0.5, 0.5, -0.5), (0.5, 0.5, 0.5)]);
         # f = [(7, 3, 1, 5), (7, 5, 4, 6), (7, 6, 2, 3), (3, 2, 0, 1), (0, 2, 6, 4), (1, 0, 4, 5)];
         # r = 0.0;
-        # self.mc = hpmc.integrate.polyhedron(seed=10);
+        # self.mc = mcm.integrate.polyhedron(seed=10);
         # self.mc.shape_param.set('A', vertices=v, faces =f, sweep_radius=r);
         # diff = (np.array(v) - np.array(self.mc.shape_param['A'].vertices)).flatten();
         # self.assertAlmostEqual(diff.dot(diff), 0);
@@ -279,7 +279,7 @@ class hpmc_gsd_state(unittest.TestCase):
         # norms =[(-1,0,0), (1,0,0), (0,1,0,), (0,-1,0), (0,0,1), (0,0,-1)];
         # diam = 1.0;
         # orig = (0,0,0);
-        # self.mc = hpmc.integrate.faceted_sphere(seed=10, d=0.0, a=0.0);
+        # self.mc = mcm.integrate.faceted_sphere(seed=10, d=0.0, a=0.0);
         # self.mc.shape_param.set('A', normals=norms,
         #                             offsets=offs,
         #                             vertices=v,
@@ -296,7 +296,7 @@ class hpmc_gsd_state(unittest.TestCase):
         # self.system = init.read_snapshot(self.snapshot3d)
         # cent = [(0,0,0), (0,0,1.15), (0,0,-1.15)]
         # diams = [1,-1.2,-1.2];
-        # self.mc = hpmc.integrate.sphinx(seed=10, d=0.0, a=0.0);
+        # self.mc = mcm.integrate.sphinx(seed=10, d=0.0, a=0.0);
         # self.mc.shape_param.set('A', diameters=diams, centers=cent);
         # self.run_test(latticep=lattice3d, latticeq=latticeq, k=k, kalt=kalt, q=k*10.0, qalt=kalt*10.0, uein=None, snapshot_s=self.snapshot3d_s, eng_check=(eng_check3d+eng_checkq));
         # self.tear_down()
@@ -309,7 +309,7 @@ class hpmc_gsd_state(unittest.TestCase):
         # self.system = init.read_snapshot(self.snapshot3d)
         # cent = [(0,0,0), (0,0,0.15), (0,0,-0.15)]
         # diams = [1,1,1];
-        # self.mc = hpmc.integrate.sphere_union(seed=10, d=0.0, a=0.0);
+        # self.mc = mcm.integrate.sphere_union(seed=10, d=0.0, a=0.0);
         # self.mc.shape_param.set('A', diameters=diams, centers=cent);
         # self.run_test(latticep=lattice3d, latticeq=latticeq, k=k, kalt=kalt, q=k*10.0, qalt=kalt*10.0, uein=None, snapshot_s=self.snapshot3d_s, eng_check=(eng_check3d+eng_checkq));
         # self.tear_down()

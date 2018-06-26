@@ -1,7 +1,7 @@
 from __future__ import division
 
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 
 import numpy as np
 import math
@@ -115,7 +115,7 @@ class implicit_test (unittest.TestCase):
         self.system.particles.types.add('B')
 
     def test_measure_etap(self):
-        self.mc = hpmc.integrate.sphere(seed=seed,implicit=True, depletant_mode='circumsphere')
+        self.mc = mcm.integrate.sphere(seed=seed,implicit=True, depletant_mode='circumsphere')
         self.mc.set_params(d=0.1,a=0.1)
         self.mc.set_params(depletant_type='B')
         self.mc.shape_param.set('A', diameter=d_sphere)
@@ -124,7 +124,7 @@ class implicit_test (unittest.TestCase):
         # no depletants during tuning
         self.mc.set_params(nR=0)
 
-        self.mc_tune = hpmc.util.tune(self.mc, tunables=['d'],max_val=[d_sphere],gamma=1,target=0.2)
+        self.mc_tune = mcm.util.tune(self.mc, tunables=['d'],max_val=[d_sphere],gamma=1,target=0.2)
         for i in range(10):
             run(100, quiet=True)
             self.mc_tune.update()
@@ -136,20 +136,20 @@ class implicit_test (unittest.TestCase):
         nR = eta_p_r/(math.pi/6.0*math.pow(d_sphere*q,3.0))
         self.mc.set_params(nR=nR)
 
-        free_volume = hpmc.compute.free_volume(mc=self.mc, seed=seed, nsample=10000, test_type='B')
-        log=analyze.log(filename=None, quantities=['hpmc_overlap_count','volume','hpmc_free_volume','hpmc_fugacity'], overwrite=True,period=1000)
+        free_volume = mcm.compute.free_volume(mc=self.mc, seed=seed, nsample=10000, test_type='B')
+        log=analyze.log(filename=None, quantities=['mcm_overlap_count','volume','mcm_free_volume','mcm_fugacity'], overwrite=True,period=1000)
 
         eta_p_measure = []
         def log_callback(timestep):
-            v = math.pi/6.0*log.query('hpmc_free_volume')/log.query('volume')*log.query('hpmc_fugacity')
+            v = math.pi/6.0*log.query('mcm_free_volume')/log.query('volume')*log.query('mcm_fugacity')
             eta_p_measure.append(v)
-            self.assertEqual(log.query('hpmc_overlap_count'),0)
+            self.assertEqual(log.query('mcm_overlap_count'),0)
 
             if comm.get_rank() == 0:
                 print('eta_p =', v);
 
         if use_clusters:
-            hpmc.update.clusters(self.mc,period=1,seed=seed+1)
+            mcm.update.clusters(self.mc,period=1,seed=seed+1)
 
         run(4e5,callback=log_callback,callback_period=100)
 
@@ -180,7 +180,7 @@ class implicit_test (unittest.TestCase):
         self.assertLessEqual(math.fabs(eta_p_avg-eta_p_ref[(phi_c,eta_p_r)][0]),ci*(eta_p_ref[(phi_c,eta_p_r)][1]+eta_p_err))
 
     def test_measure_etap_new(self):
-        self.mc = hpmc.integrate.sphere(seed=seed,implicit=True, depletant_mode='overlap_regions')
+        self.mc = mcm.integrate.sphere(seed=seed,implicit=True, depletant_mode='overlap_regions')
         self.mc.set_params(d=0.1,a=0.1)
         self.mc.set_params(depletant_type='B')
         self.mc.shape_param.set('A', diameter=d_sphere)
@@ -189,7 +189,7 @@ class implicit_test (unittest.TestCase):
         # no depletants during tuning
         self.mc.set_params(nR=0)
 
-        self.mc_tune = hpmc.util.tune(self.mc, tunables=['d'],max_val=[d_sphere],gamma=1,target=0.2)
+        self.mc_tune = mcm.util.tune(self.mc, tunables=['d'],max_val=[d_sphere],gamma=1,target=0.2)
         for i in range(10):
             run(100, quiet=True)
             self.mc_tune.update()
@@ -200,18 +200,18 @@ class implicit_test (unittest.TestCase):
         nR = eta_p_r/(math.pi/6.0*math.pow(d_sphere*q,3.0))
         self.mc.set_params(nR=nR)
 
-        free_volume = hpmc.compute.free_volume(mc=self.mc, seed=seed, nsample=10000, test_type='B')
-        log=analyze.log(filename=None, quantities=['hpmc_overlap_count','volume','hpmc_free_volume','hpmc_fugacity'], overwrite=True,period=1000)
+        free_volume = mcm.compute.free_volume(mc=self.mc, seed=seed, nsample=10000, test_type='B')
+        log=analyze.log(filename=None, quantities=['mcm_overlap_count','volume','mcm_free_volume','mcm_fugacity'], overwrite=True,period=1000)
 
         eta_p_measure = []
         def log_callback(timestep):
-            v = math.pi/6.0*log.query('hpmc_free_volume')/log.query('volume')*log.query('hpmc_fugacity')
+            v = math.pi/6.0*log.query('mcm_free_volume')/log.query('volume')*log.query('mcm_fugacity')
             eta_p_measure.append(v)
             if comm.get_rank() == 0:
                 print('eta_p =', v);
 
         if use_clusters:
-            hpmc.update.clusters(self.mc,period=1,seed=seed+1)
+            mcm.update.clusters(self.mc,period=1,seed=seed+1)
 
         run(4e5,callback=log_callback,callback_period=100)
 

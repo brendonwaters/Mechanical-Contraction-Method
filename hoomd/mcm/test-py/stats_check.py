@@ -1,6 +1,6 @@
 from __future__ import division, print_function
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import unittest
 import os
 import numpy
@@ -33,7 +33,7 @@ class pair_accept_all (unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=1000, box=data.boxdim(L=12, dimensions=3), particle_types=['A'])
 
-        self.mc = hpmc.integrate.ellipsoid(seed=10);
+        self.mc = mcm.integrate.ellipsoid(seed=10);
         self.mc.set_params(deterministic=True)
         self.mc.shape_param.set('A', a=0.5,b=0.25,c=0.15,ignore_statistics=True)
         self.mc.overlap_checks.set('A','A', False)
@@ -86,7 +86,7 @@ class pair_accept_none (unittest.TestCase):
     def setUp(self):
         self.system = create_empty(N=2, box=data.boxdim(L=10, dimensions=3), particle_types=['A'])
 
-        self.mc = hpmc.integrate.ellipsoid(seed=10);
+        self.mc = mcm.integrate.ellipsoid(seed=10);
         self.mc.set_params(deterministic=True)
         self.mc.shape_param.set('A', a=0.5,b=0.25,c=0.15,ignore_statistics=False)
         self.mc.set_params(d=0.01,a=0.01)
@@ -124,7 +124,7 @@ class pair_accept_some(unittest.TestCase):
     def setUp(self) :
         self.system  = create_empty(N=1000, box=data.boxdim(L=12, dimensions=3), particle_types=['A','B'])
 
-        self.mc = hpmc.integrate.ellipsoid(seed=84,d=1.0);
+        self.mc = mcm.integrate.ellipsoid(seed=84,d=1.0);
         self.mc.set_params(deterministic=True)
         self.mc.shape_param.set('A', a=0.5,b=0.5,c=0.5,ignore_statistics=True)
         self.mc.overlap_checks.set('A','A', False)

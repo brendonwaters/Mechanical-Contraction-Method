@@ -1,5 +1,5 @@
 from hoomd import *
-from hoomd import hpmc
+from hoomd import mcm
 import math
 import numpy as np
 import unittest
@@ -20,12 +20,12 @@ class diskEOS_test(unittest.TestCase):
     def setUp(self):
         self.system = init.create_lattice(unitcell=lattice.sq(a=a), n=n);
 
-        self.mc = hpmc.integrate.sphere(d = 0.2, seed=1)
+        self.mc = mcm.integrate.sphere(d = 0.2, seed=1)
         self.mc.shape_param.set('A',diameter=1.0)
-        self.boxmc = hpmc.update.boxmc(self.mc,betaP=P_ref,seed=123)
+        self.boxmc = mcm.update.boxmc(self.mc,betaP=P_ref,seed=123)
         self.boxmc.volume(delta=0.42,weight=1)
 
-        self.log = analyze.log(filename=None, quantities = ['hpmc_overlap_count','volume','phi_p', 'hpmc_d','hpmc_a','time'], overwrite=True, period=100)
+        self.log = analyze.log(filename=None, quantities = ['mcm_overlap_count','volume','phi_p', 'mcm_d','mcm_a','time'], overwrite=True, period=100)
         self.log.register_callback('phi_p', lambda timestep: len(self.system.particles)/self.system.box.get_volume() * math.pi / 4.0)
 
         # warm up
