@@ -165,22 +165,22 @@ class convex_spheropolygon_params(_mcm.convex_spheropolygon_param_proxy, _param)
                             float(sweep_radius),
                             ignore_statistics);
 
-class simple_polygon_params(_mcm.simple_polygon_param_proxy, _param):
-    def __init__(self, mc, index):
-        _mcm.simple_polygon_param_proxy.__init__(self, mc.cpp_integrator, index);
-        _param.__init__(self, mc, index);
-        self._keys += ['vertices'];
-        self.make_fn = _mcm.make_poly2d_verts;
+# class simple_polygon_params(_mcm.simple_polygon_param_proxy, _param):
+#     def __init__(self, mc, index):
+#         _mcm.simple_polygon_param_proxy.__init__(self, mc.cpp_integrator, index);
+#         _param.__init__(self, mc, index);
+#         self._keys += ['vertices'];
+#         self.make_fn = _mcm.make_poly2d_verts;
 
-    def __str__(self):
-        # should we put this in the c++ side?
-        string = "simple polygon(vertices = {})".format(self.vertices);
-        return string;
+#     def __str__(self):
+#         # should we put this in the c++ side?
+#         string = "simple polygon(vertices = {})".format(self.vertices);
+#         return string;
 
-    def make_param(self, vertices, ignore_statistics=False):
-        return self.make_fn(self.ensure_list(vertices),
-                            float(0),
-                            ignore_statistics);
+#     def make_param(self, vertices, ignore_statistics=False):
+#         return self.make_fn(self.ensure_list(vertices),
+#                             float(0),
+#                             ignore_statistics);
 
 class convex_polyhedron_params(_mcm.convex_polyhedron_param_proxy,_param):
     def __init__(self, mc, index):
@@ -218,207 +218,207 @@ class convex_spheropolyhedron_params(_mcm.convex_spheropolyhedron_param_proxy,_p
                             ignore_statistics,
                             hoomd.context.current.system_definition.getParticleData().getExecConf());
 
-class polyhedron_params(_mcm.polyhedron_param_proxy, _param):
-    def __init__(self, mc, index):
-        _mcm.polyhedron_param_proxy.__init__(self, mc.cpp_integrator, index);
-        _param.__init__(self, mc, index);
-        self._keys += ['vertices', 'faces','overlap', 'colors', 'sweep_radius', 'capacity','origin','hull_only'];
-        self.make_fn = _mcm.make_poly3d_data;
-        self.__dict__.update(dict(colors=None));
+# class polyhedron_params(_mcm.polyhedron_param_proxy, _param):
+#     def __init__(self, mc, index):
+#         _mcm.polyhedron_param_proxy.__init__(self, mc.cpp_integrator, index);
+#         _param.__init__(self, mc, index);
+#         self._keys += ['vertices', 'faces','overlap', 'colors', 'sweep_radius', 'capacity','origin','hull_only'];
+#         self.make_fn = _mcm.make_poly3d_data;
+#         self.__dict__.update(dict(colors=None));
 
-    def __str__(self):
-        # should we put this in the c++ side?
-        string = "polyhedron(vertices = {}, faces = {}, overlap = {}, colors= {}, sweep_radius = {}, capacity = {}, origin = {})".format(self.vertices, self.faces, self.overlap, self.colors, self.sweep_radius, self.capacity, self.hull_only);
-        return string;
+#     def __str__(self):
+#         # should we put this in the c++ side?
+#         string = "polyhedron(vertices = {}, faces = {}, overlap = {}, colors= {}, sweep_radius = {}, capacity = {}, origin = {})".format(self.vertices, self.faces, self.overlap, self.colors, self.sweep_radius, self.capacity, self.hull_only);
+#         return string;
 
-    def make_param(self, vertices, faces, sweep_radius=0.0, ignore_statistics=False, origin=(0,0,0), capacity=4, hull_only=True, overlap=None, colors=None):
-        face_offs = []
-        face_verts = []
-        offs = 0
+#     def make_param(self, vertices, faces, sweep_radius=0.0, ignore_statistics=False, origin=(0,0,0), capacity=4, hull_only=True, overlap=None, colors=None):
+#         face_offs = []
+#         face_verts = []
+#         offs = 0
 
-        for face in faces:
-            if len(face) != 3 and len(face) != 1:
-                hoomd.context.msg.error("Only triangulated shapes and spheres are supported.\n")
-                raise RuntimeError('Error setting shape parameters')
-            face_offs.append(offs)
-            for face_idx in face:
-                face_verts.append(int(face_idx))
-            offs += len(face)
+#         for face in faces:
+#             if len(face) != 3 and len(face) != 1:
+#                 hoomd.context.msg.error("Only triangulated shapes and spheres are supported.\n")
+#                 raise RuntimeError('Error setting shape parameters')
+#             face_offs.append(offs)
+#             for face_idx in face:
+#                 face_verts.append(int(face_idx))
+#             offs += len(face)
 
-        # end offset
-        face_offs.append(offs)
+#         # end offset
+#         face_offs.append(offs)
 
-        self.colors = None if colors is None else self.ensure_list(colors);
+#         self.colors = None if colors is None else self.ensure_list(colors);
 
-        if overlap is None:
-            overlap = [1 for f in faces]
+#         if overlap is None:
+#             overlap = [1 for f in faces]
 
-        if sweep_radius < 0.0:
-            hoomd.context.msg.warning("A rounding radius < 0 does not make sense.\n")
+#         if sweep_radius < 0.0:
+#             hoomd.context.msg.warning("A rounding radius < 0 does not make sense.\n")
 
-        if len(origin) != 3:
-            hoomd.context.error("Origin must be a coordinate triple.\n")
+#         if len(origin) != 3:
+#             hoomd.context.error("Origin must be a coordinate triple.\n")
 
-        return self.make_fn([self.ensure_list(v) for v in vertices],
-                            self.ensure_list(face_verts),
-                            self.ensure_list(face_offs),
-                            self.ensure_list(overlap),
-                            float(sweep_radius),
-                            ignore_statistics,
-                            capacity,
-                            self.ensure_list(origin),
-                            int(hull_only),
-                            hoomd.context.current.system_definition.getParticleData().getExecConf());
+#         return self.make_fn([self.ensure_list(v) for v in vertices],
+#                             self.ensure_list(face_verts),
+#                             self.ensure_list(face_offs),
+#                             self.ensure_list(overlap),
+#                             float(sweep_radius),
+#                             ignore_statistics,
+#                             capacity,
+#                             self.ensure_list(origin),
+#                             int(hull_only),
+#                             hoomd.context.current.system_definition.getParticleData().getExecConf());
 
-class faceted_sphere_params(_mcm.faceted_sphere_param_proxy, _param):
-    def __init__(self, mc, index):
-        _mcm.faceted_sphere_param_proxy.__init__(self, mc.cpp_integrator, index);
-        _param.__init__(self, mc, index);
-        self._keys += ['vertices', 'normals', 'offsets', 'diameter', 'origin'];
-        self.make_fn = _mcm.make_faceted_sphere;
+# class faceted_sphere_params(_mcm.faceted_sphere_param_proxy, _param):
+#     def __init__(self, mc, index):
+#         _mcm.faceted_sphere_param_proxy.__init__(self, mc.cpp_integrator, index);
+#         _param.__init__(self, mc, index);
+#         self._keys += ['vertices', 'normals', 'offsets', 'diameter', 'origin'];
+#         self.make_fn = _mcm.make_faceted_sphere;
 
-    def __str__(self):
-        # should we put this in the c++ side?
-        string = "faceted sphere(vertices = {}, normals = {}, offsets = {})".format(self.vertices, self.normals, self.offsets);
-        return string;
+#     def __str__(self):
+#         # should we put this in the c++ side?
+#         string = "faceted sphere(vertices = {}, normals = {}, offsets = {})".format(self.vertices, self.normals, self.offsets);
+#         return string;
 
-    def make_param(self, normals, offsets, vertices, diameter, origin=(0.0, 0.0, 0.0), ignore_statistics=False):
-        return self.make_fn(self.ensure_list(normals),
-                            self.ensure_list(offsets),
-                            self.ensure_list(vertices),
-                            float(diameter),
-                            tuple(origin),
-                            bool(ignore_statistics),
-                            hoomd.context.current.system_definition.getParticleData().getExecConf());
+#     def make_param(self, normals, offsets, vertices, diameter, origin=(0.0, 0.0, 0.0), ignore_statistics=False):
+#         return self.make_fn(self.ensure_list(normals),
+#                             self.ensure_list(offsets),
+#                             self.ensure_list(vertices),
+#                             float(diameter),
+#                             tuple(origin),
+#                             bool(ignore_statistics),
+#                             hoomd.context.current.system_definition.getParticleData().getExecConf());
 
-class sphinx_params(_mcm.sphinx3d_param_proxy, _param):
-    def __init__(self, mc, index):
-        _mcm.sphinx3d_param_proxy.__init__(self, mc.cpp_integrator, index);
-        _param.__init__(self, mc, index);
-        self.__dict__.update(dict(colors=None));
-        self._keys += ['diameters', 'centers', 'diameter', 'colors'];
-        self.make_fn = _mcm.make_sphinx3d_params;
+# class sphinx_params(_mcm.sphinx3d_param_proxy, _param):
+#     def __init__(self, mc, index):
+#         _mcm.sphinx3d_param_proxy.__init__(self, mc.cpp_integrator, index);
+#         _param.__init__(self, mc, index);
+#         self.__dict__.update(dict(colors=None));
+#         self._keys += ['diameters', 'centers', 'diameter', 'colors'];
+#         self.make_fn = _mcm.make_sphinx3d_params;
 
-    def __str__(self):
-        # should we put this in the c++ side?
-        string = "sphinx(centers = {}, diameters = {}, diameter = {})".format(self.centers, self.diameters, self.diameter);
-        return string;
+#     def __str__(self):
+#         # should we put this in the c++ side?
+#         string = "sphinx(centers = {}, diameters = {}, diameter = {})".format(self.centers, self.diameters, self.diameter);
+#         return string;
 
-    def make_param(self, diameters, centers, ignore_statistics=False, colors=None):
-        self.colors = None if colors is None else self.ensure_list(colors);
-        return self.make_fn(self.ensure_list(diameters),
-                            self.ensure_list(centers),
-                            ignore_statistics);
+#     def make_param(self, diameters, centers, ignore_statistics=False, colors=None):
+#         self.colors = None if colors is None else self.ensure_list(colors);
+#         return self.make_fn(self.ensure_list(diameters),
+#                             self.ensure_list(centers),
+#                             ignore_statistics);
 
-class ellipsoid_params(_mcm.ell_param_proxy, _param):
-    def __init__(self, mc, index):
-        _mcm.ell_param_proxy.__init__(self, mc.cpp_integrator, index);
-        _param.__init__(self, mc, index);
-        self._keys += ['a', 'b', 'c'];
-        self.make_fn = _mcm.make_ell_params;
+# class ellipsoid_params(_mcm.ell_param_proxy, _param):
+#     def __init__(self, mc, index):
+#         _mcm.ell_param_proxy.__init__(self, mc.cpp_integrator, index);
+#         _param.__init__(self, mc, index);
+#         self._keys += ['a', 'b', 'c'];
+#         self.make_fn = _mcm.make_ell_params;
 
-    def __str__(self):
-        # should we put this in the c++ side?
-        return "ellipsoid(a = {}, b = {}, c = {})".format(self.a, self.b, self.c)
+#     def __str__(self):
+#         # should we put this in the c++ side?
+#         return "ellipsoid(a = {}, b = {}, c = {})".format(self.a, self.b, self.c)
 
-    def make_param(self, a, b, c, ignore_statistics=False):
-        return self.make_fn(float(a),
-                            float(b),
-                            float(c),
-                            ignore_statistics);
+#     def make_param(self, a, b, c, ignore_statistics=False):
+#         return self.make_fn(float(a),
+#                             float(b),
+#                             float(c),
+#                             ignore_statistics);
 
-class sphere_union_params(_mcm.sphere_union_param_proxy,_param):
-    def __init__(self, mc, index):
-        _mcm.sphere_union_param_proxy.__init__(self, mc.cpp_integrator, index); # we will add this base class later because of the size template
-        _param.__init__(self, mc, index);
-        self.__dict__.update(dict(colors=None));
-        self._keys += ['centers', 'orientations', 'diameter', 'colors','overlap'];
-        self.make_fn = _mcm.make_sphere_union_params;
+# class sphere_union_params(_mcm.sphere_union_param_proxy,_param):
+#     def __init__(self, mc, index):
+#         _mcm.sphere_union_param_proxy.__init__(self, mc.cpp_integrator, index); # we will add this base class later because of the size template
+#         _param.__init__(self, mc, index);
+#         self.__dict__.update(dict(colors=None));
+#         self._keys += ['centers', 'orientations', 'diameter', 'colors','overlap'];
+#         self.make_fn = _mcm.make_sphere_union_params;
 
-    def __str__(self):
-        # should we put this in the c++ side?
-        string = "sphere union(centers = {}, orientations = {}, diameter = {}, overlap = {}, capacity = {})\n".format(self.centers, self.orientations, self.diameter, self.overlap, self.capacity);
-        ct = 0;
-        members = self.members;
-        for m in members:
-            end = "\n" if ct < (len(members)-1) else "";
-            string+="sphere-{}(d = {}){}".format(ct, m.diameter, end)
-            ct+=1
-        return string;
+#     def __str__(self):
+#         # should we put this in the c++ side?
+#         string = "sphere union(centers = {}, orientations = {}, diameter = {}, overlap = {}, capacity = {})\n".format(self.centers, self.orientations, self.diameter, self.overlap, self.capacity);
+#         ct = 0;
+#         members = self.members;
+#         for m in members:
+#             end = "\n" if ct < (len(members)-1) else "";
+#             string+="sphere-{}(d = {}){}".format(ct, m.diameter, end)
+#             ct+=1
+#         return string;
 
-    def get_metadata(self):
-        data = {}
-        for key in self._keys:
-            if key == 'diameters':
-                val = [ m.diameter for m in self.members ];
-            else:
-                val = getattr(self, key);
-            data[key] = val;
-        return data;
+#     def get_metadata(self):
+#         data = {}
+#         for key in self._keys:
+#             if key == 'diameters':
+#                 val = [ m.diameter for m in self.members ];
+#             else:
+#                 val = getattr(self, key);
+#             data[key] = val;
+#         return data;
 
-    def make_param(self, diameters, centers, overlap=None, ignore_statistics=False, colors=None, capacity=4):
-        if overlap is None:
-            overlap = [1 for c in centers]
+#     def make_param(self, diameters, centers, overlap=None, ignore_statistics=False, colors=None, capacity=4):
+#         if overlap is None:
+#             overlap = [1 for c in centers]
 
-        members = [_mcm.make_sph_params(float(d)/2.0, False, False) for d in diameters];
-        N = len(diameters)
-        if len(centers) != N:
-            raise RuntimeError("Lists of constituent particle parameters and centers must be equal length.")
-        self.colors = None if colors is None else self.ensure_list(colors);
-        return self.make_fn(self.ensure_list(members),
-                            self.ensure_list(centers),
-                            self.ensure_list([[1,0,0,0] for i in range(N)]),
-                            self.ensure_list(overlap),
-                            ignore_statistics,
-                            capacity,
-                            hoomd.context.current.system_definition.getParticleData().getExecConf());
+#         members = [_mcm.make_sph_params(float(d)/2.0, False, False) for d in diameters];
+#         N = len(diameters)
+#         if len(centers) != N:
+#             raise RuntimeError("Lists of constituent particle parameters and centers must be equal length.")
+#         self.colors = None if colors is None else self.ensure_list(colors);
+#         return self.make_fn(self.ensure_list(members),
+#                             self.ensure_list(centers),
+#                             self.ensure_list([[1,0,0,0] for i in range(N)]),
+#                             self.ensure_list(overlap),
+#                             ignore_statistics,
+#                             capacity,
+#                             hoomd.context.current.system_definition.getParticleData().getExecConf());
 
-class convex_polyhedron_union_params(_mcm.convex_polyhedron_union_param_proxy,_param):
-    def __init__(self, mc, index):
-        _mcm.convex_polyhedron_union_param_proxy.__init__(self, mc.cpp_integrator, index); # we will add this base class later because of the size templated
-        _param.__init__(self, mc, index);
-        self.__dict__.update(dict(colors=None));
-        self._keys += ['centers', 'orientations', 'vertices', 'colors','overlap'];
-        self.make_fn = _mcm.make_convex_polyhedron_union_params;
+# class convex_polyhedron_union_params(_mcm.convex_polyhedron_union_param_proxy,_param):
+#     def __init__(self, mc, index):
+#         _mcm.convex_polyhedron_union_param_proxy.__init__(self, mc.cpp_integrator, index); # we will add this base class later because of the size templated
+#         _param.__init__(self, mc, index);
+#         self.__dict__.update(dict(colors=None));
+#         self._keys += ['centers', 'orientations', 'vertices', 'colors','overlap'];
+#         self.make_fn = _mcm.make_convex_polyhedron_union_params;
 
-    def __str__(self):
-        # should we put this in the c++ side?
-        string = "convex polyhedron union(centers = {}, orientations = {}, vertices = {}, overlap = {})\n".format(self.centers, self.orientations, self.vertices, self.overlap);
-        ct = 0;
-        members = self.members;
-        for m in members:
-            end = "\n" if ct < (len(members)-1) else "";
-            string+="convex polyhedron-{}(v = {}){}".format(ct, m.vertices, end)
-            ct+=1
-        return string;
+#     def __str__(self):
+#         # should we put this in the c++ side?
+#         string = "convex polyhedron union(centers = {}, orientations = {}, vertices = {}, overlap = {})\n".format(self.centers, self.orientations, self.vertices, self.overlap);
+#         ct = 0;
+#         members = self.members;
+#         for m in members:
+#             end = "\n" if ct < (len(members)-1) else "";
+#             string+="convex polyhedron-{}(v = {}){}".format(ct, m.vertices, end)
+#             ct+=1
+#         return string;
 
-    def get_metadata(self):
-        data = {}
-        for key in self._keys:
-            if key == 'vertices':
-                val = [ m.vertices for m in self.members ];
-            else:
-                val = getattr(self, key);
-            data[key] = val;
-        return data;
+#     def get_metadata(self):
+#         data = {}
+#         for key in self._keys:
+#             if key == 'vertices':
+#                 val = [ m.vertices for m in self.members ];
+#             else:
+#                 val = getattr(self, key);
+#             data[key] = val;
+#         return data;
 
-    def make_param(self, centers, orientations, vertices, overlap=None, ignore_statistics=False, colors=None, capacity=4):
-        if overlap is None:
-            overlap = [1 for c in centers]
+#     def make_param(self, centers, orientations, vertices, overlap=None, ignore_statistics=False, colors=None, capacity=4):
+#         if overlap is None:
+#             overlap = [1 for c in centers]
 
-        members = []
-        for i, verts in enumerate(vertices):
-            member_fn = _mcm.make_poly3d_verts
-            members.append(member_fn(self.ensure_list(verts), float(0), ignore_statistics, hoomd.context.current.system_definition.getParticleData().getExecConf()))
+#         members = []
+#         for i, verts in enumerate(vertices):
+#             member_fn = _mcm.make_poly3d_verts
+#             members.append(member_fn(self.ensure_list(verts), float(0), ignore_statistics, hoomd.context.current.system_definition.getParticleData().getExecConf()))
 
-        N = len(vertices)
-        if len(centers) != N or len(orientations)!= N:
-            raise RuntimeError("Lists of constituent particle parameters and centers must be equal length.")
-        self.colors = None if colors is None else self.ensure_list(colors);
-        return self.make_fn(self.ensure_list(members),
-                            self.ensure_list(centers),
-                            self.ensure_list(orientations),
-                            self.ensure_list(overlap),
-                            ignore_statistics,
-                            capacity,
-                            hoomd.context.current.system_definition.getParticleData().getExecConf());
+#         N = len(vertices)
+#         if len(centers) != N or len(orientations)!= N:
+#             raise RuntimeError("Lists of constituent particle parameters and centers must be equal length.")
+#         self.colors = None if colors is None else self.ensure_list(colors);
+#         return self.make_fn(self.ensure_list(members),
+#                             self.ensure_list(centers),
+#                             self.ensure_list(orientations),
+#                             self.ensure_list(overlap),
+#                             ignore_statistics,
+#                             capacity,
+#                             hoomd.context.current.system_definition.getParticleData().getExecConf());

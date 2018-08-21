@@ -10,7 +10,7 @@
 
 #include "ShapeSphere.h"
 #include "AnalyzerSDF.h"
-#include "ShapeUnion.h"
+// #include "ShapeUnion.h"
 
 #include "ExternalField.h"
 #include "ExternalFieldWall.h"

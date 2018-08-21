@@ -138,6 +138,7 @@ struct sph_params : param_base
                                         //   First bit is ignore overlaps, Second bit is ignore statistics
     bool isOriented;                    //!< Flag to specify whether a sphere has orientation or not. Intended for
                                         //!  for use with anisotropic/patchy pair potentials.
+    unsigned int N=1;                   // For compatibility with MCM length calculations
 
     #ifdef ENABLE_CUDA
     //! Attach managed memory to CUDA stream

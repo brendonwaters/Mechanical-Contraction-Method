@@ -2,14 +2,14 @@
 #include "ShapeSphere.h" // check
 #include "ShapeConvexPolygon.h" // check
 #include "ShapeSpheropolygon.h" // check
-#include "ShapePolyhedron.h"
+// #include "ShapePolyhedron.h"
 #include "ShapeConvexPolyhedron.h" // check
 #include "ShapeSpheropolyhedron.h" // check
-#include "ShapeSimplePolygon.h" // check
-#include "ShapeEllipsoid.h" // check
-#include "ShapeFacetedSphere.h"
-#include "ShapeSphinx.h"
-#include "ShapeUnion.h"
+// #include "ShapeSimplePolygon.h" // check
+// #include "ShapeEllipsoid.h" // check
+// #include "ShapeFacetedSphere.h"
+// #include "ShapeSphinx.h"
+// #include "ShapeUnion.h"
 #include "hoomd/extern/gsd.h"
 #include "hoomd/GSDDumpWriter.h"
 #include "hoomd/GSDReader.h"
@@ -140,71 +140,71 @@ struct gsd_shape_schema<mcm::sph_params>: public gsd_schema_mcm_base
         }
     };
 
-template<>
-struct gsd_shape_schema<mcm::ell_params>: public gsd_schema_mcm_base
-    {
-    gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_mcm_base(exec_conf, mpi) {}
+// template<>
+// struct gsd_shape_schema<mcm::ell_params>: public gsd_schema_mcm_base
+//     {
+//     gsd_shape_schema(const std::shared_ptr<const ExecutionConfiguration> exec_conf, bool mpi) : gsd_schema_mcm_base(exec_conf, mpi) {}
 
-    int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes,const param_array<mcm::ell_params>& shape)
-        {
-        if(!m_exec_conf->isRoot())
-            return 0;
+//     int write(gsd_handle& handle, const std::string& name, unsigned int Ntypes,const param_array<mcm::ell_params>& shape)
+//         {
+//         if(!m_exec_conf->isRoot())
+//             return 0;
 
-        int retval = 0;
-        std::vector<float> data(Ntypes);
-        std::string path = name + "a";
-        std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const mcm::ell_params& s)->float{return s.x;});
-        retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
-        path = name + "b";
-        std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const mcm::ell_params& s)->float{return s.y;});
-        retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
-        path = name + "c";
-        std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const mcm::ell_params& s)->float{return s.z;});
-        retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
-        return retval;
-        }
+//         int retval = 0;
+//         std::vector<float> data(Ntypes);
+//         std::string path = name + "a";
+//         std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const mcm::ell_params& s)->float{return s.x;});
+//         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
+//         path = name + "b";
+//         std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const mcm::ell_params& s)->float{return s.y;});
+//         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
+//         path = name + "c";
+//         std::transform(shape.cbegin(), shape.cend(), data.begin(), [](const mcm::ell_params& s)->float{return s.z;});
+//         retval |= gsd_write_chunk(&handle, path.c_str(), GSD_TYPE_FLOAT, Ntypes, 1, 0, (void *)&data[0]);
+//         return retval;
+//         }
 
-    bool read(  std::shared_ptr<GSDReader> reader,
-                uint64_t frame,
-                const std::string& name,
-                unsigned int Ntypes,
-                param_array<mcm::ell_params>& shape
-            )
-        {
-        bool success = true;
-        std::vector<float> a,b,c;
-        if(m_exec_conf->isRoot())
-            {
-            a.resize(Ntypes),b.resize(Ntypes),c.resize(Ntypes);
-            std::string path = name + "a";
-            success = reader->readChunk((void *)&a[0], frame, path.c_str(), Ntypes*gsd_sizeof_type(GSD_TYPE_FLOAT), Ntypes) && success;
-            path = name + "b";
-            success = reader->readChunk((void *)&b[0], frame, path.c_str(), Ntypes*gsd_sizeof_type(GSD_TYPE_FLOAT), Ntypes) && success;
-            path = name + "c";
-            success = reader->readChunk((void *)&c[0], frame, path.c_str(), Ntypes*gsd_sizeof_type(GSD_TYPE_FLOAT), Ntypes) && success;
-            }
-        #ifdef ENABLE_MPI
-            if(m_mpi)
-                {
-                bcast(a, 0, m_exec_conf->getMPICommunicator()); // broadcast the data
-                bcast(b, 0, m_exec_conf->getMPICommunicator()); // broadcast the data
-                bcast(c, 0, m_exec_conf->getMPICommunicator()); // broadcast the data
-                }
-        #endif
+//     bool read(  std::shared_ptr<GSDReader> reader,
+//                 uint64_t frame,
+//                 const std::string& name,
+//                 unsigned int Ntypes,
+//                 param_array<mcm::ell_params>& shape
+//             )
+//         {
+//         bool success = true;
+//         std::vector<float> a,b,c;
+//         if(m_exec_conf->isRoot())
+//             {
+//             a.resize(Ntypes),b.resize(Ntypes),c.resize(Ntypes);
+//             std::string path = name + "a";
+//             success = reader->readChunk((void *)&a[0], frame, path.c_str(), Ntypes*gsd_sizeof_type(GSD_TYPE_FLOAT), Ntypes) && success;
+//             path = name + "b";
+//             success = reader->readChunk((void *)&b[0], frame, path.c_str(), Ntypes*gsd_sizeof_type(GSD_TYPE_FLOAT), Ntypes) && success;
+//             path = name + "c";
+//             success = reader->readChunk((void *)&c[0], frame, path.c_str(), Ntypes*gsd_sizeof_type(GSD_TYPE_FLOAT), Ntypes) && success;
+//             }
+//         #ifdef ENABLE_MPI
+//             if(m_mpi)
+//                 {
+//                 bcast(a, 0, m_exec_conf->getMPICommunicator()); // broadcast the data
+//                 bcast(b, 0, m_exec_conf->getMPICommunicator()); // broadcast the data
+//                 bcast(c, 0, m_exec_conf->getMPICommunicator()); // broadcast the data
+//                 }
+//         #endif
 
-        if(!a.size() || !b.size() || !c.size()) // adding this sanity check but can remove.
-            throw std::runtime_error("Error occured while attempting to restore from gsd file.");
+//         if(!a.size() || !b.size() || !c.size()) // adding this sanity check but can remove.
+//             throw std::runtime_error("Error occured while attempting to restore from gsd file.");
 
-        for(unsigned int i = 0; i < Ntypes; i++)
-            {
-            shape[i].x = a[i];
-            shape[i].y = b[i];
-            shape[i].z = c[i];
-            shape[i].ignore = 0;
-            }
-        return success;
-        }
-    };
+//         for(unsigned int i = 0; i < Ntypes; i++)
+//             {
+//             shape[i].x = a[i];
+//             shape[i].y = b[i];
+//             shape[i].z = c[i];
+//             shape[i].ignore = 0;
+//             }
+//         return success;
+//         }
+//     };
 
 template<>
 struct gsd_shape_schema< mcm::detail::poly3d_verts > : public gsd_schema_mcm_base

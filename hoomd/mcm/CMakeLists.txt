@@ -9,14 +9,7 @@ set(_mcm_sources   module.cc
                     module_external_field.cc
                     module_sphere.cc
                     module_convex_polygon.cc
-                    module_simple_polygon.cc
                     module_spheropolygon.cc
-                    module_polyhedron.cc
-                    module_ellipsoid.cc
-                    module_faceted_sphere.cc
-                    module_sphinx.cc
-                    module_union_convex_polyhedron.cc
-                    module_union_sphere.cc
                     module_convex_polyhedron.cc
                     module_convex_spheropolyhedron.cc
                     UpdaterBoxMC.cc
@@ -48,16 +41,10 @@ set(_mcm_headers
     OBBTree.h
     ShapeConvexPolygon.h
     ShapeConvexPolyhedron.h
-    ShapeEllipsoid.h
-    ShapeFacetedSphere.h
-    ShapePolyhedron.h
-    ShapeProxy.h
-    ShapeSimplePolygon.h
     ShapeSphere.h
     ShapeSpheropolygon.h
     ShapeSpheropolyhedron.h
-    ShapeSphinx.h
-    ShapeUnion.h
+    ShapeProxy.h
     SphinxOverlap.h
     UpdaterClusters.h
     UpdaterExternalFieldWall.h
