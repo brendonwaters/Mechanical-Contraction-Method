@@ -100,7 +100,7 @@ struct ShapeSpheropolyhedron
         {
         }
 
-    //! Is this a spherocylinder?
+    // ! Is this a spherocylinder?
     DEVICE bool isSpherocylinder() const{
         if (verts.N==2)
             {

@@ -131,6 +131,7 @@ struct param_base
 
     \ingroup shape
 */
+const unsigned int MAX_VERTS=1;
 struct sph_params : param_base
     {
     OverlapReal radius;                 //!< radius of sphere
@@ -139,6 +140,11 @@ struct sph_params : param_base
     bool isOriented;                    //!< Flag to specify whether a sphere has orientation or not. Intended for
                                         //!  for use with anisotropic/patchy pair potentials.
     unsigned int N=1;                   // For compatibility with MCM length calculations
+    OverlapReal sweep_radius=OverlapReal(0);// For compatibility with MCM length calculations
+
+    OverlapReal x[3]={OverlapReal(0),OverlapReal(0),OverlapReal(0)};// For compatibility with MCM length calculations
+    OverlapReal y[3]={OverlapReal(0),OverlapReal(0),OverlapReal(0)};// For compatibility with MCM length calculations
+    OverlapReal z[3]={OverlapReal(0),OverlapReal(0),OverlapReal(0)};// For compatibility with MCM length calculations
 
     #ifdef ENABLE_CUDA
     //! Attach managed memory to CUDA stream

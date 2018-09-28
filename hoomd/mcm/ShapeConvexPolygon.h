@@ -65,6 +65,7 @@ struct poly2d_verts : param_base
 
     OverlapReal x[MAX_POLY2D_VERTS];    //!< X coordinate of vertices
     OverlapReal y[MAX_POLY2D_VERTS];    //!< Y coordinate of vertices
+    OverlapReal z[2];                      //For compatibility with MCM
     unsigned int N;                     //!< Number of vertices
     OverlapReal diameter;               //!< Precomputed diameter
     OverlapReal sweep_radius;           //!< Radius of the sphere sweep (used for spheropolygons)
