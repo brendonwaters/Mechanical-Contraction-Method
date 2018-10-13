@@ -2993,8 +2993,31 @@ void IntegratorMCMMono<Shape>::writePairs()
                         }
                     }
                 }
-
             //construct final list of cluster names
+            std::vector<int> old_names;
+            for (int k=0;k<(int) clusters.size();k++)
+                {
+                int name=clusters[k];
+                //check each cluster name to see if its in the list of names
+                if (std::find(old_names.begin(), old_names.end(), name) == old_names.end())
+                    {
+                    old_names.push_back(name);
+                    }
+                }
+
+            //rename clusters to be sequential numbers
+            for (int j=0;j<(int) clusters.size();j++)
+                {
+                for (int i=0;i<(int) old_names.size();i++)
+                    {
+                    if (clusters[j]==old_names[i])
+                        {
+                        clusters[j]=i;
+                        }
+                    }
+                }
+
+            //reconstruct final list of cluster names, now sequential
             std::vector<int> names;
             for (int k=0;k<(int) clusters.size();k++)
                 {
@@ -3006,17 +3029,6 @@ void IntegratorMCMMono<Shape>::writePairs()
                     }
                 }
 
-            //rename clusters to be sequential numbers
-            for (int j=0;j<(int) clusters.size();j++)
-                {
-                for (int i=0;i<cluster_number;i++)
-                    {
-                    if (clusters[j]==names[i])
-                        {
-                        clusters[j]=i;
-                        }
-                    }
-                }
             //find maximum extent of each cluster
             double xdist[names.size()];
             double ydist[names.size()];
@@ -3031,77 +3043,78 @@ void IntegratorMCMMono<Shape>::writePairs()
                 double zmax=0;
                 for (int l=0;l<(int) clusters.size();l++)
                     {
-                    unsigned int i=pair_list[type][l][0];
-                    unsigned int j=pair_list[type][l][1];
-                    Scalar4 postype_i = h_postype.data[i];
-                    vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
-                    Scalar4 postype_j = h_postype.data[j];
-                    vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
+                    if (clusters[l]==names[k])
+                        {
+                        unsigned int i=pair_list[type][l][0];
+                        unsigned int j=pair_list[type][l][1];
+                        Scalar4 postype_i = h_postype.data[i];
+                        vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
+                        Scalar4 postype_j = h_postype.data[j];
+                        vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
 
-                    if (pos_i.x<xmin)
-                        {
-                        xmin=pos_i.x;
+                        if (pos_i.x<xmin)
+                            {
+                            xmin=pos_i.x;
+                            }
+                        if (pos_i.x>xmax)
+                            {
+                            xmax=pos_i.x;
+                            }
+                        if (pos_j.x<xmin)
+                            {
+                            xmin=pos_j.x;
+                            }
+                        if (pos_j.x>xmax)
+                            {
+                            xmax=pos_j.x;
+                            }
+                        if (pos_i.y<ymin)
+                            {
+                            ymin=pos_i.y;
+                            }
+                        if (pos_i.y>ymax)
+                            {
+                            ymax=pos_i.y;
+                            }
+                        if (pos_j.y<ymin)
+                            {
+                            ymin=pos_j.y;
+                            }
+                        if (pos_j.y>ymax)
+                            {
+                            ymax=pos_j.y;
+                            }
+                        if (pos_i.z<zmin)
+                            {
+                            zmin=pos_i.z;
+                            }
+                        if (pos_i.z>zmax)
+                            {
+                            zmax=pos_i.z;
+                            }
+                        if (pos_j.z<zmin)
+                            {
+                            zmin=pos_j.z;
+                            }
+                        if (pos_j.z>zmax)
+                            {
+                            zmax=pos_j.z;
+                            }
                         }
-                    if (pos_i.x>xmax)
-                        {
-                        xmax=pos_i.x;
-                        }
-                    if (pos_j.x<xmin)
-                        {
-                        xmin=pos_j.x;
-                        }
-                    if (pos_j.x>xmax)
-                        {
-                        xmax=pos_j.x;
-                        }
-                    if (pos_i.y<ymin)
-                        {
-                        ymin=pos_i.y;
-                        }
-                    if (pos_i.y>ymax)
-                        {
-                        ymax=pos_i.y;
-                        }
-                    if (pos_j.y<ymin)
-                        {
-                        ymin=pos_j.y;
-                        }
-                    if (pos_j.y>ymax)
-                        {
-                        ymax=pos_j.y;
-                        }
-                    if (pos_i.z<zmin)
-                        {
-                        zmin=pos_i.z;
-                        }
-                    if (pos_i.z>zmax)
-                        {
-                        zmax=pos_i.z;
-                        }
-                    if (pos_j.z<zmin)
-                        {
-                        zmin=pos_j.z;
-                        }
-                    if (pos_j.z>zmax)
-                        {
-                        zmax=pos_j.z;
-                        }
+                    xdist[k]=xmax-xmin;
+                    ydist[k]=ymax-ymin;
+                    zdist[k]=zmax-zmin;
                     }
-                xdist[k]=xmax-xmin;
-                ydist[k]=ymax-ymin;
-                zdist[k]=zmax-zmin;
-                }
-            for (int i=0;i<(int) names.size();i++)
-                {
-                if (xdist[i]+tol*2*radius>box_L.x)
+
+                if (xdist[k]+tol*2*radius>box_L.x)
                     {
                     percolating=1;
                     }
-                if (ydist[i]+tol*2*radius>box_L.y)
+                if (ydist[k]+tol*2*radius>box_L.y)
                     {
                     percolating=1;
                     }
-                if (zdist[i]+tol*2*radius>box_L.z)
+                if (zdist[k]+tol*2*radius>box_L.z)
                     {
                     percolating=1;
                     }
