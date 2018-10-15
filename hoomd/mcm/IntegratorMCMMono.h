@@ -929,9 +929,9 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         do {
             overlap=false;
             n_attempts++;
-            vec3<Scalar> min_array [m_pdata->getN()] = {}; //stores minimum overlap vectors for each particle
-            Scalar4 positions [m_pdata->getN()] = {}; //stores updated particle positions until loop over particles completes
-            Scalar4 orientations [m_pdata->getN()] = {}; //stores updated particle orientations until loop over particles completes
+            vec3<Scalar> min_array [m_pdata->getN()];// = {}; //stores minimum overlap vectors for each particle
+            Scalar4 positions [m_pdata->getN()];// = {}; //stores updated particle positions until loop over particles completes
+            Scalar4 orientations [m_pdata->getN()];// = {}; //stores updated particle orientations until loop over particles completes
 
             // access particle data and system box
             ArrayHandle<Scalar4> h_postype(m_pdata->getPositions(), access_location::host, access_mode::readwrite);
@@ -2610,7 +2610,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     const double tiny=1e-7;
     const double tol=2;
 
-    unsigned int pair_list[nTypes][N*maxCoordN][2] = {0};
+    unsigned int pair_list[nTypes][N*maxCoordN][2];// = {0};
 
     // std::ofstream pairfile;
     // pairfile.open ("pairs.txt");
