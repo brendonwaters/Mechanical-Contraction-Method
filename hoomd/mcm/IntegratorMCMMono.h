@@ -879,7 +879,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
 
         const Scalar3& box_L = curBox.getL(); //save current box dimensions
         const double sep_tol=1.0001; //1.0001; //temp
-        const int attempt_cutoff=1000; //cutoff number of overlap removal attempts
+        const int attempt_cutoff=m_pdata->getN(); //cutoff number of overlap removal attempts
         int n_attempts=0;  //counter for compression attempts
         const vec3<Scalar> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
         const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
