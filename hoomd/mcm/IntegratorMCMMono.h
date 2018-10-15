@@ -2612,6 +2612,18 @@ void IntegratorMCMMono<Shape>::writePairs()
 
     unsigned int pair_list[nTypes][N*maxCoordN][2];// = {0};
 
+    for (int i=0;i<nTypes;i++)
+        {
+        for (int j=0;j<N*maxCoordN;j++)
+            {
+            for (int k=0;k<2;k++)
+                {
+                pair_list[i][j][k]=(unsigned int) 0;
+                }
+            }
+        }
+
+
     // std::ofstream pairfile;
     // pairfile.open ("pairs.txt");
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
