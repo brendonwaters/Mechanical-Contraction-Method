@@ -353,6 +353,7 @@ class IntegratorMCMMono : public IntegratorMCM
         unsigned int n_mc=0;
         bool done=false;
         double a_max=0;
+        double small=1e-3;
 
         //! Set the nominal width appropriate for looped moves
         virtual void updateCellWidth();
@@ -890,20 +891,17 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
         const vec3<Scalar> x_norm(1,0,0);
         const vec3<Scalar> y_norm(0,1,0);
-        double small=1e-3;
+
         double scale_factor=1-small; //factor to scale the box length by at each timestep, hardcoded for now, will add interface later
         // const double tol=1e-5;
         const double tiny=1e-7;
         // const double pi = 3.14159265358979323846;
 
-        if (!needs_mc)
-            {
-            Scalar3 L=make_scalar3(box_L.x*std::cbrt(scale_factor),box_L.y*std::cbrt(scale_factor),box_L.z*std::cbrt(scale_factor));  //attempt to shrink box dimensions by scale_factor
-            BoxDim newBox = m_pdata->getGlobalBox();
-            // BoxDim oldBox = m_pdata->getGlobalBox();
-            newBox.setL(L);
-            attemptBoxResize(timestep, newBox);
-            }
+        // //attempt to shrink box dimensions by scale_factor
+        // Scalar3 L=make_scalar3(box_L.x*std::cbrt(scale_factor),box_L.y*std::cbrt(scale_factor),box_L.z*std::cbrt(scale_factor));
+        // BoxDim newBox = m_pdata->getGlobalBox();
+        // newBox.setL(L);
+        // attemptBoxResize(timestep, newBox);
 
         #ifdef ENABLE_MPI
         // compute the width of the active region
@@ -935,6 +933,10 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         // loop over all particles
 
         bool overlap=false;
+        bool first=true;
+
+        Scalar4 old_positions [m_pdata->getN()];
+        Scalar4 old_orientations [m_pdata->getN()];
         do {
             overlap=false;
             n_attempts++;
@@ -962,6 +964,28 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
             ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::readwrite);
             ArrayHandle<Scalar> h_diameter(m_pdata->getDiameters(), access_location::host, access_mode::read);
             ArrayHandle<Scalar> h_charge(m_pdata->getCharges(), access_location::host, access_mode::read);
+
+            if (first)
+                {
+                for (unsigned int q=0;q< m_pdata->getN(); q++)
+                    {
+                    Scalar4 postype_q=h_postype.data[q];
+                    Scalar4 orientation_q=h_orientation.data[q];
+                    vec3<Scalar> pos_q=vec3<Scalar>(postype_q);
+                    unsigned int typ_q= __scalar_as_int(postype_q.w);
+
+                    old_positions[q]=make_scalar4(pos_q.x,pos_q.y,pos_q.z,__int_as_scalar(typ_q));
+                    old_orientations[q]=make_scalar4(orientation_q.x,orientation_q.y,orientation_q.z,orientation_q.w);
+                    }
+
+                //attempt to shrink box dimensions by scale_factor
+                Scalar3 L=make_scalar3(box_L.x*std::cbrt(scale_factor),box_L.y*std::cbrt(scale_factor),box_L.z*std::cbrt(scale_factor));
+                BoxDim newBox = m_pdata->getGlobalBox();
+                newBox.setL(L);
+                attemptBoxResize(timestep, newBox);
+
+                first=false;
+                }
 
             // loop through N particles in a shuffled order
             // for (unsigned int i = 0; i < m_pdata->getN(); i++)
@@ -1381,9 +1405,9 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                     vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
                     quat<Scalar> or_j=quat<Scalar>(orientation_j);
 
-                    int typ_i = __scalar_as_int(postype_i.w);
+                    unsigned int typ_i = __scalar_as_int(postype_i.w);
                     double radius_i=m_params[typ_i].sweep_radius;
-                    int typ_j = __scalar_as_int(postype_j.w);
+                    unsigned int typ_j = __scalar_as_int(postype_j.w);
                     double radius_j=m_params[typ_j].sweep_radius;
 
                     double length_i=sqrt((m_params[typ_i].x[0]-m_params[typ_i].x[1])*(m_params[typ_i].x[0]-m_params[typ_i].x[1])+
@@ -1623,10 +1647,63 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                 //     needs_mc=true; //use monte carlo to anneal
                 //     n_attempts=0;
                 //     }
-                if (small>1e-100)
+                if (small>1e-50)
                     {
+                    Scalar3 L=make_scalar3(box_L.x/std::cbrt(scale_factor),box_L.y/std::cbrt(scale_factor),box_L.z/std::cbrt(scale_factor));  //attempt to shrink box dimensions by scale_factor
+                    BoxDim newBox = m_pdata->getGlobalBox();
+                    newBox.setL(L);
+                    attemptBoxResize(timestep, newBox);
+
+                    ArrayHandle<Scalar4> h_postype(m_pdata->getPositions(), access_location::host, access_mode::readwrite);
+                    ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::readwrite);
+
+                    for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
+                        {
+                        unsigned int k = cur_particle;
+
+                        Scalar4 postype_copy_k = old_positions[k];
+
+                        Scalar4 orientation_copy_k = old_orientations[k];
+                        vec3<Scalar> pos_copy_k = vec3<Scalar>(postype_copy_k);
+
+                        int typ_copy_k = __scalar_as_int(postype_copy_k.w);
+                        Shape shape_copy_k(quat<Scalar>(orientation_copy_k), m_params[typ_copy_k]);
+
+                        OverlapReal r_cut_patch = 0;
+
+                        if (m_patch && !m_patch_log)
+                            {
+                            r_cut_patch = m_patch->getRCut() + 0.5*m_patch->getAdditiveCutoff(typ_copy_k);
+                            }
+                        OverlapReal R_query_k = std::max(shape_copy_k.getCircumsphereDiameter()/OverlapReal(2.0),
+                        r_cut_patch-getMinCoreDiameter()/(OverlapReal)2.0);
+                        detail::AABB aabb_k_local = detail::AABB(vec3<Scalar>(0,0,0),R_query_k);
+
+                        // check for overlaps with neighboring particle's positions (also calculate the new energy)
+                        // All image boxes (including the primary)
+                        unsigned int n_images = m_image_list.size();
+                        for (unsigned int cur_image = 0; cur_image < n_images; cur_image++)
+                            {
+                            vec3<Scalar> pos_k_image = pos_copy_k + m_image_list[cur_image];
+                            detail::AABB aabb = aabb_k_local;
+                            aabb.translate(pos_k_image);
+                            } // end loop over images
+
+                        // update the position of the particle in the tree for future updates
+                        detail::AABB aabb_k = aabb_k_local;
+                        aabb_k.translate(pos_copy_k);
+                        m_aabb_tree.update(k, aabb_k);
+
+                        h_postype.data[k] = make_scalar4(pos_copy_k.x,pos_copy_k.y,pos_copy_k.z,postype_copy_k.w); //update position of particle
+
+                        if (shape_copy_k.hasOrientation())
+                            {
+                            h_orientation.data[k] = quat_to_scalar4(shape_copy_k.orientation);
+                            }
+                        }
+
                     small=small*0.1;
-                    needs_mc=true;
+                    // needs_mc=true;
                     n_attempts=0;
                     }
                 else
