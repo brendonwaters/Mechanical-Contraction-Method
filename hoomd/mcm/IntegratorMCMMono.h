@@ -885,7 +885,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
 
         const Scalar3& box_L = curBox.getL(); //save current box dimensions
         const double sep_tol=1.0001; //1.0001; //temp
-        const int attempt_cutoff=1000;//m_pdata->getN(); //cutoff number of overlap removal attempts
+        const int attempt_cutoff=10000;//m_pdata->getN(); //cutoff number of overlap removal attempts
         int n_attempts=0;  //counter for compression attempts
         const vec3<Scalar> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
         const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
@@ -1647,7 +1647,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                 //     needs_mc=true; //use monte carlo to anneal
                 //     n_attempts=0;
                 //     }
-                if (small>1e-50)
+                if (small>1e-12)
                     {
                     Scalar3 L=make_scalar3(box_L.x/std::cbrt(scale_factor),box_L.y/std::cbrt(scale_factor),box_L.z/std::cbrt(scale_factor));  //attempt to shrink box dimensions by scale_factor
                     BoxDim newBox = m_pdata->getGlobalBox();
@@ -2651,8 +2651,8 @@ void IntegratorMCMMono<Shape>::writePairs()
     // loop through N particles in a shuffled order
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
         {
-        unsigned int n_pairs=0;
         unsigned int i = m_update_order[cur_particle];
+        unsigned int n_pairs=0;
 
         // read in the current position and orientation
         Scalar4 postype_i = h_postype.data[i];
@@ -2685,6 +2685,10 @@ void IntegratorMCMMono<Shape>::writePairs()
 
         double radius_i=m_params[typ_i].sweep_radius;
 
+        double length_i=sqrt((m_params[typ_i].x[0]-m_params[typ_i].x[1])*(m_params[typ_i].x[0]-m_params[typ_i].x[1])+
+        (m_params[typ_i].y[0]-m_params[typ_i].y[1])*(m_params[typ_i].y[0]-m_params[typ_i].y[1])+
+        (m_params[typ_i].z[0]-m_params[typ_i].z[1])*(m_params[typ_i].z[0]-m_params[typ_i].z[1]));
+
         OverlapReal r_cut_patch = 0;
 
         if (m_patch && !m_patch_log)
@@ -2713,6 +2717,8 @@ void IntegratorMCMMono<Shape>::writePairs()
                     {
                     if (m_aabb_tree.isNodeLeaf(cur_node_idx))
                         {
+                        // for (unsigned int j = i+1; j < m_pdata->getN();j++)
+                        //     {
                         for (unsigned int cur_p = 0; cur_p < m_aabb_tree.getNodeNumParticles(cur_node_idx); cur_p++)
                             {
                             // read in its position and orientation
@@ -2744,6 +2750,7 @@ void IntegratorMCMMono<Shape>::writePairs()
                                 }
 
                             // put particles in coordinate system of particle i
+                            vec3<Scalar> r_ij = vec3<Scalar>(postype_j) - pos_i_image;
 
                             unsigned int typ_j = __scalar_as_int(postype_j.w);
                             Shape shape_j(quat<Scalar>(orientation_j), m_params[typ_j]);
@@ -2751,13 +2758,7 @@ void IntegratorMCMMono<Shape>::writePairs()
 
                             double radius_j=m_params[typ_j].sweep_radius;
 
-
                             vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
-
-                            double length_i=sqrt((m_params[typ_i].x[0]-m_params[typ_i].x[1])*(m_params[typ_i].x[0]-m_params[typ_i].x[1])+
-                            (m_params[typ_i].y[0]-m_params[typ_i].y[1])*(m_params[typ_i].y[0]-m_params[typ_i].y[1])+
-                            (m_params[typ_i].z[0]-m_params[typ_i].z[1])*(m_params[typ_i].z[0]-m_params[typ_i].z[1]));
-                            // double volume=(pi*radius_i*radius_i*length_i)+((4/3)*pi*radius_i*radius_i*radius_i);
 
                             double length_j=sqrt((m_params[typ_j].x[0]-m_params[typ_j].x[1])*(m_params[typ_j].x[0]-m_params[typ_j].x[1])+
                             (m_params[typ_j].y[0]-m_params[typ_j].y[1])*(m_params[typ_j].y[0]-m_params[typ_j].y[1])+
@@ -2766,73 +2767,127 @@ void IntegratorMCMMono<Shape>::writePairs()
                             //return vectors along spherocylinder axis
                             vec3<Scalar> or_vect_i;
                             vec3<Scalar> or_vect_j;
+
+                            double si=1000;
+                            double sj=1000;
                             if (ndim==3)
                                 {
                                 or_vect_i=rotate(or_i,defaultOrientation3D);
                                 or_vect_j=rotate(or_j,defaultOrientation3D);
+
+                                vec3<Scalar> N=cross(or_vect_i,or_vect_j);
+
+                                double mag_N=sqrt(dot(N,N));
+
+                                if (mag_N==0) //parallel
+                                    {
+                                    sj=0;
+                                    si=dot(or_vect_i,r_ij);
+                                    }
+                                else
+                                    {
+                                    double intersect_test=abs(dot(N,r_ij));
+
+                                    if (intersect_test==0) //particle axis intersect
+                                        {
+                                        Eigen::MatrixXf a(3, 2);
+                                        Eigen::MatrixXf b(1, 3);
+                                        Eigen::MatrixXf x(1, 2);
+
+                                        double a00=or_vect_i.x;
+                                        double a01=or_vect_j.x;
+                                        double a10=or_vect_i.y;
+                                        double a11=or_vect_j.y;
+                                        double a20=or_vect_i.z;
+                                        double a21=or_vect_j.z;
+
+                                        double b00=-r_ij.x;
+                                        double b10=-r_ij.y;
+                                        double b20=-r_ij.z;
+
+                                        a(0,0)=a00;
+                                        a(0,1)=a01;
+                                        a(1,0)=a10;
+                                        a(1,1)=a11;
+                                        a(2,0)=a20;
+                                        a(2,1)=a21;
+
+                                        b(0,0)=b00;
+                                        b(1,0)=b10;
+                                        b(2,0)=b20;
+
+                                        Eigen::Matrix2f c(2,2);
+                                        c=a.transpose() * a;
+                                        Eigen::Matrix2f d(2,2);
+                                        d=c.inverse();
+                                        Eigen::MatrixXf e(2,3);
+                                        e=d * a.transpose();
+                                        x=e * b;
+
+                                        si=x(0,0);
+                                        sj=x(1,0);
+                                        }
+                                    else //skew axis, calculate closest approach
+                                        {
+                                        vec3<Scalar> n1=cross(or_vect_i,N);
+                                        vec3<Scalar> n2=cross(or_vect_j,N);
+
+                                        si=dot(r_ij,n2)/dot(or_vect_i,n2);
+                                        sj=dot(-r_ij,n1)/dot(or_vect_j,n1);
+                                        }
+                                    }
                                 }
                             else if (ndim==2)
                                 {
                                 or_vect_i=rotate(or_i,defaultOrientation2D);
                                 or_vect_j=rotate(or_j,defaultOrientation2D);
+
+                                vec3<Scalar> N=cross(or_vect_i,or_vect_j);
+                                double mag_N=sqrt(dot(N,N));
+
+                                if (mag_N<tiny) //parallel
+                                    {
+                                    sj=0;
+                                    si=dot(or_vect_i,r_ij);
+                                    }
+
+                                else
+                                    {
+                                    si=(r_ij.x-(r_ij.y/or_vect_j.y))/(or_vect_i.x-(or_vect_i.y/or_vect_j.y));
+                                    sj=(r_ij.y-si*or_vect_i.y)/or_vect_j.y;
+                                    }
                                 }
 
-                            vec3<Scalar> pos_vect=pos_i-pos_j;
-
-                            double denom=(1.0-dot(or_vect_i,or_vect_j)*dot(or_vect_i,or_vect_j));
-
-                            double si=0;
-                            double sj=0;
-
-                            if (denom>tiny) //otherwise, particle axis are parallel
+                            //truncate nearest approach search to lengths of particles
+                            if (si>length_i/2.0)
                                 {
-
-                                if (ndim==3)
-                                    {
-                                    si=(dot(or_vect_i,or_vect_j)*dot(or_vect_j,pos_vect)-dot(or_vect_i,pos_vect))/denom;
-                                    sj=(dot(or_vect_j,pos_vect)-dot(or_vect_i,or_vect_j)*dot(or_vect_i,pos_vect))/denom;
-                                    }
-                                else if (ndim==2)
-                                    {
-                                    si=(pos_vect.x-(pos_vect.y/or_vect_j.y))/(or_vect_i.x-(or_vect_i.y/or_vect_j.y));
-                                    sj=(pos_vect.y-si*or_vect_i.y)/or_vect_j.y;
-                                    }
-
-                                if (si>length_i/2.0)
-                                    {
-                                    si=length_i/2.0;
-                                    }
-                                else if (si<-length_i/2.0)
-                                    {
-                                    si=-length_i/2.0;
-                                    }
-                                if (sj>length_j/2.0)
-                                    {
-                                    sj=length_j/2.0;
-                                    }
-                                else if (sj<-length_j/2.0)
-                                    {
-                                    sj=-length_j/2.0;
-                                    }
+                                si=length_i/2.0;
                                 }
-                            else  //the parallel case
+                            else if (si<-length_i/2.0)
                                 {
-                                sj=0;
-                                si=dot(or_vect_i,pos_vect);
+                                si=-length_i/2.0;
+                                }
+                            if (sj>length_j/2.0)
+                                {
+                                sj=length_j/2.0;
+                                }
+                            else if (sj<-length_j/2.0)
+                                {
+                                sj=-length_j/2.0;
                                 }
 
-                            vec3<Scalar> k_vect=(pos_i+si*or_vect_i)-(pos_j+sj*or_vect_j);
+                            vec3<Scalar> k_vect=(pos_i_image+si*or_vect_i)-(pos_j+sj*or_vect_j);
 
                             double mag_k=sqrt(dot(k_vect,k_vect));
                             double delta=(radius_i+radius_j)-mag_k;
 
-                            if (delta>-contact && typ_i==typ_j) //particles are overlapping
-                            // if (delta>0) //particles are overlapping
+                            if (delta>-contact && typ_i==typ_j && i!=j) //particles are overlapping
                                 {
                                 pair_list[(int) typ_i][n_pairs][0]=i;
                                 pair_list[(int) typ_i][n_pairs][1]=j;
                                 n_pairs++;
                                 }
+                                // }
                             }
                         }
                     }
