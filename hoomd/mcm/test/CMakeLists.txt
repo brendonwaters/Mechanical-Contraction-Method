@@ -10,7 +10,6 @@ set(TEST_LIST
     mcm_test_sphere
     mcm_test_spheropolygon
     mcm_test_spheropolyhedron
-    mcm_test_sphinx
     )
 
 foreach (CUR_TEST ${TEST_LIST})
