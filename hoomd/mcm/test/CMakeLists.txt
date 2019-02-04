@@ -6,13 +6,8 @@ set(TEST_LIST
     mcm_test_aabb_tree
     mcm_test_convex_polygon
     mcm_test_convex_polyhedron
-    mcm_test_ellipsoid
-    mcm_test_faceted_sphere
     mcm_test_moves
-    mcm_test_polyhedron
-    mcm_test_simple_polygon
     mcm_test_sphere
-    mcm_test_sphere_union
     mcm_test_spheropolygon
     mcm_test_spheropolyhedron
     mcm_test_sphinx
