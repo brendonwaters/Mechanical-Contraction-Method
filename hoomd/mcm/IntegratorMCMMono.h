@@ -2632,7 +2632,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
     const vec3<Scalar> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
     const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
-    const double contact=0.01;
+    const double contact=0.1;
     const double tiny=1e-7;
     const double tol=1;
 
@@ -2649,10 +2649,11 @@ void IntegratorMCMMono<Shape>::writePairs()
             }
         }
     // loop through N particles in a shuffled order
+    unsigned int n_pairs=0;
+
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
         {
         unsigned int i = cur_particle;//m_update_order[cur_particle];
-        unsigned int n_pairs=0;
 
         // read in the current position and orientation
         Scalar4 postype_i = h_postype.data[i];
