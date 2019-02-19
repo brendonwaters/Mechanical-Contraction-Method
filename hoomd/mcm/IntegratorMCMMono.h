@@ -2636,7 +2636,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     const double tiny=1e-7;
     const double tol=1;
 
-    unsigned int pair_list[nTypes][N*maxCoordN][2];// = {0};
+    unsigned int* pair_list = new unsigned int[nTypes*N*maxCoordN*2];
 
     for (int i=0;i<nTypes;i++)
         {
@@ -2644,7 +2644,7 @@ void IntegratorMCMMono<Shape>::writePairs()
             {
             for (int k=0;k<2;k++)
                 {
-                pair_list[i][j][k]=(unsigned int) 0;
+                pair_list[i*N*maxCoordN*2+j*2+k]=(unsigned int) 0;
                 }
             }
         }
@@ -2902,8 +2902,8 @@ void IntegratorMCMMono<Shape>::writePairs()
 
             if (delta>-contact && typ_i==typ_j && i!=j) //particles are overlapping
                 {
-                pair_list[(unsigned int) typ_i][n_pairs][0]=i;
-                pair_list[(unsigned int) typ_i][n_pairs][1]=j;
+                pair_list[typ_i*N*maxCoordN*2+n_pairs*2+0]=i;
+                pair_list[typ_j*N*maxCoordN*2+n_pairs*2+1]=j;
                 n_pairs++;
                 }
             }
@@ -2929,7 +2929,7 @@ void IntegratorMCMMono<Shape>::writePairs()
         std::vector<int> clusters;
         for (int i=0;i<N*maxCoordN;i++)
             {
-            if (pair_list[type][i][0] == 0 && pair_list[type][i][1]==0)
+            if (pair_list[type*N*maxCoordN*2+i*2+0] == 0 && pair_list[type*N*maxCoordN*2+i*2+1]==0)
                 {
                 continue;
                 }
@@ -2961,10 +2961,10 @@ void IntegratorMCMMono<Shape>::writePairs()
                         if (clusters[i]!=clusters[j])
                             {
                             //combine clusters that share common elements
-                            if (pair_list[type][i][0]==pair_list[type][j][0] ||
-                                pair_list[type][i][1]==pair_list[type][j][1] ||
-                                pair_list[type][i][0]==pair_list[type][j][1] ||
-                                pair_list[type][i][1]==pair_list[type][j][0])
+                            if (pair_list[type*N*maxCoordN*2+i*2+0]==pair_list[type*N*maxCoordN*2+j*2+0] ||
+                                pair_list[type*N*maxCoordN*2+i*2+1]==pair_list[type*N*maxCoordN*2+j*2+1] ||
+                                pair_list[type*N*maxCoordN*2+i*2+0]==pair_list[type*N*maxCoordN*2+j*2+1] ||
+                                pair_list[type*N*maxCoordN*2+i*2+1]==pair_list[type*N*maxCoordN*2+j*2+0])
 
                                 {
                                 int name=std::min(clusters[i],clusters[j]);
@@ -3051,8 +3051,8 @@ void IntegratorMCMMono<Shape>::writePairs()
                     {
                     if (clusters[l]==names[k])
                         {
-                        unsigned int i=pair_list[type][l][0];
-                        unsigned int j=pair_list[type][l][1];
+                        unsigned int i=pair_list[type*N*maxCoordN*2+l*2+0];
+                        unsigned int j=pair_list[type*N*maxCoordN*2+l*2+1];
                         Scalar4 postype_i = h_postype.data[i];
                         vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
                         unsigned int typ_i=postype_i.w;
@@ -3167,6 +3167,7 @@ void IntegratorMCMMono<Shape>::writePairs()
             outfile<<percolating<<" "<<box_L.x<<" "<<maxdist_x<<" "<<maxdist_y<<" "<<maxdist_z<<std::endl;
             }
         }
+    delete[] pair_list;
     }
 
 } // end namespace mcm
