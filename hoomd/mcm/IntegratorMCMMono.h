@@ -1288,7 +1288,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                                     //     }
                                     double delta=(radius_i+radius_j)-mag_k;
 
-                                    if (delta>-contact && i!=j && typ_i==typ_j && typ_i=0)
+                                    if (delta>-contact && i!=j && typ_i==typ_j && typ_i==0)
                                         {
                                         avg_contacts++;
                                         }
