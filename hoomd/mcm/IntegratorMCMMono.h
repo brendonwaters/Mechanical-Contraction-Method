@@ -2654,7 +2654,10 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
     const double con1=1;
     const double con2=1e-1;
-    const double con3=1e-12;
+    const double con3=1e-4;
+
+    double t_arr[steps];
+    double r_arr[steps];
 
     double sigma=0;
 
@@ -2971,6 +2974,8 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
         for (unsigned int n=0;n<steps;n++)
             {
+            t_arr[n]=t;
+            r_arr[n]=r2;
             Scalar4 postype_i = h_postype.data[i];
             Scalar4 orientation_i = h_orientation.data[i];
             vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
@@ -3201,7 +3206,29 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
                 }
             }//end loop over steps
-        sigma+=r2/(steps*t);
+            double sigma_m=0;
+
+            //initialize regression variables
+            double Sx=0;
+            double Sy=0;
+            double Sxx=0;
+            double Sxy=0;
+
+            for (int nr=0;nr<steps;nr++)
+                {
+                double r=t_arr[nr];
+                double y=r_arr[nr];
+
+                Sx+=r;
+                Sy+=y;
+                Sxx+=r*r;
+                Sxy+=r*y;
+                }
+
+            //Conductivity is diffusion coefficient, slope of line r^2/t.
+            sigma_m=(steps*Sxx-Sx*Sx)/(steps*Sxy-Sx*Sy);
+
+            sigma+=sigma_m;
         }//end loop over starting positions
     sigma/=runs;
 
