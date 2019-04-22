@@ -2638,15 +2638,12 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
     ArrayHandle<Scalar4> h_postype(m_pdata->getPositions(), access_location::host, access_mode::read);
     ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::read);
     const int N=m_pdata->getN();
-    const BoxDim box = m_pdata->getBox();
-    const Scalar3 box_L = box.getL();
     const unsigned int ndim = this->m_sysdef->getNDimensions();
     ArrayHandle<unsigned int> h_overlaps(m_overlaps, access_location::host, access_mode::read);
     ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
     const vec3<Scalar> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
     const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
     const double tiny=1e-7;
-    const double pi = 3.14159265358979323846;
     const double contact=0.1;
     const int runs=20;
     const int steps=1000;
@@ -2930,7 +2927,6 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
                 }  // end loop over AABB nodes
             } // end loop over images
         } // end loop over all particles
-
     for (unsigned int cur_particle = 0; cur_particle < runs; cur_particle++)
         {
         double t=1;
@@ -2964,11 +2960,6 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
         unsigned int typ_o = __scalar_as_int(postype_o.w);
         Shape shape_o(quat<Scalar>(orientation_o), m_params[typ_o]);
-        double radius_o=m_params[typ_o].sweep_radius;
-
-        double length_o=sqrt((m_params[typ_o].x[0]-m_params[typ_o].x[1])*(m_params[typ_o].x[0]-m_params[typ_o].x[1])+
-        (m_params[typ_o].y[0]-m_params[typ_o].y[1])*(m_params[typ_o].y[0]-m_params[typ_o].y[1])+
-        (m_params[typ_o].z[0]-m_params[typ_o].z[1])*(m_params[typ_o].z[0]-m_params[typ_o].z[1]));
 
         unsigned int i=o;
 
@@ -3003,7 +2994,6 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
             unsigned int typ_i = __scalar_as_int(postype_i.w);
             Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
-            double radius_i=m_params[typ_i].sweep_radius;
 
             double length_i=sqrt((m_params[typ_i].x[0]-m_params[typ_i].x[1])*(m_params[typ_i].x[0]-m_params[typ_i].x[1])+
             (m_params[typ_i].y[0]-m_params[typ_i].y[1])*(m_params[typ_i].y[0]-m_params[typ_i].y[1])+
@@ -3017,7 +3007,7 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
             Scalar4 postype_j = h_postype.data[j];
             Scalar4 orientation_j = h_orientation.data[j];
             unsigned int typ_j = __scalar_as_int(postype_j.w);
-            double tau;
+            double tau=1;
             if (typ_i==0 && typ_j==0)
                 {
                 tau=1.0/con1;
@@ -3058,7 +3048,6 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
                 // vec3<Scalar> r_vect= vec3<Scalar>(postype_j) - pos_i;
 
                 Shape shape_j(quat<Scalar>(orientation_j), m_params[typ_j]);
-                double radius_j=m_params[typ_j].sweep_radius;
                 quat<Scalar> or_j=quat<Scalar>(orientation_j);
 
                 vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
@@ -3206,6 +3195,7 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
                 }
             }//end loop over steps
+            std::cout<<"";
             double sigma_m=0;
 
             //initialize regression variables
@@ -4094,7 +4084,7 @@ void IntegratorMCMMono<Shape>::writePairs()
                     zdist[k]=zmax-zmin;
                     }
 
-                for (int r=0;r<total_clusters;r++)\
+                for (int r=0;r<total_clusters;r++)
                     {
                     if (xdist[r]>maxdist_x)
                         {
@@ -4109,7 +4099,6 @@ void IntegratorMCMMono<Shape>::writePairs()
                         maxdist_z=zdist[r];
                         }
                     }
-
                 if (maxdist_x+tol*2*radius>box_L.x)
                     {
                     percolating=1;
