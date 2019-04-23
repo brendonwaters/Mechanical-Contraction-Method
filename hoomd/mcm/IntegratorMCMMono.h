@@ -2937,7 +2937,7 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
         Scalar4 orientation_o = h_orientation.data[o];
         vec3<Scalar> pos_o = vec3<Scalar>(postype_o);
 
-        vec3<Scalar> or_vect_o(0,0,0);
+        vec3<Scalar> or_vect_o;
 
         quat<Scalar> or_o=quat<Scalar>(orientation_o);
         if (ndim==2)
@@ -2963,6 +2963,13 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
         unsigned int i=o;
 
+        //if we start on a particle with no neighbors, add zero to the average conductivity
+        int o_neighbors=neighborList[o].size();
+        if (o_neighbors==0)
+            {
+            continue;
+            }
+
         for (unsigned int n=0;n<steps;n++)
             {
             t_arr[n]=t;
@@ -2971,7 +2978,7 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
             Scalar4 orientation_i = h_orientation.data[i];
             vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
 
-            vec3<Scalar> or_vect_i(0,0,0);
+            vec3<Scalar> or_vect_i;
 
             quat<Scalar> or_i=quat<Scalar>(orientation_i);
             if (ndim==2)
