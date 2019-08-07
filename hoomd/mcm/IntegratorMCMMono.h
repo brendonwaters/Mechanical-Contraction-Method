@@ -2911,7 +2911,7 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
                             double delta=(radius_i+radius_j)-mag_k;
 
-                            if (delta>-contact && i!=j && typ_i==typ_j)
+                            if (delta>-contact && i!=j)
                                 {
                                 neighborList[i].push_back(j);
                                 neighbor++;
@@ -3017,15 +3017,15 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
             double tau=1;
             if (typ_i==0 && typ_j==0)
                 {
-                tau=1.0/con1;
+                tau=1.0*con1;
                 }
             else if (typ_i!=typ_j)
                 {
-                tau=1.0/con2;
+                tau=1.0*con2;
                 }
             else if (typ_i==1 && typ_j==1)
                 {
-                tau=1.0/con3;
+                tau=1.0*con3;
                 }
             t+=tau;
 
