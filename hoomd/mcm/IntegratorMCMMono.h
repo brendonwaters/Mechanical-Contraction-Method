@@ -2650,7 +2650,7 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
     // const int max_contacts=20;
 
     const double con1=1;
-    const double con2=1e-1;
+    const double con2=2e-4;
     const double con3=1e-4;
 
     double t_arr[steps];
