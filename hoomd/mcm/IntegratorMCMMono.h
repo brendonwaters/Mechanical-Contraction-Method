@@ -390,6 +390,9 @@ class IntegratorMCMMono : public IntegratorMCM
 
         //! Use diffusion coefficient to calculate system bulk conductivity
         virtual double diffuseConductivity();
+
+        //! Write out the normalized radial number variance function, (<n(r)^2>-<n(r)>^2)/r^3
+        virtual void numberVariance();
     };
 
 template <class Shape>
@@ -1724,6 +1727,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                     }
                 else
                     {
+                    IntegratorMCMMono<Shape>::numberVariance();
                     IntegratorMCMMono<Shape>::writePairs();
                     max_density=true; //system is fully compressed
                     }
@@ -2650,6 +2654,7 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
     // const int max_contacts=20;
 
     const double con1=1;
+    const double con15=0.05;
     const double con2=2e-4;
     const double con3=1e-4;
 
@@ -3014,10 +3019,38 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
             Scalar4 postype_j = h_postype.data[j];
             Scalar4 orientation_j = h_orientation.data[j];
             unsigned int typ_j = __scalar_as_int(postype_j.w);
+
+            vec3<Scalar> or_vect_j;
+
+            quat<Scalar> or_j=quat<Scalar>(orientation_j);
+            if (ndim==2)
+                {
+                or_vect_j=rotate(or_j,defaultOrientation2D);
+                }
+            else if (ndim==3)
+                {
+                or_vect_j=rotate(or_j,defaultOrientation3D);
+                }
             double tau=1;
             if (typ_i==0 && typ_j==0)
                 {
-                tau=1.0*con1;
+                double or_vect_i_mag=sqrt(dot(or_vect_i,or_vect_i));
+                double or_vect_j_mag=sqrt(dot(or_vect_j,or_vect_j));
+
+                vec3<Scalar> norm_or_vect_i=(1.0/or_vect_i_mag)*or_vect_i;
+                vec3<Scalar> norm_or_vect_j=(1.0/or_vect_j_mag)*or_vect_j;
+
+                vec3<Scalar> angle_test=cross(norm_or_vect_i,norm_or_vect_j);
+                double angle_test_mag=sqrt(dot(angle_test,angle_test));
+
+                if (angle_test_mag<0.1)
+                    {
+                    tau=1.0*con1;
+                    }
+                else
+                    {
+                    tau=1.0*con15;
+                    }
                 }
             else if (typ_i!=typ_j)
                 {
@@ -3231,6 +3264,141 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
     return sigma;
 
+    }
+
+template<class Shape>
+void IntegratorMCMMono<Shape>::numberVariance()
+    {
+    // access particle data and system box
+    ArrayHandle<Scalar4> h_postype(m_pdata->getPositions(), access_location::host, access_mode::read);
+    ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::read);
+    const int N=m_pdata->getN();
+    const unsigned int ndim = this->m_sysdef->getNDimensions();
+    ArrayHandle<unsigned int> h_overlaps(m_overlaps, access_location::host, access_mode::read);
+    ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
+    const vec3<Scalar> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
+    const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
+
+    // loop through N particles in a shuffled order
+
+
+    for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
+        {
+        unsigned int i = cur_particle;//m_update_order[cur_particle];
+        int testcount=0;
+
+        // read in the current position and orientation
+        Scalar4 postype_i = h_postype.data[i];
+        Scalar4 orientation_i = h_orientation.data[i];
+        vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
+
+        vec3<Scalar> or_vect_i(0,0,0);
+
+        quat<Scalar> or_i=quat<Scalar>(orientation_i);
+        if (ndim==2)
+            {
+            or_vect_i=rotate(or_i,defaultOrientation2D);
+            }
+        else if (ndim==3)
+            {
+            or_vect_i=rotate(or_i,defaultOrientation3D);
+            }
+
+        #ifdef ENABLE_MPI
+        if (m_comm)
+            {
+            // only move particle if active
+            if (!isActive(make_scalar3(postype_i.x, postype_i.y, postype_i.z), box, ghost_fraction))
+                continue;
+            }
+        #endif
+
+        unsigned int typ_i = __scalar_as_int(postype_i.w);
+        Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
+        double radius_i=m_params[typ_i].sweep_radius;
+
+        OverlapReal r_cut_patch = 0;
+
+        if (m_patch && !m_patch_log)
+            {
+            r_cut_patch = m_patch->getRCut() + 0.5*m_patch->getAdditiveCutoff(typ_i);
+            }
+
+        // subtract minimum AABB extent from search radius
+        OverlapReal R_query_i = std::max(shape_i.getCircumsphereDiameter()/OverlapReal(2.0),
+            r_cut_patch-getMinCoreDiameter()/(OverlapReal)2.0);
+        detail::AABB aabb_i_local = detail::AABB(vec3<Scalar>(0,0,0),R_query_i);
+
+        // check for overlaps with neighboring particle's positions (also calculate the new energy)
+        // All image boxes (including the primary)
+        const unsigned int n_images = m_image_list.size();
+        for (unsigned int cur_image = 0; cur_image < n_images; cur_image++)
+            {
+            vec3<Scalar> pos_i_image = pos_i + m_image_list[cur_image];
+            detail::AABB aabb = aabb_i_local;
+            aabb.translate(pos_i_image);
+
+            // stackless search
+            for (unsigned int cur_node_idx = 0; cur_node_idx < m_aabb_tree.getNumNodes(); cur_node_idx++)
+                {
+                if (detail::overlap(m_aabb_tree.getNodeAABB(cur_node_idx), aabb))
+                    {
+                    if (m_aabb_tree.isNodeLeaf(cur_node_idx))
+                        {
+                        // for (unsigned int j = i+1; j < m_pdata->getN();j++)
+                        //     {
+                        for (unsigned int cur_p = 0; cur_p < m_aabb_tree.getNodeNumParticles(cur_node_idx); cur_p++)
+                            {
+                            // read in its position and orientation
+                            unsigned int j = m_aabb_tree.getNodeParticle(cur_node_idx, cur_p);
+
+                            Scalar4 postype_j;
+                            Scalar4 orientation_j;
+
+                            // handle j==i situations
+                            if ( j != i )
+                                {
+                                // load the position and orientation of the j particle
+                                postype_j = h_postype.data[j];
+                                orientation_j = h_orientation.data[j];
+                                }
+                            else
+                                {
+                                if (cur_image == 0)
+                                    {
+                                    // in the first image, skip i == j
+                                    continue;
+                                    }
+                                else
+                                    {
+                                    // If this is particle i and we are in an outside image, use the translated position and orientation
+                                    postype_j = make_scalar4(pos_i.x, pos_i.y, pos_i.z, postype_i.w);
+                                    orientation_j = quat_to_scalar4(shape_i.orientation);
+                                    }
+                                }
+                            // put particles in coordinate system of particle i
+                            vec3<Scalar> r_ij = vec3<Scalar>(postype_j) - pos_i_image;
+
+                            double mag_r=sqrt(dot(r_ij,r_ij));
+                            testcount++;
+
+                            unsigned int typ_j = __scalar_as_int(postype_j.w);
+                            Shape shape_j(quat<Scalar>(orientation_j), m_params[typ_j]);
+                            quat<Scalar> or_j=quat<Scalar>(orientation_j);
+
+                            vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
+                            }
+                        }
+                    }
+                else
+                    {
+                    // skip ahead
+                    cur_node_idx += m_aabb_tree.getNodeSkip(cur_node_idx);
+                    }
+                }  // end loop over AABB nodes
+            } // end loop over images
+        std::cout<<testcount<<std::endl;
+        } // end loop over all particles
     }
 
 template<class Shape>
