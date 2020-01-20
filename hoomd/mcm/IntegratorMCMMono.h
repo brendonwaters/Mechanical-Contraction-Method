@@ -2654,9 +2654,13 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
     // const int max_contacts=20;
 
     const double con1=1;
-    const double con15=0.05;
-    const double con2=2e-4;
-    const double con3=1e-4;
+    // const double con15=0.05;
+    // const double con2=2e-4;
+    // const double con3=1e-4;
+
+    const double con15=0.01;
+    const double con2=2e-5;
+    const double con3=1e-5;
 
     double t_arr[steps];
     double r_arr[steps];
@@ -3043,7 +3047,7 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
                 vec3<Scalar> angle_test=cross(norm_or_vect_i,norm_or_vect_j);
                 double angle_test_mag=sqrt(dot(angle_test,angle_test));
 
-                if (angle_test_mag<0.1)
+                if (angle_test_mag<0.087)
                     {
                     tau=1.0*con1;
                     }
