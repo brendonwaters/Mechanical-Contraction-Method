@@ -356,6 +356,7 @@ class IntegratorMCMMono : public IntegratorMCM
         double a_max=0;
         double small=1e-3;
         double avg_contacts=0;
+        int single_contacts=0;
 
         //! Set the nominal width appropriate for looped moves
         virtual void updateCellWidth();
@@ -1291,6 +1292,11 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                                     //     }
                                     double delta=(radius_i+radius_j)-mag_k;
 
+                                    if (delta>-contact && i!=j)
+                                        {
+                                        single_contacts++;
+                                        }
+
                                     if (delta>-contact && i!=j && typ_i==typ_j && typ_i==0)
                                         {
                                         avg_contacts++;
@@ -1607,6 +1613,13 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                     }
                     positions[i] = make_scalar4(pos_i.x,pos_i.y,pos_i.z,postype_i.w);
                     orientations[i] = quat_to_scalar4(or_i);  //store in copy in correct format
+
+                    //write contact information to file
+                    std::ofstream outfile;
+
+                    outfile.open("contact_stats.txt", std::ios_base::app);
+                    // outfile << percolating<<std::endl;
+                    outfile<<single_contacts<<std::endl;
                 } // end loop over all particles
             avg_contacts=avg_contacts/m_pdata->getN();
             avg_contacts=avg_contacts/2; //2 to avoid double counting contacts, each pair indexed twice
