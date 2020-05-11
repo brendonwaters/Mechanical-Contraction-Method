@@ -4062,6 +4062,7 @@ void IntegratorMCMMono<Shape>::writePairs()
             //         }
             //     }  // end loop over AABB nodes
             // } // end loop over images
+        std::ofstream outfile;
         outfile.open("contact_stats.txt", std::ios_base::app);
         outfile<<single_contacts<<std::endl;
         single_contacts=0;

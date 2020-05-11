@@ -20,7 +20,7 @@ import platform
 # The following global variables keep track of the walltime and processing time since the import of hoomd_script
 import time
 TIME_START = time.time()
-CLOCK_START = time.clock()
+CLOCK_START = time.perf_counter()
 
 ## Global Messenger
 # \note This is initialized to a default messenger on load so that python code may have a unified path for sending
@@ -359,7 +359,7 @@ class ExecutionContext(hoomd.meta._metadata):
     # \brief Return the CPU clock time since the import of hoomd_script
     @property
     def cputime(self):
-        return time.clock() - CLOCK_START
+        return time.perf_counter() - CLOCK_START
 
     # \brief Return the job id
     @property
