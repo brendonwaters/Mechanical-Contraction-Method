@@ -356,7 +356,6 @@ class IntegratorMCMMono : public IntegratorMCM
         double a_max=0;
         double small=1e-3;
         double avg_contacts=0;
-        int single_contacts=0;
 
         //! Set the nominal width appropriate for looped moves
         virtual void updateCellWidth();
@@ -1292,11 +1291,6 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                                     //     }
                                     double delta=(radius_i+radius_j)-mag_k;
 
-                                    if (delta>-contact && i!=j)
-                                        {
-                                        single_contacts++;
-                                        }
-
                                     if (delta>-contact && i!=j && typ_i==typ_j && typ_i==0)
                                         {
                                         avg_contacts++;
@@ -1616,10 +1610,6 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
 
                     //write contact information to file
                     std::ofstream outfile;
-
-                    outfile.open("contact_stats.txt", std::ios_base::app);
-                    // outfile << percolating<<std::endl;
-                    outfile<<single_contacts<<std::endl;
                 } // end loop over all particles
             avg_contacts=avg_contacts/m_pdata->getN();
             avg_contacts=avg_contacts/2; //2 to avoid double counting contacts, each pair indexed twice
@@ -3783,6 +3773,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     const double contact=0.1;
     const double tiny=1e-7;
     const double tol=1;
+    int single_contacts=0;
 
     unsigned int* pair_list = new unsigned int[nTypes*N*maxCoordN*2];
 
@@ -3802,6 +3793,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
         {
         unsigned int i = cur_particle;//m_update_order[cur_particle];
+        single_contacts=0;
 
         // read in the current position and orientation
         Scalar4 postype_i = h_postype.data[i];
@@ -4048,6 +4040,11 @@ void IntegratorMCMMono<Shape>::writePairs()
             double mag_k=sqrt(dot(k_vect,k_vect));
             double delta=(radius_i+radius_j)-mag_k;
 
+            if (delta>-contact && i!=j)
+                {
+                single_contacts++;
+                }
+
             if (delta>-contact && typ_i==typ_j && i!=j) //particles are overlapping
                 {
                 pair_list[typ_i*N*maxCoordN*2+n_pairs*2+0]=i;
@@ -4065,6 +4062,9 @@ void IntegratorMCMMono<Shape>::writePairs()
             //         }
             //     }  // end loop over AABB nodes
             // } // end loop over images
+        outfile.open("contact_stats.txt", std::ios_base::app);
+        outfile<<single_contacts<<std::endl;
+        single_contacts=0;
         } // end loop over all particles
 
     for (int type=0;type<nTypes;type++) //find clusters of each type
