@@ -3762,7 +3762,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::read);
     const int nTypes=m_pdata->getNTypes();
     const int N=m_pdata->getN();
-    const int maxCoordN=100; //highest coordination number
+    const int maxCoordN=30; //highest coordination number
     const BoxDim box = m_pdata->getBox();
     const Scalar3 box_L = box.getL();
     const unsigned int ndim = this->m_sysdef->getNDimensions();
@@ -3773,6 +3773,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     const double contact=0.1;
     const double tiny=1e-7;
     const double tol=1;
+    unsigned int contact_list[N][2]={{0}};
     int single_contacts=0;
 
     unsigned int* pair_list = new unsigned int[nTypes*N*maxCoordN*2];
@@ -3787,7 +3788,7 @@ void IntegratorMCMMono<Shape>::writePairs()
                 }
             }
         }
-    // loop through N particles in a shuffled order
+    // loop through N particles in order
     unsigned int n_pairs=0;
 
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
@@ -4065,6 +4066,8 @@ void IntegratorMCMMono<Shape>::writePairs()
         std::ofstream outfile;
         outfile.open("contact_stats.txt", std::ios_base::app);
         outfile<<single_contacts<<std::endl;
+        contact_list[i][0]=i;
+        contact_list[i][1]=single_contacts;
         single_contacts=0;
         } // end loop over all particles
 
@@ -4311,6 +4314,36 @@ void IntegratorMCMMono<Shape>::writePairs()
                         }
                     }
                 }
+
+            //write out contact stats for particles in percolating clusters
+            if (percolating_clusters.size()>0)
+                {
+                std::vector<int> percolating_particles;
+                for (int a=0;a<(int) percolating_clusters.size();a++)
+                    {
+                    for (int b=0;b<clusters.size();b++)
+                        {
+                        if (clusters[b]==percolating_clusters[a])
+                            {
+                            unsigned int i=pair_list[type*N*maxCoordN*2+b*2+0];
+                            unsigned int j=pair_list[type*N*maxCoordN*2+b*2+1];
+                            percolating_particles.push_back(i);
+                            percolating_particles.push_back(j);
+                            }
+                        }
+                    }
+                 //remove duplicates
+                std::set<int> s( percolating_particles.begin(), percolating_particles.end() );
+                percolating_particles.assign( s.begin(), s.end() );
+                std::ofstream outfile;
+                outfile.open("percolating_contact_data.txt", std::ios_base::app);
+                for (int ii=0;ii<percolating_particles.size();ii++)
+                    {
+                    unsigned int part_index=percolating_particles[ii];
+                    outfile<<contact_list[part_index][1]<<std::endl;
+                    }
+                }
+
             // double correlation_length=calculateCorrelationLength(clusters, percolating_clusters);
             double conductivity=diffuseConductivity();
 
