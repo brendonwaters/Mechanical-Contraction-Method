@@ -4066,6 +4066,7 @@ void IntegratorMCMMono<Shape>::writePairs()
         std::ofstream outfile;
         outfile.open("contact_stats.txt", std::ios_base::app);
         outfile<<single_contacts<<std::endl;
+        outffile<<std::endl;
         contact_list[i][0]=i;
         contact_list[i][1]=single_contacts;
         single_contacts=0;
@@ -4342,6 +4343,7 @@ void IntegratorMCMMono<Shape>::writePairs()
                     unsigned int part_index=percolating_particles[ii];
                     outfile<<contact_list[part_index][1]<<std::endl;
                     }
+                outfile<<std::endl;
                 }
 
             // double correlation_length=calculateCorrelationLength(clusters, percolating_clusters);
