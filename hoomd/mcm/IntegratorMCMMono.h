@@ -3773,7 +3773,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     const double contact=0.1;
     const double tiny=1e-7;
     const double tol=1;
-    unsigned int contact_list[N][2]=;
+    unsigned int contact_list[N][2];
     int single_contacts=0;
 
     unsigned int* pair_list = new unsigned int[nTypes*N*maxCoordN*2];
