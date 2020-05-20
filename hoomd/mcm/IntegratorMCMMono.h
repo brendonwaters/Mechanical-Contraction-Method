@@ -3791,6 +3791,8 @@ void IntegratorMCMMono<Shape>::writePairs()
     // loop through N particles in order
     unsigned int n_pairs=0;
 
+    std::ofstream outfile;
+
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
         {
         unsigned int i = cur_particle;//m_update_order[cur_particle];
@@ -4063,7 +4065,6 @@ void IntegratorMCMMono<Shape>::writePairs()
             //         }
             //     }  // end loop over AABB nodes
             // } // end loop over images
-        std::ofstream outfile;
         outfile.open("contact_stats.txt", std::ios_base::app);
         outfile<<single_contacts<<std::endl;
         outfile<<std::endl;
@@ -4071,6 +4072,7 @@ void IntegratorMCMMono<Shape>::writePairs()
         contact_list[i][1]=single_contacts;
         single_contacts=0;
         } // end loop over all particles
+    outfile<<std::endl;
 
     for (int type=0;type<nTypes;type++) //find clusters of each type
         {
