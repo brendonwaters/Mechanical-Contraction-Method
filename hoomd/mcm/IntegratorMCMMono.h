@@ -3762,7 +3762,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::read);
     const int nTypes=m_pdata->getNTypes();
     const int N=m_pdata->getN();
-    const int maxCoordN=30; //highest coordination number
+    const int maxCoordN=100; //highest coordination number
     const BoxDim box = m_pdata->getBox();
     const Scalar3 box_L = box.getL();
     const unsigned int ndim = this->m_sysdef->getNDimensions();
@@ -3791,7 +3791,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     // loop through N particles in order
     unsigned int n_pairs=0;
 
-    std::ofstream outfile;
+    std::ofstream outfile1;
 
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
         {
@@ -4065,14 +4065,13 @@ void IntegratorMCMMono<Shape>::writePairs()
             //         }
             //     }  // end loop over AABB nodes
             // } // end loop over images
-        outfile.open("contact_stats.txt", std::ios_base::app);
-        outfile<<single_contacts<<std::endl;
-        outfile<<std::endl;
+        outfile1.open("contact_stats.txt", std::ios_base::app);
+        outfile1<<single_contacts<<std::endl;
         contact_list[i][0]=i;
         contact_list[i][1]=single_contacts;
         single_contacts=0;
         } // end loop over all particles
-    outfile<<std::endl;
+    outfile1<<std::endl;
 
     for (int type=0;type<nTypes;type++) //find clusters of each type
         {
