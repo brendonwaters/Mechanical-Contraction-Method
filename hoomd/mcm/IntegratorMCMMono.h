@@ -3792,6 +3792,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     unsigned int n_pairs=0;
 
     std::ofstream outfile1;
+    outfile1.open("contact_stats.txt", std::ios_base::app);
 
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
         {
@@ -4065,7 +4066,6 @@ void IntegratorMCMMono<Shape>::writePairs()
             //         }
             //     }  // end loop over AABB nodes
             // } // end loop over images
-        outfile1.open("contact_stats.txt", std::ios_base::app);
         outfile1<<single_contacts<<std::endl;
         contact_list[i][0]=i;
         contact_list[i][1]=single_contacts;
