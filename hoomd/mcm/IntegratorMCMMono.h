@@ -3776,6 +3776,12 @@ void IntegratorMCMMono<Shape>::writePairs()
     unsigned int contact_list[N][2];
     int single_contacts=0;
 
+    for (unsigned int i=0;i<N;i++)
+        {
+        contact_list[i][0]=i;
+        contact_list[i][1]=0;
+        }
+
     unsigned int* pair_list = new unsigned int[nTypes*N*maxCoordN*2];
 
     for (int i=0;i<nTypes;i++)
