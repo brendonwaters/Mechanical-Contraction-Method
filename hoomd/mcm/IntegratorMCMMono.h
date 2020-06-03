@@ -3773,13 +3773,13 @@ void IntegratorMCMMono<Shape>::writePairs()
     const double contact=0.1;
     const double tiny=1e-7;
     const double tol=1;
-    unsigned int contact_list[N][2];
+    unsigned int* contact_list= new unsigned int[N*2];
     int single_contacts=0;
 
     for (unsigned int i=0;i<N;i++)
         {
-        contact_list[i][0]=i;
-        contact_list[i][1]=0;
+        contact_list[i+0]=i;
+        contact_list[i+1]=0;
         }
 
     unsigned int* pair_list = new unsigned int[nTypes*N*maxCoordN*2];
@@ -4073,8 +4073,8 @@ void IntegratorMCMMono<Shape>::writePairs()
             //     }  // end loop over AABB nodes
             // } // end loop over images
         outfile1<<single_contacts<<std::endl;
-        contact_list[i][0]=i;
-        contact_list[i][1]=single_contacts;
+        contact_list[i+0]=i;
+        contact_list[i+1]=single_contacts;
         single_contacts=0;
         } // end loop over all particles
     outfile1<<std::endl;
@@ -4348,7 +4348,7 @@ void IntegratorMCMMono<Shape>::writePairs()
                 for (int ii=0;ii<percolating_particles.size();ii++)
                     {
                     unsigned int part_index=percolating_particles[ii];
-                    outfile<<contact_list[part_index][1]<<std::endl;
+                    outfile<<contact_list[part_index+1]<<std::endl;
                     }
                 outfile<<std::endl;
                 }
@@ -4364,6 +4364,7 @@ void IntegratorMCMMono<Shape>::writePairs()
             }
         }
     delete[] pair_list;
+    delete[] contact_list;
     }
 
 } // end namespace mcm
