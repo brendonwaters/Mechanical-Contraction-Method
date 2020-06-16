@@ -3773,14 +3773,14 @@ void IntegratorMCMMono<Shape>::writePairs()
     const double contact=0.1;
     const double tiny=1e-7;
     const double tol=1;
-    unsigned int* contact_list= new unsigned int[N*2];
-    int single_contacts=0;
+    // unsigned int* contact_list= new unsigned int[N*2];
+    // int single_contacts=0;
 
-    for (unsigned int i=0;i<N;i++)
-        {
-        contact_list[i+0]=i;
-        contact_list[i+1]=0;
-        }
+    // for (unsigned int i=0;i<N;i++)
+    //     {
+    //     contact_list[i+0]=i;
+    //     contact_list[i+1]=0;
+    //     }
 
     unsigned int* pair_list = new unsigned int[nTypes*N*maxCoordN*2];
 
@@ -3803,7 +3803,7 @@ void IntegratorMCMMono<Shape>::writePairs()
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
         {
         unsigned int i = cur_particle;//m_update_order[cur_particle];
-        single_contacts=0;
+        // single_contacts=0;
 
         // read in the current position and orientation
         Scalar4 postype_i = h_postype.data[i];
@@ -4050,10 +4050,10 @@ void IntegratorMCMMono<Shape>::writePairs()
             double mag_k=sqrt(dot(k_vect,k_vect));
             double delta=(radius_i+radius_j)-mag_k;
 
-            if (delta>-contact && i!=j)
-                {
-                single_contacts++;
-                }
+            // if (delta>-contact && i!=j)
+            //     {
+            //     single_contacts++;
+            //     }
 
             if (delta>-contact && typ_i==typ_j && i!=j) //particles are overlapping
                 {
@@ -4072,10 +4072,10 @@ void IntegratorMCMMono<Shape>::writePairs()
             //         }
             //     }  // end loop over AABB nodes
             // } // end loop over images
-        outfile1<<single_contacts<<std::endl;
-        contact_list[i+0]=i;
-        contact_list[i+1]=single_contacts;
-        single_contacts=0;
+        // outfile1<<single_contacts<<std::endl;
+        // contact_list[i+0]=i;
+        // contact_list[i+1]=single_contacts;
+        // single_contacts=0;
         } // end loop over all particles
     outfile1<<std::endl;
 
@@ -4323,35 +4323,35 @@ void IntegratorMCMMono<Shape>::writePairs()
                     }
                 }
 
-            //write out contact stats for particles in percolating clusters
-            if (percolating_clusters.size()>0)
-                {
-                std::vector<int> percolating_particles;
-                for (int a=0;a<(int) percolating_clusters.size();a++)
-                    {
-                    for (int b=0;b<clusters.size();b++)
-                        {
-                        if (clusters[b]==percolating_clusters[a])
-                            {
-                            unsigned int i=pair_list[type*N*maxCoordN*2+b*2+0];
-                            unsigned int j=pair_list[type*N*maxCoordN*2+b*2+1];
-                            percolating_particles.push_back(i);
-                            percolating_particles.push_back(j);
-                            }
-                        }
-                    }
-                 //remove duplicates
-                std::set<int> s( percolating_particles.begin(), percolating_particles.end() );
-                percolating_particles.assign( s.begin(), s.end() );
-                std::ofstream outfile;
-                outfile.open("percolating_contact_data.txt", std::ios_base::app);
-                for (int ii=0;ii<percolating_particles.size();ii++)
-                    {
-                    unsigned int part_index=percolating_particles[ii];
-                    outfile<<contact_list[part_index+1]<<std::endl;
-                    }
-                outfile<<std::endl;
-                }
+            // //write out contact stats for particles in percolating clusters
+            // if (percolating_clusters.size()>0)
+            //     {
+            //     std::vector<int> percolating_particles;
+            //     for (int a=0;a<(int) percolating_clusters.size();a++)
+            //         {
+            //         for (int b=0;b<clusters.size();b++)
+            //             {
+            //             if (clusters[b]==percolating_clusters[a])
+            //                 {
+            //                 unsigned int i=pair_list[type*N*maxCoordN*2+b*2+0];
+            //                 unsigned int j=pair_list[type*N*maxCoordN*2+b*2+1];
+            //                 percolating_particles.push_back(i);
+            //                 percolating_particles.push_back(j);
+            //                 }
+            //             }
+            //         }
+            //      //remove duplicates
+            //     std::set<int> s( percolating_particles.begin(), percolating_particles.end() );
+            //     percolating_particles.assign( s.begin(), s.end() );
+            //     std::ofstream outfile;
+            //     outfile.open("percolating_contact_data.txt", std::ios_base::app);
+            //     for (int ii=0;ii<percolating_particles.size();ii++)
+            //         {
+            //         unsigned int part_index=percolating_particles[ii];
+            //         outfile<<contact_list[part_index+1]<<std::endl;
+            //         }
+            //     outfile<<std::endl;
+            //     }
 
             // double correlation_length=calculateCorrelationLength(clusters, percolating_clusters);
             double conductivity=diffuseConductivity();
@@ -4364,7 +4364,7 @@ void IntegratorMCMMono<Shape>::writePairs()
             }
         }
     delete[] pair_list;
-    delete[] contact_list;
+    // delete[] contact_list;
     }
 
 } // end namespace mcm
