@@ -1609,7 +1609,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                     orientations[i] = quat_to_scalar4(or_i);  //store in copy in correct format
 
                     //write contact information to file
-                    std::ofstream outfile;
+                    // std::ofstream outfile;
                 } // end loop over all particles
             avg_contacts=avg_contacts/m_pdata->getN();
             avg_contacts=avg_contacts/2; //2 to avoid double counting contacts, each pair indexed twice
@@ -1730,7 +1730,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                     }
                 else
                     {
-                    IntegratorMCMMono<Shape>::numberVariance();
+                    // IntegratorMCMMono<Shape>::numberVariance();
                     IntegratorMCMMono<Shape>::writePairs();
                     max_density=true; //system is fully compressed
                     }
@@ -3797,8 +3797,8 @@ void IntegratorMCMMono<Shape>::writePairs()
     // loop through N particles in order
     unsigned int n_pairs=0;
 
-    std::ofstream outfile1;
-    outfile1.open("contact_stats.txt", std::ios_base::app);
+    // std::ofstream outfile1;
+    // outfile1.open("contact_stats.txt", std::ios_base::app);
 
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
         {
@@ -4077,7 +4077,7 @@ void IntegratorMCMMono<Shape>::writePairs()
         // contact_list[i+1]=single_contacts;
         // single_contacts=0;
         } // end loop over all particles
-    outfile1<<std::endl;
+    // outfile1<<std::endl;
 
     for (int type=0;type<nTypes;type++) //find clusters of each type
         {
