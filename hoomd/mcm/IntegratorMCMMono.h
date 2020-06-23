@@ -17,6 +17,7 @@
 #include <vector>
 #include <algorithm>
 #include <math.h>
+#include <random>
 
 #include "hoomd/Integrator.h"
 #include "MCMPrecisionSetup.h"
@@ -3020,7 +3021,11 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
 
             int n_neighbors=neighborList[i].size();
             //pick a random neighbor, and increment time according to its conductivity
-            int index=std::rand()%n_neighbors;
+            std::random_device rd;     // only used once to initialise (seed) engine
+            std::mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
+            std::uniform_int_distribution<int> uni(0,n_neighbors); // guaranteed unbiased
+            auto random_integer = uni(rng);
+            int index=random_integer%n_neighbors;
             unsigned int j=neighborList[i][index];
 
             Scalar4 postype_j = h_postype.data[j];
