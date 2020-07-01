@@ -3223,7 +3223,14 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
                 }
 
             //Conductivity is diffusion coefficient, slope of line r^2/t.
-            sigma_m=(steps*Sxx-Sx*Sx)/(steps*Sxy-Sx*Sy);
+            if (Sx!=0 && Sy!=0 && Sxy!=0 )
+                {
+                sigma_m=(steps*Sxx-Sx*Sx)/(steps*Sxy-Sx*Sy);
+                }
+            else
+                {
+                sigma_m=0;
+                }
 
             sigma+=sigma_m;
         }//end loop over starting positions
