@@ -389,7 +389,7 @@ class IntegratorMCMMono : public IntegratorMCM
         virtual double calculateCorrelationLength(const std::vector<int> &clusters, const std::vector<int> &percolating_clusters);
 
         //! Use diffusion coefficient to calculate system bulk conductivity
-        virtual double diffuseConductivity();
+        virtual void diffuseConductivity();
     };
 
 template <class Shape>
@@ -2632,7 +2632,7 @@ template < class Shape > void export_IntegratorMCMMono(pybind11::module& m, cons
           ;
     }
 template<class Shape>
-double IntegratorMCMMono<Shape>::diffuseConductivity()
+void IntegratorMCMMono<Shape>::diffuseConductivity()
     {
     // access particle data and system box
     ArrayHandle<Scalar4> h_postype(m_pdata->getPositions(), access_location::host, access_mode::read);
@@ -2646,15 +2646,46 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
     const double tiny=1e-7;
     const double contact=0.1;
     const int runs=20;
-    const int steps=1000;
+    const int steps=10000;
     // const int max_contacts=20;
 
     const double con1=1;
-    const double con2=2e-4;
-    const double con3=1e-4;
+    const double con2=0;
+    const double con3=0;
 
     double t_arr[steps];
     double r_arr[steps];
+
+    int nbins=100;
+
+    //Overestimate the maximum possible t and r values
+    double tmax=steps;
+
+    double dt=tmax/nbins;
+
+    //Bin Centers
+    double tcenter[nbins]={0};
+
+    double tlower[nbins]={0};
+    double tupper[nbins]={0};
+
+    //Bin counters for averaging
+
+    double rlist[nbins]={0};
+    double rcount[nbins]={0};
+
+    double tfinal[nbins]={0};
+    double rfinal[nbins]={0};
+
+    //Initialize arrays
+    for (int i=0;i<nbins;i++)
+        {
+        tcenter[i]=i*dt;
+
+        tlower[i]=tcenter[i]-dt/2;
+
+        tupper[i]=tcenter[i]+dt/2;
+        }
 
     double sigma=0;
 
@@ -2929,11 +2960,18 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
         } // end loop over all particles
     for (unsigned int cur_particle = 0; cur_particle < runs; cur_particle++)
         {
-        double t=1;
+        double t=0;
         unsigned int o = m_update_order[cur_particle];
         double r2=0;
 
         Scalar4 postype_o = h_postype.data[o];
+        unsigned int typ_o = __scalar_as_int(postype_o.w);
+
+        if (typ_o!=0)
+            {
+            continue;
+            }
+
         Scalar4 orientation_o = h_orientation.data[o];
         vec3<Scalar> pos_o = vec3<Scalar>(postype_o);
 
@@ -2958,7 +2996,6 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
             }
         #endif
 
-        unsigned int typ_o = __scalar_as_int(postype_o.w);
         Shape shape_o(quat<Scalar>(orientation_o), m_params[typ_o]);
 
         unsigned int i=o;
@@ -3015,19 +3052,18 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
             Scalar4 orientation_j = h_orientation.data[j];
             unsigned int typ_j = __scalar_as_int(postype_j.w);
             double tau=1;
-            if (typ_i==0 && typ_j==0)
+            if (typ_j==0)
                 {
                 tau=1.0*con1;
+                t+=tau;
                 }
-            else if (typ_i!=typ_j)
+            else
                 {
                 tau=1.0*con2;
+                t+=tau;
+                continue;
                 }
-            else if (typ_i==1 && typ_j==1)
-                {
-                tau=1.0*con3;
-                }
-            t+=tau;
+
 
             OverlapReal r_cut_patch = 0;
 
@@ -3197,46 +3233,42 @@ double IntegratorMCMMono<Shape>::diffuseConductivity()
                 vec3<Scalar> pos2=pos_i_image+si*or_vect_i+0.5*k_vect;
                 vec3<Scalar> disp=pos2-pos_o;
                 double disp2=dot(disp,disp);
-                r2+=disp2;
+                r2=disp2;
                 i=j;
+
+                for (int ii=0;ii<nbins;ii++)
+                    {
+                    if (t>=tlower[ii] &&  t<tupper[ii])
+                        {
+                        rlist[ii]+=r2;
+                        rcount[ii]+=1;
+                        }
+                    }
 
                 }
             }//end loop over steps
             std::cout<<"";
             double sigma_m=0;
 
-            //initialize regression variables
-            double Sx=0;
-            double Sy=0;
-            double Sxx=0;
-            double Sxy=0;
-
-            for (int nr=0;nr<steps;nr++)
+            for (int k=0;k<nbins;k++)
                 {
-                double r=t_arr[nr];
-                double y=r_arr[nr];
-
-                Sx+=r;
-                Sy+=y;
-                Sxx+=r*r;
-                Sxy+=r*y;
+                if (rcount[k]>0)
+                    {
+                    tfinal[k]=tcenter[k];
+                    rfinal[k]=rlist[k]/rcount[k];
+                    }
                 }
 
-            //Conductivity is diffusion coefficient, slope of line r^2/t.
-            if (Sx!=0 && Sy!=0 && Sxy!=0 )
-                {
-                sigma_m=(steps*Sxx-Sx*Sx)/(steps*Sxy-Sx*Sy);
-                }
-            else
-                {
-                sigma_m=0;
-                }
-
-            sigma+=sigma_m;
         }//end loop over starting positions
-    sigma/=runs;
 
-    return sigma;
+    //OUTPUT DIFFUSION DATA
+    std::ofstream condfile;
+
+    condfile.open("diffuse_data.txt", std::ios_base::app);
+    for (int q=0;q<nbins;q++)
+        {
+        condfile<<tfinal[q]<<" "<<rfinal[q]<<std::endl;
+        }
 
     }
 
@@ -4144,13 +4176,13 @@ void IntegratorMCMMono<Shape>::writePairs()
                     }
                 }
             // double correlation_length=calculateCorrelationLength(clusters, percolating_clusters);
-            double conductivity=diffuseConductivity();
+            diffuseConductivity();
 
             std::ofstream outfile;
 
             outfile.open(m_pdata->getNameByType(type)+"_perc.txt", std::ios_base::app);
             // outfile << percolating<<std::endl;
-            outfile<<percolating<<" "<<box_L.x<<" "<<avg_contacts<<" "<<conductivity<<std::endl;
+            outfile<<percolating<<" "<<box_L.x<<" "<<avg_contacts<<" "<<std::endl;
             }
         }
     delete[] pair_list;
