@@ -288,7 +288,7 @@ class IntegratorMCMMono : public IntegratorMCM
         virtual bool hasOrientation() { return m_hasOrientation; }
 
         //! Compute the energy due to patch interactions
-        /*! \param timestep the current time step
+        /*! \param timestep the current time n
          * \returns the total patch energy
          */
         virtual float computePatchEnergy(unsigned int timestep);
@@ -384,9 +384,6 @@ class IntegratorMCMMono : public IntegratorMCM
 
         //! Write pairing data to file
         virtual void writePairs();
-
-        //! Calculate the percolation correlation function
-        virtual double calculateCorrelationLength(const std::vector<int> &clusters, const std::vector<int> &percolating_clusters);
 
         //! Use diffusion coefficient to calculate system bulk conductivity
         virtual void diffuseConductivity();
@@ -587,7 +584,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         Scalar3 ghost_fraction = m_nominal_width / npd;
         #endif
 
-        // Shuffle the order of particles for this step
+        // Shuffle the order of particles for this n
         m_update_order.resize(m_pdata->getN());
         m_update_order.shuffle(timestep);
 
@@ -597,7 +594,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
 
         // update the AABB Tree
         buildAABBTree();
-        // limit m_d entries so that particles cannot possibly wander more than one box image in one time step
+        // limit m_d entries so that particles cannot possibly wander more than one box image in one time n
         limitMoveDistances();
         // update the image list
         updateImageList();
@@ -899,7 +896,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
         const vec3<Scalar> x_norm(1,0,0);
         const vec3<Scalar> y_norm(0,1,0);
-        const double contact=0.1;
+        double contact=0.001*box_L.x;
 
         double scale_factor=1-small; //factor to scale the box length by at each timestep, hardcoded for now, will add interface later
         // const double tol=1e-5;
@@ -918,13 +915,13 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         Scalar3 ghost_fraction = m_nominal_width / npd;
         #endif
 
-        // Shuffle the order of particles for this step
+        // Shuffle the order of particles for this n
         m_update_order.resize(m_pdata->getN());
         m_update_order.shuffle(timestep);
 
         // update the AABB Tree
         buildAABBTree();
-        // limit m_d entries so that particles cannot possibly wander more than one box image in one time step
+        // limit m_d entries so that particles cannot possibly wander more than one box image in one time n
         limitMoveDistances();
         // update the image list
         updateImageList();
@@ -951,13 +948,13 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
             overlap=false;
             n_attempts++;
 
-             // Shuffle the order of particles for this step
+             // Shuffle the order of particles for this n
             m_update_order.resize(m_pdata->getN());
             m_update_order.shuffle(timestep);
 
             // update the AABB Tree
             buildAABBTree();
-            // limit m_d entries so that particles cannot possibly wander more than one box image in one time step
+            // limit m_d entries so that particles cannot possibly wander more than one box image in one time n
             limitMoveDistances();
             // update the image list
             updateImageList();
@@ -1781,7 +1778,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
         m_aabb_tree_invalid = true;
         }
 
-        /*! \param timestep current step
+        /*! \param timestep current n
             \param early_exit exit at first overlap found if true
             \returns number of overlaps if early_exit=false, 1 if early_exit=true
         */
@@ -2350,7 +2347,7 @@ void IntegratorMCMMono<Shape>::growAABBList(unsigned int N)
     are moved (and not updated with m_aabb_tree->update()) or the particle list changes order, m_aabb_tree_invalid
     needs to be set to true. Then buildAABBTree() will know to rebuild the tree from scratch on the next call. Typically
     this is on the next timestep. But in same cases (i.e. NPT), the tree may need to be rebuilt several times in a
-    single step because of box volume moves.
+    single n because of box volume moves.
 
     Subclasses that override update() or other methods must be user to set m_aabb_tree_invalid appropriately, or
     erroneous simulations will result.
@@ -2401,7 +2398,7 @@ const detail::AABBTree& IntegratorMCMMono<Shape>::buildAABBTree()
     }
 
 /*! Call to reduce the m_d values down to safe levels for the bvh tree + small box limitations. That code path
-    will not work if particles can wander more than one image in a time step.
+    will not work if particles can wander more than one image in a time n.
 
     In MPI simulations, they may not move more than half a local box length.
 */
@@ -2631,6 +2628,7 @@ template < class Shape > void export_IntegratorMCMMono(pybind11::module& m, cons
           .def("restoreStateGSD", &IntegratorMCMMono<Shape>::restoreStateGSD)
           ;
     }
+
 template<class Shape>
 void IntegratorMCMMono<Shape>::diffuseConductivity()
     {
@@ -2639,15 +2637,23 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
     ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::read);
     const int N=m_pdata->getN();
     const unsigned int ndim = this->m_sysdef->getNDimensions();
+    const BoxDim& box = m_pdata->getBox();
+    const BoxDim& curBox = m_pdata->getGlobalBox();
+    const Scalar3& box_L = curBox.getL(); //save current box dimensions
     ArrayHandle<unsigned int> h_overlaps(m_overlaps, access_location::host, access_mode::read);
     ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
     const vec3<Scalar> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
     const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
     const double tiny=1e-7;
-    const double contact=0.1;
     const int runs=20;
-    const int steps=10000;
+    const int steps=100000;
     // const int max_contacts=20;
+
+    double contact=0.001*box_L.x;
+
+    double Lx_2=box_L.x/2.0;
+    double Ly_2=box_L.y/2.0;
+    double Lz_2=box_L.z/2.0;
 
     const double con1=1;
     const double con2=0;
@@ -2656,44 +2662,69 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
     double t_arr[steps];
     double r_arr[steps];
 
-    int nbins=100;
+    int nbins[3]={100,1000,10000};
 
-    //Overestimate the maximum possible t and r values
-    double tmax=steps;
+    int tmax=steps;
 
-    double dt=tmax/nbins;
+    int dt0=tmax/nbins[0];
+    int dt1=tmax/nbins[1];
+    int dt2=tmax/nbins[2];
 
-    //Bin Centers
-    double tcenter[nbins]={0};
-
-    double tlower[nbins]={0};
-    double tupper[nbins]={0};
-
-    //Bin counters for averaging
-
-    double rlist[nbins]={0};
-    double rcount[nbins]={0};
-
-    double tfinal[nbins]={0};
-    double rfinal[nbins]={0};
-
-    //Initialize arrays
-    for (int i=0;i<nbins;i++)
+    if (dt0<=0)
         {
-        tcenter[i]=i*dt;
-
-        tlower[i]=tcenter[i]-dt/2;
-
-        tupper[i]=tcenter[i]+dt/2;
+        dt0=1;
         }
+    if (dt1<=0)
+        {
+        dt1=1;
+        }
+    if (dt2<=0)
+        {
+        dt2=1;
+        }
+
+    double ravg0[nbins[0]]={0};
+    double ravg1[nbins[1]]={0};
+    double ravg2[nbins[2]]={0};
+
+    double ravg0P[nbins[0]]={0};
+    double ravg1P[nbins[1]]={0};
+    double ravg2P[nbins[2]]={0};
 
     double sigma=0;
 
     std::vector<int> neighbors;
     std::vector<std::vector<int> > neighborList(N, neighbors);
 
-    // loop through N particles in a shuffled order
+    std::vector<vec3<Scalar> > conpoint(0,vec3<Scalar>(0,0,0));
+    std::vector<std::vector<vec3<Scalar>>>contactPoints(N,conpoint);
 
+    std::vector<int> starting_points;
+
+    //Initialize displacement variables
+    double dx=0;
+    double dy=0;
+    double dz=0;
+
+    double dx_s=0;
+    double dy_s=0;
+    double dz_s=0;
+
+    //Same thing, but for contact points
+    double dxP=0;
+    double dyP=0;
+    double dzP=0;
+
+    double dxP_s=0;
+    double dyP_s=0;
+    double dzP_s=0;
+
+    int t=0;
+    double r2=0;
+    //Contact point r^2
+    double r2P=0;
+
+    // loop through N particles in a shuffled order
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
         {
         unsigned int neighbor=0;
@@ -2940,11 +2971,14 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
 
                             double mag_k=sqrt(dot(k_vect,k_vect));
 
+                            vec3<Scalar> contactPoint=(pos_i_image+si*or_vect_i)-((radius_i/mag_k)*k_vect);
+
                             double delta=(radius_i+radius_j)-mag_k;
 
                             if (delta>-contact && i!=j)
                                 {
                                 neighborList[i].push_back(j);
+                                contactPoints[i].push_back(contactPoint);
                                 neighbor++;
                                 }
                             }
@@ -2958,664 +2992,244 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
                 }  // end loop over AABB nodes
             } // end loop over images
         } // end loop over all particles
-    for (unsigned int cur_particle = 0; cur_particle < runs; cur_particle++)
+
+    // loop through runs particles in a shuffled order
+    for (unsigned int cur_particle = 0; cur_particle <= runs; cur_particle++)
         {
-        double t=0;
-        unsigned int o = m_update_order[cur_particle];
-        double r2=0;
+        //reset displacements at the start of each walk
+        dx=0;
+        dy=0;
+        dz=0;
 
-        Scalar4 postype_o = h_postype.data[o];
-        unsigned int typ_o = __scalar_as_int(postype_o.w);
+        dxP=0;
+        dyP=0;
+        dzP=0;
 
-        if (typ_o!=0)
+        t=0;
+        r2=0;
+        r2P=0;
+
+        //Initialize starting particle
+        unsigned int i = m_update_order[cur_particle];
+        Scalar4 postype_i = h_postype.data[i];
+        unsigned int typ_i = __scalar_as_int(postype_i.w);
+        vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
+
+        //ensure we start on a conductive site, and not a previously chosen starting point
+        while (typ_i!=0 && std::find(starting_points.begin(), starting_points.end(), i) != starting_points.end())
             {
-            continue;
+            i = m_update_order[i];
+            Scalar4 postype_i = h_postype.data[i];
+            unsigned int typ_i = __scalar_as_int(postype_i.w);
+            vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
             }
 
-        Scalar4 orientation_o = h_orientation.data[o];
-        vec3<Scalar> pos_o = vec3<Scalar>(postype_o);
+        starting_points.push_back(i);
 
-        vec3<Scalar> or_vect_o;
+        unsigned int i_prev=i;
 
-        quat<Scalar> or_o=quat<Scalar>(orientation_o);
-        if (ndim==2)
-            {
-            or_vect_o=rotate(or_o,defaultOrientation2D);
-            }
-        else if (ndim==3)
-            {
-            or_vect_o=rotate(or_o,defaultOrientation3D);
-            }
 
-        #ifdef ENABLE_MPI
-        if (m_comm)
-            {
-            // only move particle if active
-            if (!isActive(make_scalar3(postype_o.x, postype_o.y, postype_o.z), box, ghost_fraction))
-                continue;
-            }
-        #endif
+        //initialize number of dt intervals
+        int idt0=-1;
+        int idt1=-1;
+        int idt2=-1;
 
-        Shape shape_o(quat<Scalar>(orientation_o), m_params[typ_o]);
+        int index_prev=0;
 
-        unsigned int i=o;
-
-        //if we start on a particle with no neighbors, add zero to the average conductivity
-        int o_neighbors=neighborList[o].size();
-        if (o_neighbors==0)
-            {
-            continue;
-            }
-
+        //Once we choose starting point, random walk through for steps
         for (unsigned int n=0;n<steps;n++)
             {
-            t_arr[n]=t;
-            r_arr[n]=r2;
-            Scalar4 postype_i = h_postype.data[i];
-            Scalar4 orientation_i = h_orientation.data[i];
-            vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
+            dx_s=0;
+            dy_s=0;
+            dz_s=0;
 
-            vec3<Scalar> or_vect_i;
+            dxP_s=0;
+            dyP_s=0;
+            dzP_s=0;
 
-            quat<Scalar> or_i=quat<Scalar>(orientation_i);
-            if (ndim==2)
-                {
-                or_vect_i=rotate(or_i,defaultOrientation2D);
-                }
-            else if (ndim==3)
-                {
-                or_vect_i=rotate(or_i,defaultOrientation3D);
-                }
+            // read in the current position and orientation
+            postype_i = h_postype.data[i];
+            pos_i = vec3<Scalar>(postype_i);
+            typ_i = __scalar_as_int(postype_i.w);
 
-            #ifdef ENABLE_MPI
-            if (m_comm)
-                {
-                // only move particle if active
-                if (!isActive(make_scalar3(postype_i.x, postype_i.y, postype_i.z), box, ghost_fraction))
-                    continue;
-                }
-            #endif
-
-            unsigned int typ_i = __scalar_as_int(postype_i.w);
-            Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
-
-            double length_i=sqrt((m_params[typ_i].x[0]-m_params[typ_i].x[1])*(m_params[typ_i].x[0]-m_params[typ_i].x[1])+
-            (m_params[typ_i].y[0]-m_params[typ_i].y[1])*(m_params[typ_i].y[0]-m_params[typ_i].y[1])+
-            (m_params[typ_i].z[0]-m_params[typ_i].z[1])*(m_params[typ_i].z[0]-m_params[typ_i].z[1]));
-
+            //pick a random neighbor
             int n_neighbors=neighborList[i].size();
-            //pick a random neighbor, and increment time according to its conductivity
             int index=std::rand()%n_neighbors;
             unsigned int j=neighborList[i][index];
 
-            Scalar4 postype_j = h_postype.data[j];
-            Scalar4 orientation_j = h_orientation.data[j];
+            //Read in its properties
+            Scalar4 postype_j= h_postype.data[j];
             unsigned int typ_j = __scalar_as_int(postype_j.w);
-            double tau=1;
-            if (typ_j==0)
+            vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
+
+            //Increment time every step
+            t+=1;
+
+            //Test if conductive particle
+           // if (typ_j==0)
+            if (true)
                 {
-                tau=1.0*con1;
-                t+=tau;
+                //Default to in-box measurement
+                dx_s=pos_j.x-pos_i.x;
+                dy_s=pos_j.y-pos_i.y;
+                dz_s=pos_j.z-pos_i.z;
+
+                //No previous particle in the first iteration
+                if (n==0)
+                    {
+                    dxP_s=0;
+                    dyP_s=0;
+                    dzP_s=0;
+                    }
+
+                else
+                    {
+                    dxP_s=contactPoints[i][index].x-contactPoints[i_prev][index_prev].x;
+                    dyP_s=contactPoints[i][index].y-contactPoints[i_prev][index_prev].y;
+                    dzP_s=contactPoints[i][index].z-contactPoints[i_prev][index_prev].z;
+                    }
+
+                //Subtract box size is particles cross periodic boundaries
+                if (dx_s>=Lx_2)
+                        {
+                        dx_s=dx_s-box_L.x;
+                        }
+                else if(dx_s<=-Lx_2)
+                        {
+                        dx_s=dx_s+box_L.x;
+                        }
+                if (dy_s>=Ly_2)
+                        {
+                        dy_s=dy_s-box_L.y;
+                        }
+                else if(dy_s<=-Ly_2)
+                        {
+                        dy_s=dy_s+box_L.y;
+                        }
+                if (dz_s>=Lz_2)
+                        {
+                        dz_s=dz_s-box_L.z;
+                        }
+                else if(dz_s<=-Lz_2)
+                        {
+                        dz_s=dz_s+box_L.z;
+                        }
+
+                //Contact point equivalent
+                if (dxP_s>=Lx_2)
+                        {
+                        dxP_s=dxP_s-box_L.x;
+                        }
+                else if(dxP_s<=-Lx_2)
+                        {
+                        dxP_s=dxP_s+box_L.x;
+                        }
+                if (dyP_s>=Ly_2)
+                        {
+                        dyP_s=dyP_s-box_L.y;
+                        }
+                else if(dyP_s<=-Ly_2)
+                        {
+                        dyP_s=dyP_s+box_L.y;
+                        }
+                if (dzP_s>=Lz_2)
+                        {
+                        dzP_s=dzP_s-box_L.z;
+                        }
+                else if(dzP_s<=-Lz_2)
+                        {
+                        dzP_s=dzP_s+box_L.z;
+                        }
+
+                //Update displacements
+                dx=dx+dx_s;
+                dy=dy+dy_s;
+                dz=dz+dz_s;
+
+                dxP=dxP+dxP_s;
+                dyP=dyP+dyP_s;
+                dzP=dzP+dzP_s;
+
+                //Calculate r^2 when needed
+                if (t%dt0==0 || t%dt1==0 || t%dt2==0)
+                    {
+                    r2=dx*dx+dy*dy+dz*dz;
+                    r2P=dxP*dxP+dyP*dyP+dzP*dzP;
+                    }
+
+                //on a sucessful move, change to new particle
+                i_prev=i;
+                index_prev=index;
+                i=j;
+
                 }
             else
                 {
-                tau=1.0*con2;
-                t+=tau;
                 continue;
                 }
 
-
-            OverlapReal r_cut_patch = 0;
-
-            if (m_patch && !m_patch_log)
+            //Average every dt steps
+            if (t%dt0==0)
                 {
-                r_cut_patch = m_patch->getRCut() + 0.5*m_patch->getAdditiveCutoff(typ_i);
+                idt0+=1; //update number of dt intervals
+                ravg0[idt0]+=r2;
+                ravg0P[idt0]+=r2P;
                 }
-
-            // subtract minimum AABB extent from search radius
-            OverlapReal R_query_i = std::max(shape_i.getCircumsphereDiameter()/OverlapReal(2.0),
-                r_cut_patch-getMinCoreDiameter()/(OverlapReal)2.0);
-            detail::AABB aabb_i_local = detail::AABB(vec3<Scalar>(0,0,0),R_query_i);
-
-            // check for overlaps with neighboring particle's positions (also calculate the new energy)
-            // All image boxes (including the primary)
-            const unsigned int n_images = m_image_list.size();
-            for (unsigned int cur_image = 0; cur_image < n_images; cur_image++)
+            if (t%dt1==0)
                 {
-                vec3<Scalar> pos_i_image = pos_i + m_image_list[cur_image];
-                detail::AABB aabb = aabb_i_local;
-                aabb.translate(pos_i_image);
-
-                // put particles in coordinate system of particle i
-                vec3<Scalar> r_ij = vec3<Scalar>(postype_j) - pos_i_image;
-                // vec3<Scalar> r_vect= vec3<Scalar>(postype_j) - pos_i;
-
-                Shape shape_j(quat<Scalar>(orientation_j), m_params[typ_j]);
-                quat<Scalar> or_j=quat<Scalar>(orientation_j);
-
-                vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
-
-                double length_j=sqrt((m_params[typ_j].x[0]-m_params[typ_j].x[1])*(m_params[typ_j].x[0]-m_params[typ_j].x[1])+
-                (m_params[typ_j].y[0]-m_params[typ_j].y[1])*(m_params[typ_j].y[0]-m_params[typ_j].y[1])+
-                (m_params[typ_j].z[0]-m_params[typ_j].z[1])*(m_params[typ_j].z[0]-m_params[typ_j].z[1]));
-
-                //return vectors along spherocylinder axis
-                vec3<Scalar> or_vect_i;
-                vec3<Scalar> or_vect_j;
-
-                double si=1000;
-                double sj=1000;
-                if (ndim==3)
-                    {
-                    or_vect_i=rotate(or_i,defaultOrientation3D);
-                    or_vect_j=rotate(or_j,defaultOrientation3D);
-
-                    vec3<Scalar> N=cross(or_vect_i,or_vect_j);
-
-                    double mag_N=sqrt(dot(N,N));
-
-                    if (mag_N==0) //parallel
-                        {
-                        sj=0;
-                        si=dot(or_vect_i,r_ij);
-                        // si=dot(or_vect_i,r_vect);
-                        }
-                    else
-                        {
-                        double intersect_test=abs(dot(N,r_ij));
-                        // double intersect_test=abs(dot(N,r_vect));
-
-                        if (intersect_test==0) //particle axis intersect
-                            {
-                            Eigen::MatrixXf a(3, 2);
-                            Eigen::MatrixXf b(1, 3);
-                            Eigen::MatrixXf x(1, 2);
-
-                            double a00=or_vect_i.x;
-                            double a01=or_vect_j.x;
-                            double a10=or_vect_i.y;
-                            double a11=or_vect_j.y;
-                            double a20=or_vect_i.z;
-                            double a21=or_vect_j.z;
-
-                            double b00=-r_ij.x;
-                            double b10=-r_ij.y;
-                            double b20=-r_ij.z;
-
-                            // double b00=-r_vect.x;
-                            // double b10=-r_vect.y;
-                            // double b20=-r_vect.z;
-
-                            a(0,0)=a00;
-                            a(0,1)=a01;
-                            a(1,0)=a10;
-                            a(1,1)=a11;
-                            a(2,0)=a20;
-                            a(2,1)=a21;
-
-                            b(0,0)=b00;
-                            b(1,0)=b10;
-                            b(2,0)=b20;
-
-                            Eigen::Matrix2f c(2,2);
-                            c=a.transpose() * a;
-                            Eigen::Matrix2f d(2,2);
-                            d=c.inverse();
-                            Eigen::MatrixXf e(2,3);
-                            e=d * a.transpose();
-                            x=e * b;
-
-                            si=x(0,0);
-                            sj=x(1,0);
-                            }
-                        else //skew axis, calculate closest approach
-                            {
-                            vec3<Scalar> n1=cross(or_vect_i,N);
-                            vec3<Scalar> n2=cross(or_vect_j,N);
-
-                            si=dot(r_ij,n2)/dot(or_vect_i,n2);
-                            sj=dot(-r_ij,n1)/dot(or_vect_j,n1);
-
-                            // si=dot(r_vect,n2)/dot(or_vect_i,n2);
-                            // sj=dot(-r_vect,n1)/dot(or_vect_j,n1);
-                            }
-                        }
-                    }
-                else if (ndim==2)
-                    {
-                    or_vect_i=rotate(or_i,defaultOrientation2D);
-                    or_vect_j=rotate(or_j,defaultOrientation2D);
-
-                    vec3<Scalar> N=cross(or_vect_i,or_vect_j);
-                    double mag_N=sqrt(dot(N,N));
-
-                    if (mag_N<tiny) //parallel
-                        {
-                        sj=0;
-                        si=dot(or_vect_i,r_ij);
-                        // si=dot(or_vect_i,r_vect);
-                        }
-
-                    else
-                        {
-                        si=(r_ij.x-(r_ij.y/or_vect_j.y))/(or_vect_i.x-(or_vect_i.y/or_vect_j.y));
-                        sj=(r_ij.y-si*or_vect_i.y)/or_vect_j.y;
-
-                        // si=(r_vect.x-(r_vect.y/or_vect_j.y))/(or_vect_i.x-(or_vect_i.y/or_vect_j.y));
-                        // sj=(r_vect.y-si*or_vect_i.y)/or_vect_j.y;
-                        }
-                    }
-                //truncate nearest approach search to lengths of particles
-                if (si>length_i/2.0)
-                    {
-                    si=length_i/2.0;
-                    }
-                else if (si<-length_i/2.0)
-                    {
-                    si=-length_i/2.0;
-                    }
-                if (sj>length_j/2.0)
-                    {
-                    sj=length_j/2.0;
-                    }
-                else if (sj<-length_j/2.0)
-                    {
-                    sj=-length_j/2.0;
-                    }
-
-                vec3<Scalar> k_vect=(pos_i_image+si*or_vect_i)-(pos_j+sj*or_vect_j);
-                // vec3<Scalar> k_vect=(pos_i+si*or_vect_i)-(pos_j+sj*or_vect_j);
-
-                // double mag_k=sqrt(dot(k_vect,k_vect));
-
-                // double delta=(radius_i+radius_j)-mag_k;
-
-                vec3<Scalar> pos2=pos_i_image+si*or_vect_i+0.5*k_vect;
-                vec3<Scalar> disp=pos2-pos_o;
-                double disp2=dot(disp,disp);
-                r2=disp2;
-                i=j;
-
-                for (int ii=0;ii<nbins;ii++)
-                    {
-                    if (t>=tlower[ii] &&  t<tupper[ii])
-                        {
-                        rlist[ii]+=r2;
-                        rcount[ii]+=1;
-                        }
-                    }
-
+                idt1+=1; //update number of dt intervals
+                ravg1[idt1]+=r2;
+                ravg1P[idt1]+=r2P;
+                }
+            if (t%dt2==0)
+                {
+                idt2+=1; //update number of dt intervals
+                ravg2[idt2]+=r2;
+                ravg2P[idt2]+=r2P;
                 }
             }//end loop over steps
-            std::cout<<"";
-            double sigma_m=0;
+        } // end loop over runs
 
-            for (int k=0;k<nbins;k++)
-                {
-                if (rcount[k]>0)
-                    {
-                    tfinal[k]=tcenter[k];
-                    rfinal[k]=rlist[k]/rcount[k];
-                    }
-                }
-
-        }//end loop over starting positions
-
-    //OUTPUT DIFFUSION DATA
-    std::ofstream condfile;
-
-    condfile.open("diffuse_data.txt", std::ios_base::app);
-    for (int q=0;q<nbins;q++)
+    //Average every dt steps and output files
+    double tt=0;
+    std::ofstream outfile_dt0;
+    outfile_dt0.open("diffuse_data_dt"+std::to_string(nbins[0])+".txt", std::ios_base::app);
+    for (int k=0; k<nbins[0]; k++)
         {
-        condfile<<tfinal[q]<<" "<<rfinal[q]<<std::endl;
+        if (ravg0[k]!=0)
+            {
+            ravg0[k]=ravg0[k]/(runs);
+            ravg0P[k]=ravg0P[k]/(runs);
+            tt=(k+1)*dt0;
+            outfile_dt0<<tt<<" "<<ravg0[k]<<" "<<ravg0P[k]<<std::endl;
+            }
         }
 
-    }
-
-template<class Shape>
-double IntegratorMCMMono<Shape>::calculateCorrelationLength(const std::vector<int> &clusters, const std::vector<int> &percolating_clusters)
-    {
-    // access particle data and system box
-    ArrayHandle<Scalar4> h_postype(m_pdata->getPositions(), access_location::host, access_mode::read);
-    ArrayHandle<Scalar4> h_orientation(m_pdata->getOrientationArray(), access_location::host, access_mode::read);
-    const int N=m_pdata->getN();
-    const BoxDim box = m_pdata->getBox();
-    const Scalar3 box_L = box.getL();
-    const unsigned int ndim = this->m_sysdef->getNDimensions();
-    ArrayHandle<unsigned int> h_overlaps(m_overlaps, access_location::host, access_mode::read);
-    ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
-    const vec3<Scalar> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
-    const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
-    const double tiny=1e-7;
-    const double pi = 3.14159265358979323846;
-
-    //Prepare the gr array to be returned for outside use
-    const int Nr=100;
-    double gr[Nr];
-    const double dr=box_L.x/Nr;
-    // loop through N particles in a shuffled order
-
-    for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
+    std::ofstream outfile_dt1;
+    outfile_dt1.open("diffuse_data_dt"+std::to_string(nbins[1])+".txt", std::ios_base::app);
+    for (int k=0; k<nbins[1]; k++)
         {
-        unsigned int i = cur_particle;//m_update_order[cur_particle];
-        std::vector<double> k_list;
-
-        // read in the current position and orientation
-        Scalar4 postype_i = h_postype.data[i];
-        Scalar4 orientation_i = h_orientation.data[i];
-        vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
-
-        vec3<Scalar> or_vect_i(0,0,0);
-
-        quat<Scalar> or_i=quat<Scalar>(orientation_i);
-        if (ndim==2)
+        if (ravg1[k]!=0)
             {
-            or_vect_i=rotate(or_i,defaultOrientation2D);
+            ravg1[k]=ravg1[k]/(runs);
+            ravg1P[k]=ravg1P[k]/(runs);
+            tt=(k+1)*dt1;
+            outfile_dt1<<tt<<" "<<ravg1[k]<<" "<<ravg1P[k]<<std::endl;
             }
-        else if (ndim==3)
-            {
-            or_vect_i=rotate(or_i,defaultOrientation3D);
-            }
-
-        #ifdef ENABLE_MPI
-        if (m_comm)
-            {
-            // only move particle if active
-            if (!isActive(make_scalar3(postype_i.x, postype_i.y, postype_i.z), box, ghost_fraction))
-                continue;
-            }
-        #endif
-
-        unsigned int typ_i = __scalar_as_int(postype_i.w);
-        Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
-
-        double length_i=sqrt((m_params[typ_i].x[0]-m_params[typ_i].x[1])*(m_params[typ_i].x[0]-m_params[typ_i].x[1])+
-        (m_params[typ_i].y[0]-m_params[typ_i].y[1])*(m_params[typ_i].y[0]-m_params[typ_i].y[1])+
-        (m_params[typ_i].z[0]-m_params[typ_i].z[1])*(m_params[typ_i].z[0]-m_params[typ_i].z[1]));
-
-        OverlapReal r_cut_patch = 0;
-
-        if (m_patch && !m_patch_log)
-            {
-            r_cut_patch = m_patch->getRCut() + 0.5*m_patch->getAdditiveCutoff(typ_i);
-            }
-
-        // subtract minimum AABB extent from search radius
-        OverlapReal R_query_i = std::max(shape_i.getCircumsphereDiameter()/OverlapReal(2.0),
-            r_cut_patch-getMinCoreDiameter()/(OverlapReal)2.0);
-        detail::AABB aabb_i_local = detail::AABB(vec3<Scalar>(0,0,0),R_query_i);
-
-        // check for overlaps with neighboring particle's positions (also calculate the new energy)
-        // All image boxes (including the primary)
-        const unsigned int n_images = m_image_list.size();
-        for (unsigned int cur_image = 0; cur_image < n_images; cur_image++)
-            {
-            vec3<Scalar> pos_i_image = pos_i + m_image_list[cur_image];
-            detail::AABB aabb = aabb_i_local;
-            aabb.translate(pos_i_image);
-
-            // stackless search
-            for (unsigned int cur_node_idx = 0; cur_node_idx < m_aabb_tree.getNumNodes(); cur_node_idx++)
-                {
-                if (detail::overlap(m_aabb_tree.getNodeAABB(cur_node_idx), aabb))
-                    {
-                    if (m_aabb_tree.isNodeLeaf(cur_node_idx))
-                        {
-                        // for (unsigned int j = i+1; j < m_pdata->getN();j++)
-                        //     {
-                        for (unsigned int cur_p = 0; cur_p < m_aabb_tree.getNodeNumParticles(cur_node_idx); cur_p++)
-                            {
-                            // read in its position and orientation
-                            unsigned int j = m_aabb_tree.getNodeParticle(cur_node_idx, cur_p);
-                            //Check that i and j are in the same cluster
-                            if (clusters[i]==clusters[j])
-                                {
-                                //Make sure not to count the percolating cluster, if any, in the correlation function
-                                bool perc_test=false;
-                                for (unsigned int q=0;q<percolating_clusters.size();q++)
-                                    {
-                                    if (clusters[i]==percolating_clusters[q])
-                                        {
-                                        perc_test=true;
-                                        }
-                                    }
-                                if (!perc_test)
-                                    {
-
-                                    Scalar4 postype_j;
-                                    Scalar4 orientation_j;
-
-                                    // handle j==i situations
-                                    if ( j != i )
-                                        {
-                                        // load the position and orientation of the j particle
-                                        postype_j = h_postype.data[j];
-                                        orientation_j = h_orientation.data[j];
-                                        }
-                                    else
-                                        {
-                                        if (cur_image == 0)
-                                            {
-                                            // in the first image, skip i == j
-                                            k_list.push_back(0.0);
-                                            continue;
-                                            }
-                                        else
-                                            {
-                                            // If this is particle i and we are in an outside image, use the translated position and orientation
-                                            postype_j = make_scalar4(pos_i.x, pos_i.y, pos_i.z, postype_i.w);
-                                            orientation_j = quat_to_scalar4(shape_i.orientation);
-                                            }
-                                        }
-
-                                    // put particles in coordinate system of particle i
-                                    vec3<Scalar> r_ij = vec3<Scalar>(postype_j) - pos_i_image;
-                                    // vec3<Scalar> r_vect= vec3<Scalar>(postype_j) - pos_i;
-
-                                    unsigned int typ_j = __scalar_as_int(postype_j.w);
-                                    Shape shape_j(quat<Scalar>(orientation_j), m_params[typ_j]);
-                                    quat<Scalar> or_j=quat<Scalar>(orientation_j);
-
-                                    vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
-
-                                    double length_j=sqrt((m_params[typ_j].x[0]-m_params[typ_j].x[1])*(m_params[typ_j].x[0]-m_params[typ_j].x[1])+
-                                    (m_params[typ_j].y[0]-m_params[typ_j].y[1])*(m_params[typ_j].y[0]-m_params[typ_j].y[1])+
-                                    (m_params[typ_j].z[0]-m_params[typ_j].z[1])*(m_params[typ_j].z[0]-m_params[typ_j].z[1]));
-
-                                    //return vectors along spherocylinder axis
-                                    vec3<Scalar> or_vect_i;
-                                    vec3<Scalar> or_vect_j;
-
-                                    double si=1000;
-                                    double sj=1000;
-                                    if (ndim==3)
-                                        {
-                                        or_vect_i=rotate(or_i,defaultOrientation3D);
-                                        or_vect_j=rotate(or_j,defaultOrientation3D);
-
-                                        vec3<Scalar> N=cross(or_vect_i,or_vect_j);
-
-                                        double mag_N=sqrt(dot(N,N));
-
-                                        if (mag_N==0) //parallel
-                                            {
-                                            sj=0;
-                                            si=dot(or_vect_i,r_ij);
-                                            // si=dot(or_vect_i,r_vect);
-                                            }
-                                        else
-                                            {
-                                            double intersect_test=abs(dot(N,r_ij));
-                                            // double intersect_test=abs(dot(N,r_vect));
-
-                                            if (intersect_test==0) //particle axis intersect
-                                                {
-                                                Eigen::MatrixXf a(3, 2);
-                                                Eigen::MatrixXf b(1, 3);
-                                                Eigen::MatrixXf x(1, 2);
-
-                                                double a00=or_vect_i.x;
-                                                double a01=or_vect_j.x;
-                                                double a10=or_vect_i.y;
-                                                double a11=or_vect_j.y;
-                                                double a20=or_vect_i.z;
-                                                double a21=or_vect_j.z;
-
-                                                double b00=-r_ij.x;
-                                                double b10=-r_ij.y;
-                                                double b20=-r_ij.z;
-
-                                                // double b00=-r_vect.x;
-                                                // double b10=-r_vect.y;
-                                                // double b20=-r_vect.z;
-
-                                                a(0,0)=a00;
-                                                a(0,1)=a01;
-                                                a(1,0)=a10;
-                                                a(1,1)=a11;
-                                                a(2,0)=a20;
-                                                a(2,1)=a21;
-
-                                                b(0,0)=b00;
-                                                b(1,0)=b10;
-                                                b(2,0)=b20;
-
-                                                Eigen::Matrix2f c(2,2);
-                                                c=a.transpose() * a;
-                                                Eigen::Matrix2f d(2,2);
-                                                d=c.inverse();
-                                                Eigen::MatrixXf e(2,3);
-                                                e=d * a.transpose();
-                                                x=e * b;
-
-                                                si=x(0,0);
-                                                sj=x(1,0);
-                                                }
-                                            else //skew axis, calculate closest approach
-                                                {
-                                                vec3<Scalar> n1=cross(or_vect_i,N);
-                                                vec3<Scalar> n2=cross(or_vect_j,N);
-
-                                                si=dot(r_ij,n2)/dot(or_vect_i,n2);
-                                                sj=dot(-r_ij,n1)/dot(or_vect_j,n1);
-
-                                                // si=dot(r_vect,n2)/dot(or_vect_i,n2);
-                                                // sj=dot(-r_vect,n1)/dot(or_vect_j,n1);
-                                                }
-                                            }
-                                        }
-                                    else if (ndim==2)
-                                        {
-                                        or_vect_i=rotate(or_i,defaultOrientation2D);
-                                        or_vect_j=rotate(or_j,defaultOrientation2D);
-
-                                        vec3<Scalar> N=cross(or_vect_i,or_vect_j);
-                                        double mag_N=sqrt(dot(N,N));
-
-                                        if (mag_N<tiny) //parallel
-                                            {
-                                            sj=0;
-                                            si=dot(or_vect_i,r_ij);
-                                            // si=dot(or_vect_i,r_vect);
-                                            }
-
-                                        else
-                                            {
-                                            si=(r_ij.x-(r_ij.y/or_vect_j.y))/(or_vect_i.x-(or_vect_i.y/or_vect_j.y));
-                                            sj=(r_ij.y-si*or_vect_i.y)/or_vect_j.y;
-
-                                            // si=(r_vect.x-(r_vect.y/or_vect_j.y))/(or_vect_i.x-(or_vect_i.y/or_vect_j.y));
-                                            // sj=(r_vect.y-si*or_vect_i.y)/or_vect_j.y;
-                                            }
-                                        }
-
-                                    //truncate nearest approach search to lengths of particles
-                                    if (si>length_i/2.0)
-                                        {
-                                        si=length_i/2.0;
-                                        }
-                                    else if (si<-length_i/2.0)
-                                        {
-                                        si=-length_i/2.0;
-                                        }
-                                    if (sj>length_j/2.0)
-                                        {
-                                        sj=length_j/2.0;
-                                        }
-                                    else if (sj<-length_j/2.0)
-                                        {
-                                        sj=-length_j/2.0;
-                                        }
-
-                                    vec3<Scalar> k_vect=(pos_i_image+si*or_vect_i)-(pos_j+sj*or_vect_j);
-                                    // vec3<Scalar> k_vect=(pos_i+si*or_vect_i)-(pos_j+sj*or_vect_j);
-
-                                    double mag_k=sqrt(dot(k_vect,k_vect));
-                                    k_list.push_back(mag_k);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                else
-                    {
-                    // skip ahead
-                    cur_node_idx += m_aabb_tree.getNodeSkip(cur_node_idx);
-                    }
-                }  // end loop over AABB nodes
-            } // end loop over images
-
-        //Add particle i's contribution to the gr
-        for (int nr=0;nr<Nr;nr++)
-            {
-            double r=nr*dr;
-            for (unsigned int k=0;k<k_list.size();k++)
-                {
-                if (k_list[k]>=r && k_list[k]<=r+dr)
-                    {
-                    //normalize by 1/N*(differential shell volume)*(number density)
-                    double dv=0;
-                    double rho=0;
-                    if (ndim==3)
-                        {
-                        dv=4.0*pi*r*r*dr;
-                        rho=N/(box_L.x*box_L.x*box_L.x);
-                        }
-                    if (ndim==2)
-                        {
-                        dv=2.0*pi*r*dr;
-                        rho=N/(box_L.x*box_L.x);
-                        }
-                    gr[nr]+=1.0/(N*dv*rho);
-                    }
-                }
-            }
-        } // end loop over all particles
-
-    double zeta=0;
-
-    //initialize regression variables
-    double Sx=0;
-    double Sy=0;
-    double Sxx=0;
-    double Sxy=0;
-
-    for (int nr=0;nr<Nr;nr++)
-        {
-        double r=nr*dr;
-        double y=log(gr[nr]);
-        std::cout<<gr[nr]<<std::endl;
-
-        Sx+=r;
-        Sy+=y;
-        Sxx+=r*r;
-        Sxy+=r*y;
         }
 
-    //Correlation length is the constant z in e^-r/z, can be found by taking the log and finding the slope of the line
-    zeta=(Nr*Sxx-Sx*Sx)/(Nr*Sxy-Sx*Sy);
-
-    return zeta;
+    std::ofstream outfile_dt2;
+    outfile_dt2.open("diffuse_data_dt"+std::to_string(nbins[2])+".txt", std::ios_base::app);
+    for (int k=0; k<nbins[2]; k++)
+        {
+        if (ravg2[k]!=0)
+            {
+            ravg2[k]=ravg2[k]/(runs);
+            ravg2P[k]=ravg2P[k]/(runs);
+            tt=(k+1)*dt2;
+            outfile_dt2<<tt<<" "<<ravg2[k]<<" "<<ravg2P[k]<<std::endl;
+            }
+        }
     }
 
 template<class Shape>
@@ -3634,10 +3248,10 @@ void IntegratorMCMMono<Shape>::writePairs()
     ArrayHandle<mcm_counters_t> h_counters(m_count_total, access_location::host, access_mode::readwrite);
     const vec3<Scalar> defaultOrientation2D(0,1,0); //default long axis for 2D spherocylinders
     const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
-    const double contact=0.1;
     const double tiny=1e-7;
     const double tol=1;
     int single_contacts=0;
+    double contact=0.001*box_L.x;
 
     unsigned int* pair_list = new unsigned int[nTypes*N*maxCoordN*2];
 
