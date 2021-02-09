@@ -2646,7 +2646,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
     const vec3<Scalar> defaultOrientation3D(0,0,1); //default long axis for 3D spherocylinders
     const double tiny=1e-7;
     const int runs=20;
-    const int steps=100000;
+    const int steps=1000000;
     // const int max_contacts=20;
 
     double contact=0.001*box_L.x;
@@ -3066,8 +3066,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
             t+=1;
 
             //Test if conductive particle
-           // if (typ_j==0)
-            if (true)
+            if (typ_j==0)
                 {
                 //Default to in-box measurement
                 dx_s=pos_j.x-pos_i.x;
