@@ -17,6 +17,7 @@
 #include <vector>
 #include <algorithm>
 #include <math.h>
+#include <random>
 
 #include "hoomd/Integrator.h"
 #include "MCMPrecisionSetup.h"
@@ -1721,6 +1722,7 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                     }
                 else
                     {
+                    IntegratorMCMMono<Shape>::diffuseConductivity();
                     IntegratorMCMMono<Shape>::writePairs();
                     max_density=true; //system is fully compressed
                     }
@@ -2719,10 +2721,19 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
     double dyP_s=0;
     double dzP_s=0;
 
-    int t=0;
+    int ttt=0;
     double r2=0;
     //Contact point r^2
     double r2P=0;
+
+    //initialize number of dt intervals
+    int idt0=-1;
+    int idt1=-1;
+    int idt2=-1;
+
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::uniform_int_distribution<int> gen2(0, N-1); // uniform, unbiased
 
     // loop through N particles in a shuffled order
     for (unsigned int cur_particle = 0; cur_particle < m_pdata->getN(); cur_particle++)
@@ -2994,7 +3005,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
         } // end loop over all particles
 
     // loop through runs particles in a shuffled order
-    for (unsigned int cur_particle = 0; cur_particle <= runs; cur_particle++)
+    for (unsigned int cur_particle2 = 0; cur_particle2 < runs; cur_particle2++)
         {
         //reset displacements at the start of each walk
         dx=0;
@@ -3005,20 +3016,21 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
         dyP=0;
         dzP=0;
 
-        t=0;
+        ttt=0;
         r2=0;
         r2P=0;
 
         //Initialize starting particle
-        unsigned int i = m_update_order[cur_particle];
+        unsigned int i = (unsigned int) gen2(rng);
         Scalar4 postype_i = h_postype.data[i];
         unsigned int typ_i = __scalar_as_int(postype_i.w);
         vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
 
+
         //ensure we start on a conductive site, and not a previously chosen starting point
         while (typ_i!=0 && std::find(starting_points.begin(), starting_points.end(), i) != starting_points.end())
             {
-            i = m_update_order[i];
+            i = (unsigned int) gen2(rng);
             Scalar4 postype_i = h_postype.data[i];
             unsigned int typ_i = __scalar_as_int(postype_i.w);
             vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
@@ -3028,24 +3040,22 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
 
         unsigned int i_prev=i;
 
-
-        //initialize number of dt intervals
-        int idt0=-1;
-        int idt1=-1;
-        int idt2=-1;
-
         int index_prev=0;
+
+        idt0=-1;
+        idt1=-1;
+        idt2=-1;
 
         //Once we choose starting point, random walk through for steps
         for (unsigned int n=0;n<steps;n++)
             {
-            dx_s=0;
-            dy_s=0;
-            dz_s=0;
+            // dx_s=0;
+            // dy_s=0;
+            // dz_s=0;
 
-            dxP_s=0;
-            dyP_s=0;
-            dzP_s=0;
+            // dxP_s=0;
+            // dyP_s=0;
+            // dzP_s=0;
 
             // read in the current position and orientation
             postype_i = h_postype.data[i];
@@ -3054,7 +3064,8 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
 
             //pick a random neighbor
             int n_neighbors=neighborList[i].size();
-            int index=std::rand()%n_neighbors;
+            std::uniform_int_distribution<int> gen(0, n_neighbors-1); // uniform, unbiased
+            int index = gen(rng);
             unsigned int j=neighborList[i][index];
 
             //Read in its properties
@@ -3063,7 +3074,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
             vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
 
             //Increment time every step
-            t+=1;
+            ttt+=1;
 
             //Test if conductive particle
             if (typ_j==0)
@@ -3149,12 +3160,12 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
                 dyP=dyP+dyP_s;
                 dzP=dzP+dzP_s;
 
-                //Calculate r^2 when needed
-                if (t%dt0==0 || t%dt1==0 || t%dt2==0)
-                    {
-                    r2=dx*dx+dy*dy+dz*dz;
-                    r2P=dxP*dxP+dyP*dyP+dzP*dzP;
-                    }
+                // //Calculate r^2 when needed
+                // if (ttt%dt0==0 || ttt%dt1==0 || ttt%dt2==0)
+                //     {
+                //     r2=dx*dx+dy*dy+dz*dz;
+                //     r2P=dxP*dxP+dyP*dyP+dzP*dzP;
+                //     }
 
                 //on a sucessful move, change to new particle
                 i_prev=i;
@@ -3164,70 +3175,86 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
                 }
             else
                 {
-                continue;
+                ;
                 }
 
+            std::ofstream outfile_test;
+            outfile_test.open("test.txt", std::ios_base::app);
+
+            outfile_test<<ttt<<' '<<r2<<std::endl;
+            outfile_test.close();
+
+            //Calculate r^2 when needed
+            if (ttt%dt0==0 || ttt%dt1==0 || ttt%dt2==0)
+                {
+                r2=dx*dx+dy*dy+dz*dz;
+                r2P=dxP*dxP+dyP*dyP+dzP*dzP;
+                }
             //Average every dt steps
-            if (t%dt0==0)
+            if (ttt%dt0==0)
                 {
                 idt0+=1; //update number of dt intervals
+                std::ofstream outfile_avg0;
+                outfile_avg0.open("avg0.txt", std::ios_base::app);
                 ravg0[idt0]+=r2;
                 ravg0P[idt0]+=r2P;
+                outfile_avg0<<ttt<<' '<<r2<<std::endl;
+                outfile_avg0.close();
                 }
-            if (t%dt1==0)
+            if (ttt%dt1==0)
                 {
                 idt1+=1; //update number of dt intervals
+                std::ofstream outfile_avg1;
+                outfile_avg1.open("avg1.txt", std::ios_base::app);
                 ravg1[idt1]+=r2;
                 ravg1P[idt1]+=r2P;
+                outfile_avg1<<ttt<<' '<<r2<<std::endl;
+                outfile_avg1.close();
                 }
-            if (t%dt2==0)
+            if (ttt%dt2==0)
                 {
                 idt2+=1; //update number of dt intervals
+                std::ofstream outfile_avg2;
+                outfile_avg2.open("avg2.txt", std::ios_base::app);
                 ravg2[idt2]+=r2;
                 ravg2P[idt2]+=r2P;
+                outfile_avg2<<ttt<<' '<<r2<<std::endl;
+                outfile_avg2.close();
                 }
             }//end loop over steps
+        std::cout<<idt0+1<<' '<<idt1+1<<' '<<idt2+1<<std::endl;
         } // end loop over runs
 
     //Average every dt steps and output files
     double tt=0;
     std::ofstream outfile_dt0;
     outfile_dt0.open("diffuse_data_dt"+std::to_string(nbins[0])+".txt", std::ios_base::app);
-    for (int k=0; k<nbins[0]; k++)
+    for (int k=0; k<=idt0; k++)
         {
-        if (ravg0[k]!=0)
-            {
-            ravg0[k]=ravg0[k]/(runs);
-            ravg0P[k]=ravg0P[k]/(runs);
-            tt=(k+1)*dt0;
-            outfile_dt0<<tt<<" "<<ravg0[k]<<" "<<ravg0P[k]<<std::endl;
-            }
+        ravg0[k]=ravg0[k]/(runs);
+        ravg0P[k]=ravg0P[k]/(runs);
+        tt=(k+1)*dt0;
+        outfile_dt0<<tt<<" "<<ravg0[k]<<" "<<ravg0P[k]<<std::endl;
         }
 
     std::ofstream outfile_dt1;
     outfile_dt1.open("diffuse_data_dt"+std::to_string(nbins[1])+".txt", std::ios_base::app);
-    for (int k=0; k<nbins[1]; k++)
+    for (int k=0; k<=idt1; k++)
         {
-        if (ravg1[k]!=0)
-            {
-            ravg1[k]=ravg1[k]/(runs);
-            ravg1P[k]=ravg1P[k]/(runs);
-            tt=(k+1)*dt1;
-            outfile_dt1<<tt<<" "<<ravg1[k]<<" "<<ravg1P[k]<<std::endl;
-            }
+        ravg1[k]=ravg1[k]/(runs);
+        ravg1P[k]=ravg1P[k]/(runs);
+        tt=(k+1)*dt1;
+        outfile_dt1<<tt<<" "<<ravg1[k]<<" "<<ravg1P[k]<<std::endl;
         }
 
     std::ofstream outfile_dt2;
     outfile_dt2.open("diffuse_data_dt"+std::to_string(nbins[2])+".txt", std::ios_base::app);
-    for (int k=0; k<nbins[2]; k++)
+    for (int k=0; k<=idt2; k++)
         {
-        if (ravg2[k]!=0)
-            {
-            ravg2[k]=ravg2[k]/(runs);
-            ravg2P[k]=ravg2P[k]/(runs);
-            tt=(k+1)*dt2;
-            outfile_dt2<<tt<<" "<<ravg2[k]<<" "<<ravg2P[k]<<std::endl;
-            }
+        ravg2[k]=ravg2[k]/(runs);
+        ravg2P[k]=ravg2P[k]/(runs);
+        tt=(k+1)*dt2;
+        outfile_dt2<<tt<<" "<<ravg2[k]<<" "<<ravg2P[k]<<std::endl;
         }
     }
 
@@ -3789,7 +3816,6 @@ void IntegratorMCMMono<Shape>::writePairs()
                     }
                 }
             // double correlation_length=calculateCorrelationLength(clusters, percolating_clusters);
-            diffuseConductivity();
 
             std::ofstream outfile;
 
