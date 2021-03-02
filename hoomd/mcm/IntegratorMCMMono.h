@@ -3178,11 +3178,11 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
                 ;
                 }
 
-            std::ofstream outfile_test;
-            outfile_test.open("test.txt", std::ios_base::app);
+            // std::ofstream outfile_test;
+            // outfile_test.open("test.txt", std::ios_base::app);
 
-            outfile_test<<ttt<<' '<<r2<<std::endl;
-            outfile_test.close();
+            // outfile_test<<ttt<<' '<<r2<<std::endl;
+            // outfile_test.close();
 
             //Calculate r^2 when needed
             if (ttt%dt0==0 || ttt%dt1==0 || ttt%dt2==0)
@@ -3194,35 +3194,35 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
             if (ttt%dt0==0)
                 {
                 idt0+=1; //update number of dt intervals
-                std::ofstream outfile_avg0;
-                outfile_avg0.open("avg0.txt", std::ios_base::app);
+                // std::ofstream outfile_avg0;
+                // outfile_avg0.open("avg0.txt", std::ios_base::app);
                 ravg0[idt0]+=r2;
                 ravg0P[idt0]+=r2P;
-                outfile_avg0<<ttt<<' '<<r2<<std::endl;
-                outfile_avg0.close();
+                // outfile_avg0<<ttt<<' '<<r2<<std::endl;
+                // outfile_avg0.close();
                 }
             if (ttt%dt1==0)
                 {
                 idt1+=1; //update number of dt intervals
-                std::ofstream outfile_avg1;
-                outfile_avg1.open("avg1.txt", std::ios_base::app);
+                // std::ofstream outfile_avg1;
+                // outfile_avg1.open("avg1.txt", std::ios_base::app);
                 ravg1[idt1]+=r2;
                 ravg1P[idt1]+=r2P;
-                outfile_avg1<<ttt<<' '<<r2<<std::endl;
-                outfile_avg1.close();
+                // outfile_avg1<<ttt<<' '<<r2<<std::endl;
+                // outfile_avg1.close();
                 }
             if (ttt%dt2==0)
                 {
                 idt2+=1; //update number of dt intervals
-                std::ofstream outfile_avg2;
-                outfile_avg2.open("avg2.txt", std::ios_base::app);
+                // std::ofstream outfile_avg2;
+                // outfile_avg2.open("avg2.txt", std::ios_base::app);
                 ravg2[idt2]+=r2;
                 ravg2P[idt2]+=r2P;
-                outfile_avg2<<ttt<<' '<<r2<<std::endl;
-                outfile_avg2.close();
+                // outfile_avg2<<ttt<<' '<<r2<<std::endl;
+                // outfile_avg2.close();
                 }
             }//end loop over steps
-        std::cout<<idt0+1<<' '<<idt1+1<<' '<<idt2+1<<std::endl;
+        // std::cout<<idt0+1<<' '<<idt1+1<<' '<<idt2+1<<std::endl;
         } // end loop over runs
 
     //Average every dt steps and output files
@@ -3236,6 +3236,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
         tt=(k+1)*dt0;
         outfile_dt0<<tt<<" "<<ravg0[k]<<" "<<ravg0P[k]<<std::endl;
         }
+    outfile_dt0.close();
 
     std::ofstream outfile_dt1;
     outfile_dt1.open("diffuse_data_dt"+std::to_string(nbins[1])+".txt", std::ios_base::app);
@@ -3246,6 +3247,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
         tt=(k+1)*dt1;
         outfile_dt1<<tt<<" "<<ravg1[k]<<" "<<ravg1P[k]<<std::endl;
         }
+    outfile_dt1.close();
 
     std::ofstream outfile_dt2;
     outfile_dt2.open("diffuse_data_dt"+std::to_string(nbins[2])+".txt", std::ios_base::app);
@@ -3256,6 +3258,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
         tt=(k+1)*dt2;
         outfile_dt2<<tt<<" "<<ravg2[k]<<" "<<ravg2P[k]<<std::endl;
         }
+    outfile_dt2.close();
     }
 
 template<class Shape>
