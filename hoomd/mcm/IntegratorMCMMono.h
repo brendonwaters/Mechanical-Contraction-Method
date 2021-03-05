@@ -3077,7 +3077,8 @@ void IntegratorMCMMono<Shape>::diffuseConductivity()
             ttt+=1;
 
             //Test if conductive particle
-            if (typ_j==0)
+            // if (typ_j==0)
+            if (true)
                 {
                 //Default to in-box measurement
                 dx_s=pos_j.x-pos_i.x;
