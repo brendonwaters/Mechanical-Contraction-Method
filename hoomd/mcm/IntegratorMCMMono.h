@@ -1579,10 +1579,27 @@ void IntegratorMCMMono<Shape>::update(unsigned int timestep)
                 else
                     {
                     std::cout<<"Test1"<<std::endl;
-                    IntegratorMCMMono<Shape>::diffuseConductivity(0.9);
                     IntegratorMCMMono<Shape>::diffuseConductivity(0.0);
+                    IntegratorMCMMono<Shape>::diffuseConductivity(0.1);
+                    IntegratorMCMMono<Shape>::diffuseConductivity(0.2);
+                    IntegratorMCMMono<Shape>::diffuseConductivity(0.3);
+                    IntegratorMCMMono<Shape>::diffuseConductivity(0.4);
+                    IntegratorMCMMono<Shape>::diffuseConductivity(0.5);
+                    IntegratorMCMMono<Shape>::diffuseConductivity(0.6);
+                    IntegratorMCMMono<Shape>::diffuseConductivity(0.7);
+                    IntegratorMCMMono<Shape>::diffuseConductivity(0.8);
+                    IntegratorMCMMono<Shape>::diffuseConductivity(0.9);
                     std::cout<<"Test2"<<std::endl;
+                    IntegratorMCMMono<Shape>::writePairs(0.0);
                     IntegratorMCMMono<Shape>::writePairs(0.1);
+                    IntegratorMCMMono<Shape>::writePairs(0.2);
+                    IntegratorMCMMono<Shape>::writePairs(0.3);
+                    IntegratorMCMMono<Shape>::writePairs(0.4);
+                    IntegratorMCMMono<Shape>::writePairs(0.5);
+                    IntegratorMCMMono<Shape>::writePairs(0.6);
+                    IntegratorMCMMono<Shape>::writePairs(0.7);
+                    IntegratorMCMMono<Shape>::writePairs(0.8);
+                    IntegratorMCMMono<Shape>::writePairs(0.9);
                     std::cout<<"Test3"<<std::endl;
                     max_density=true; //system is fully compressed
                     }
