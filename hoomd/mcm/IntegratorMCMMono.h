@@ -1686,6 +1686,7 @@ std::vector<std::vector<Scalar>> IntegratorMCMMono<Shape>::getContactDistance(un
     std::vector<Scalar> imagesz;
     std::vector<Scalar> iaxis;
     std::vector<Scalar> jaxis;
+    // std::vector<Scalar> typj;
 
     std::vector<std::vector<Scalar>> neighborStats;
 
@@ -1942,6 +1943,7 @@ std::vector<std::vector<Scalar>> IntegratorMCMMono<Shape>::getContactDistance(un
                         imagesx.push_back(pos_i_image.x);
                         imagesy.push_back(pos_i_image.y);
                         imagesz.push_back(pos_i_image.z);
+                        // typj.push_back(typ_j)
                         }
                     }
                 }
@@ -1959,6 +1961,7 @@ std::vector<std::vector<Scalar>> IntegratorMCMMono<Shape>::getContactDistance(un
     neighborStats.push_back(imagesx);
     neighborStats.push_back(imagesy);
     neighborStats.push_back(imagesz);
+    // neighborStats.push_back(typj);
 
     return neighborStats;
 
@@ -2831,6 +2834,8 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
 
     // double contact=0.001*box_L.x;
 
+    std::cout<<contactFactor<<std::endl;
+
     double Lx_2=box_L.x/2.0;
     double Ly_2=box_L.y/2.0;
     double Lz_2=box_L.z/2.0;
@@ -2956,117 +2961,175 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
 
         std::vector<std::vector<Scalar>> tmp = getContactDistance(i);
 
-        if (tmp[0].size()!=0)
+        while (tmp[0].size()==0)
             {
-            unsigned int neighborIDs[tmp[0].size()];
-            Scalar siArr[tmp[0].size()];
-            Scalar sjArr[tmp[0].size()];
+            neighbor=0;
+            i = m_update_order[cur_particle];
 
-            vec3<Scalar> images[tmp[0].size()];
+            // read in the current position and orientation
+            postype_i = h_postype.data[i];
+            orientation_i = h_orientation.data[i];
+            pos_i = vec3<Scalar>(postype_i);
 
-            std::vector<Scalar>::iterator result = std::min_element(tmp[1].begin(), tmp[1].end());
-            int min_index = std::distance(tmp[1].begin(), result);
+            vec3<Scalar> or_vect_i(0,0,0);
 
-            unsigned int min_id = tmp[0][min_index];
-            Scalar rmin = tmp[1][min_index];
-
-
-            for (int q=0;q<tmp[0].size();q++)
+            or_i=quat<Scalar>(orientation_i);
+            if (ndim==2)
                 {
-                unsigned int ID = (unsigned int) tmp[0][q];
-                Scalar si1 = tmp[1][q];
-                Scalar sj1 = tmp[2][q];
-
-                double pos_i_image_x = tmp[3][q];
-                double pos_i_image_y = tmp[4][q];
-                double pos_i_image_z = tmp[5][q];
-
-                vec3<Scalar> pos_i_image_1(pos_i_image_x,pos_i_image_y,pos_i_image_z);
-
-                neighborIDs[q] = ID;
-                siArr[q] = si1;
-                sjArr[q] = sj1;
-                images[q] = pos_i_image_1;
+                or_vect_i=rotate(or_i,defaultOrientation2D);
+                }
+            else if (ndim==3)
+                {
+                or_vect_i=rotate(or_i,defaultOrientation3D);
                 }
 
-            for (int q=0;q<tmp[0].size();q++)
+            #ifdef ENABLE_MPI
+            if (m_comm)
                 {
-
-                vec3<Scalar> pos_i_image_tmp = images[q];
-                Scalar si_tmp = siArr[q];
-                Scalar sj_tmp = sjArr[q];
-                unsigned int j_tmp = neighborIDs[q];
-
-                Scalar4 orientation_j = h_orientation.data[j_tmp];
-                quat<Scalar> or_j=quat<Scalar>(orientation_j);
-                Scalar4 postype_j = h_postype.data[j_tmp];
-                vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
-                or_j=quat<Scalar>(orientation_j);
-
-                unsigned int typ_j = __scalar_as_int(postype_j.w);
-                double radius_j=m_params[typ_j].sweep_radius;
-
-                double length_j=sqrt((m_params[typ_j].x[0]-m_params[typ_j].x[1])*(m_params[typ_j].x[0]-m_params[typ_j].x[1])+
-                                (m_params[typ_j].y[0]-m_params[typ_j].y[1])*(m_params[typ_j].y[0]-m_params[typ_j].y[1])+
-                                (m_params[typ_j].z[0]-m_params[typ_j].z[1])*(m_params[typ_j].z[0]-m_params[typ_j].z[1]));
-
-                vec3<Scalar> or_vect_i;
-                vec3<Scalar> or_vect_j;
-                if (ndim==3)
-                    {
-                    or_vect_i=rotate(or_i,defaultOrientation3D);
-                    or_vect_j=rotate(or_j,defaultOrientation3D);
-                    }
-
-                else if (ndim==2)
-                    {
-                    or_vect_i=rotate(or_i,defaultOrientation2D);
-                    or_vect_j=rotate(or_j,defaultOrientation2D);
-                    }
-
-                vec3<Scalar> r_ij_tmp = vec3<Scalar>(postype_j) - pos_i_image_tmp;
-
-                vec3<Scalar> k_vect=(pos_i_image_tmp+si_tmp*or_vect_i)-(pos_j+sj_tmp*or_vect_j);
-
-                // vec3<Scalar> k_vect=(pos_i_image+si*or_vect_i)-(pos_j+sj*or_vect_j);
-                // vec3<Scalar> k_vect=(pos_i+si*or_vect_i)-(pos_j+sj*or_vect_j);
-
-                double mag_k=sqrt(dot(k_vect,k_vect));
-
-                vec3<Scalar> contactPoint=(pos_i_image_tmp+si_tmp*or_vect_i)-((radius_i/mag_k)*k_vect);
-
-                double delta=(radius_i+radius_j)-mag_k;
-
-                double contact=radius_i*contactFactor;
-
-                if (delta>-contact && i!=j_tmp)
-                    {
-                    neighborList[i].push_back(j_tmp);
-                    contactPoints[i].push_back(contactPoint);
-                    neighbor++;
-                    }
+                // only move particle if active
+                if (!isActive(make_scalar3(postype_i.x, postype_i.y, postype_i.z), box, ghost_fraction))
+                    continue;
                 }
+            #endif
+
+            typ_i = __scalar_as_int(postype_i.w);
+            Shape shape_i(quat<Scalar>(orientation_i), m_params[typ_i]);
+            radius_i=m_params[typ_i].sweep_radius;
+
+            length_i=sqrt((m_params[typ_i].x[0]-m_params[typ_i].x[1])*(m_params[typ_i].x[0]-m_params[typ_i].x[1])+
+            (m_params[typ_i].y[0]-m_params[typ_i].y[1])*(m_params[typ_i].y[0]-m_params[typ_i].y[1])+
+            (m_params[typ_i].z[0]-m_params[typ_i].z[1])*(m_params[typ_i].z[0]-m_params[typ_i].z[1]));
+
+            tmp = getContactDistance(i);
             }
-        else
+
+        unsigned int neighborIDs[tmp[0].size()];
+        Scalar siArr[tmp[0].size()];
+        Scalar sjArr[tmp[0].size()];
+
+        vec3<Scalar> images[tmp[0].size()];
+
+        std::vector<Scalar>::iterator result = std::min_element(tmp[1].begin(), tmp[1].end());
+        int min_index = std::distance(tmp[1].begin(), result);
+
+        unsigned int min_id = tmp[0][min_index];
+        Scalar rmin = tmp[1][min_index];
+
+
+        for (int q=0;(int) q<tmp[0].size();q++)
             {
-            continue;
+            unsigned int ID = (unsigned int) tmp[0][q];
+            Scalar si1 = tmp[1][q];
+            Scalar sj1 = tmp[2][q];
+
+            double pos_i_image_x = tmp[3][q];
+            double pos_i_image_y = tmp[4][q];
+            double pos_i_image_z = tmp[5][q];
+
+            unsigned int typ_jj = tmp[6][q];
+
+            vec3<Scalar> pos_i_image_1(pos_i_image_x,pos_i_image_y,pos_i_image_z);
+
+            neighborIDs[q] = ID;
+            siArr[q] = si1;
+            sjArr[q] = sj1;
+            images[q] = pos_i_image_1;
+            }
+
+        for (int q=0;q<tmp[0].size();q++)
+            {
+
+            vec3<Scalar> pos_i_image_tmp = images[q];
+            Scalar si_tmp = siArr[q];
+            Scalar sj_tmp = sjArr[q];
+            unsigned int j_tmp = neighborIDs[q];
+
+            Scalar4 orientation_j = h_orientation.data[j_tmp];
+            quat<Scalar> or_j=quat<Scalar>(orientation_j);
+            Scalar4 postype_j = h_postype.data[j_tmp];
+            vec3<Scalar> pos_j = vec3<Scalar>(postype_j);
+            or_j=quat<Scalar>(orientation_j);
+
+            unsigned int typ_j = __scalar_as_int(postype_j.w);
+            double radius_j=m_params[typ_j].sweep_radius;
+
+            double length_j=sqrt((m_params[typ_j].x[0]-m_params[typ_j].x[1])*(m_params[typ_j].x[0]-m_params[typ_j].x[1])+
+                            (m_params[typ_j].y[0]-m_params[typ_j].y[1])*(m_params[typ_j].y[0]-m_params[typ_j].y[1])+
+                            (m_params[typ_j].z[0]-m_params[typ_j].z[1])*(m_params[typ_j].z[0]-m_params[typ_j].z[1]));
+
+            vec3<Scalar> or_vect_i;
+            vec3<Scalar> or_vect_j;
+            if (ndim==3)
+                {
+                or_vect_i=rotate(or_i,defaultOrientation3D);
+                or_vect_j=rotate(or_j,defaultOrientation3D);
+                }
+
+            else if (ndim==2)
+                {
+                or_vect_i=rotate(or_i,defaultOrientation2D);
+                or_vect_j=rotate(or_j,defaultOrientation2D);
+                }
+
+            vec3<Scalar> r_ij_tmp = vec3<Scalar>(postype_j) - pos_i_image_tmp;
+
+            vec3<Scalar> k_vect=(pos_i_image_tmp+si_tmp*or_vect_i)-(pos_j+sj_tmp*or_vect_j);
+
+            // vec3<Scalar> k_vect=(pos_i_image+si*or_vect_i)-(pos_j+sj*or_vect_j);
+            // vec3<Scalar> k_vect=(pos_i+si*or_vect_i)-(pos_j+sj*or_vect_j);
+
+            double mag_k=sqrt(dot(k_vect,k_vect));
+
+            vec3<Scalar> contactPoint=(pos_i_image_tmp+si_tmp*or_vect_i)-((radius_i/mag_k)*k_vect);
+
+            double delta=(radius_i+radius_j)-mag_k;
+
+            double contact=radius_i*contactFactor;
+
+            if (delta>-contact && i!=j_tmp)
+                {
+                neighborList[i].push_back(j_tmp);
+                contactPoints[i].push_back(contactPoint);
+                neighbor++;
+                }
             }
         }
 
+    //Make a list of valid starting IDs
+    //Must be conductive particles with at least 1 conductive neighbor
     std::vector<int> neighborNums;
     for (int qq=0;qq<N;qq++)
         {
+        bool validStart=false;
         int n_neighbors=neighborList[qq].size();
         if (n_neighbors!=0)
             {
-            neighborNums.push_back(qq);
+            for (int zz=0;zz<n_neighbors;zz++)
+                {
+                unsigned int jj=neighborList[qq][zz];
+                Scalar4 postype_jj= h_postype.data[jj];
+                unsigned int typ_jj = __scalar_as_int(postype_jj.w);
+                if (typ_jj==0)
+                    {
+                    validStart=true;
+                    }
+                }
+            if (validStart==true)
+                {
+                neighborNums.push_back(qq);
+                }
             }
         }
 
+    int possibleStarts=neighborNums.size();
+
+    unsigned int i_prev;
+    int index_prev;
 
     // loop through runs particles in a shuffled order
     for (unsigned int cur_particle2 = 0; cur_particle2 < runs; cur_particle2++)
         {
+        std::cout<<cur_particle2<<std::endl;
         //reset displacements at the start of each walk
         dx=0;
         dy=0;
@@ -3080,43 +3143,74 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
         r2=0;
         r2P=0;
 
-        int possibleStarts=neighborNums.size();
+        int ii;
 
-        if (possibleStarts==0)
-            {
-            break;
-            }
+        std::cout<<"before break"<<std::endl;
 
         //Initialize starting particle
-        std::uniform_int_distribution<int> gen3(0, possibleStarts-1);
-        unsigned int i = (unsigned int) gen3(rng);
+        if (possibleStarts==0)
+            {
+            std::cout<<"ERROR: NO VALID STARTING POINTS"<<std::endl;
+            break;
+            }
+        else if (possibleStarts==1)
+            {
+            ii=0;
+            }
+        else
+            {
+            std::uniform_int_distribution<int> gen3(0, possibleStarts-1);
+            ii = (unsigned int) gen3(rng);
+            }
+        unsigned int i = neighborNums[ii];
+
         Scalar4 postype_i = h_postype.data[i];
         unsigned int typ_i = __scalar_as_int(postype_i.w);
         vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
 
 
-        //ensure we start on a conductive site, and not a previously chosen starting point
-        while (typ_i!=0 && std::find(starting_points.begin(), starting_points.end(), i) != starting_points.end())
-            {
-            i = (unsigned int) gen3(rng);
-            Scalar4 postype_i = h_postype.data[i];
-            unsigned int typ_i = __scalar_as_int(postype_i.w);
-            vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
-            }
+        //ensure we start on a conductive site
+        // while (typ_i!=0)
+        //     {
+        //     if (possibleStarts==0)
+        //         {
+        //         std::cout<<"ERROR: NO VALID STARTING POINTS"<<std::endl;
+        //         break;
+        //         }
+        //     else if (possibleStarts==1)
+        //         {
+        //         ii=0;
+        //         }
+        //     else
+        //         {
+        //         std::uniform_int_distribution<int> gen3(0, possibleStarts-1);
+        //         ii =  gen3(rng);
+        //         }
+        //     i = neighborNums[ii];
+        //     Scalar4 postype_i = h_postype.data[i];
+        //     unsigned int typ_i = __scalar_as_int(postype_i.w);
+        //     vec3<Scalar> pos_i = vec3<Scalar>(postype_i);
+        //     }
 
-        starting_points.push_back(i);
+        // starting_points.push_back(i);
 
-        unsigned int i_prev=i;
+        i_prev=i;
 
-        int index_prev=0;
+        index_prev=0;
 
         idt0=-1;
         idt1=-1;
         idt2=-1;
 
+        std::cout<<"after break"<<std::endl;
+
         //Once we choose starting point, random walk through for steps
         for (unsigned int n=0;n<steps;n++)
             {
+            // if (n%100000==0)
+            //     {
+            //     std::cout<<n<<std::endl;
+            //     }
             // dx_s=0;
             // dy_s=0;
             // dz_s=0;
@@ -3132,8 +3226,16 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
 
             //pick a random neighbor
             int n_neighbors=neighborList[i].size();
-            std::uniform_int_distribution<int> gen(0, n_neighbors-1); // uniform, unbiased
-            int index = gen(rng);
+            int index;
+            if (n_neighbors==1)
+                {
+                index=0;
+                }
+            else
+                {
+                std::uniform_int_distribution<int> gen(0, n_neighbors-1); // uniform, unbiased
+                index = gen(rng);
+                }
             unsigned int j=neighborList[i][index];
 
             //Read in its properties
@@ -3144,9 +3246,18 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
             //Increment time every step
             ttt+=1;
 
-            //Test if conductive particle
-            // if (typ_j==0)
-            if (true)
+            if (typ_j!=0)
+                {
+                dx_s=0.0;
+                dy_s=0.0;
+                dz_s=0.0;
+
+                dxP_s=0.0;
+                dyP_s=0.0;
+                dzP_s=0.0;
+                }
+
+            else
                 {
                 //Default to in-box measurement
                 dx_s=pos_j.x-pos_i.x;
@@ -3167,91 +3278,73 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
                     dyP_s=contactPoints[i][index].y-contactPoints[i_prev][index_prev].y;
                     dzP_s=contactPoints[i][index].z-contactPoints[i_prev][index_prev].z;
                     }
-
-                //Subtract box size is particles cross periodic boundaries
-                if (dx_s>=Lx_2)
-                        {
-                        dx_s=dx_s-box_L.x;
-                        }
-                else if(dx_s<=-Lx_2)
-                        {
-                        dx_s=dx_s+box_L.x;
-                        }
-                if (dy_s>=Ly_2)
-                        {
-                        dy_s=dy_s-box_L.y;
-                        }
-                else if(dy_s<=-Ly_2)
-                        {
-                        dy_s=dy_s+box_L.y;
-                        }
-                if (dz_s>=Lz_2)
-                        {
-                        dz_s=dz_s-box_L.z;
-                        }
-                else if(dz_s<=-Lz_2)
-                        {
-                        dz_s=dz_s+box_L.z;
-                        }
-
-                //Contact point equivalent
-                if (dxP_s>=Lx_2)
-                        {
-                        dxP_s=dxP_s-box_L.x;
-                        }
-                else if(dxP_s<=-Lx_2)
-                        {
-                        dxP_s=dxP_s+box_L.x;
-                        }
-                if (dyP_s>=Ly_2)
-                        {
-                        dyP_s=dyP_s-box_L.y;
-                        }
-                else if(dyP_s<=-Ly_2)
-                        {
-                        dyP_s=dyP_s+box_L.y;
-                        }
-                if (dzP_s>=Lz_2)
-                        {
-                        dzP_s=dzP_s-box_L.z;
-                        }
-                else if(dzP_s<=-Lz_2)
-                        {
-                        dzP_s=dzP_s+box_L.z;
-                        }
-
-                //Update displacements
-                dx=dx+dx_s;
-                dy=dy+dy_s;
-                dz=dz+dz_s;
-
-                dxP=dxP+dxP_s;
-                dyP=dyP+dyP_s;
-                dzP=dzP+dzP_s;
-
-                // //Calculate r^2 when needed
-                // if (ttt%dt0==0 || ttt%dt1==0 || ttt%dt2==0)
-                //     {
-                //     r2=dx*dx+dy*dy+dz*dz;
-                //     r2P=dxP*dxP+dyP*dyP+dzP*dzP;
-                //     }
-
-                //on a sucessful move, change to new particle
-                i_prev=i;
-                index_prev=index;
-                i=j;
-
-                }
-            else
-                {
-                ;
                 }
 
-            // std::ofstream outfile_test;
-            // outfile_test.open("test.txt", std::ios_base::app);
+            //Subtract box size is particles cross periodic boundaries
+            if (dx_s>=Lx_2)
+                    {
+                    dx_s=dx_s-box_L.x;
+                    }
+            else if(dx_s<=-Lx_2)
+                    {
+                    dx_s=dx_s+box_L.x;
+                    }
+            if (dy_s>=Ly_2)
+                    {
+                    dy_s=dy_s-box_L.y;
+                    }
+            else if(dy_s<=-Ly_2)
+                    {
+                    dy_s=dy_s+box_L.y;
+                    }
+            if (dz_s>=Lz_2)
+                    {
+                    dz_s=dz_s-box_L.z;
+                    }
+            else if(dz_s<=-Lz_2)
+                    {
+                    dz_s=dz_s+box_L.z;
+                    }
 
-            // outfile_test<<ttt<<' '<<r2<<std::endl;
-            // outfile_test.close();
+            //Contact point equivalent
+            if (dxP_s>=Lx_2)
+                    {
+                    dxP_s=dxP_s-box_L.x;
+                    }
+            else if(dxP_s<=-Lx_2)
+                    {
+                    dxP_s=dxP_s+box_L.x;
+                    }
+            if (dyP_s>=Ly_2)
+                    {
+                    dyP_s=dyP_s-box_L.y;
+                    }
+            else if(dyP_s<=-Ly_2)
+                    {
+                    dyP_s=dyP_s+box_L.y;
+                    }
+            if (dzP_s>=Lz_2)
+                    {
+                    dzP_s=dzP_s-box_L.z;
+                    }
+            else if(dzP_s<=-Lz_2)
+                    {
+                    dzP_s=dzP_s+box_L.z;
+                    }
+
+            //Update displacements
+            dx=dx+dx_s;
+            dy=dy+dy_s;
+            dz=dz+dz_s;
+
+            dxP=dxP+dxP_s;
+            dyP=dyP+dyP_s;
+            dzP=dzP+dzP_s;
+
+            //on a sucessful move, change to new particle
+            i_prev=i;
+            index_prev=index;
+            i=j;
 
             //Calculate r^2 when needed
             if (ttt%dt0==0 || ttt%dt1==0 || ttt%dt2==0)
@@ -3291,8 +3384,10 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
                 // outfile_avg2.close();
                 }
             }//end loop over steps
+        std::cout<<"after steps"<<std::endl;
         // std::cout<<idt0+1<<' '<<idt1+1<<' '<<idt2+1<<std::endl;
         } // end loop over runs
+    std::cout<<"after runs"<<std::endl;
 
     //Average every dt steps and output files
     double tt=0;
