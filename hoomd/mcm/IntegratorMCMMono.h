@@ -2834,7 +2834,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
 
     // double contact=0.001*box_L.x;
 
-    std::cout<<contactFactor<<std::endl;
+    // std::cout<<contactFactor<<std::endl;
 
     double Lx_2=box_L.x/2.0;
     double Ly_2=box_L.y/2.0;
@@ -3129,7 +3129,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
     // loop through runs particles in a shuffled order
     for (unsigned int cur_particle2 = 0; cur_particle2 < runs; cur_particle2++)
         {
-        std::cout<<cur_particle2<<std::endl;
+        // std::cout<<cur_particle2<<std::endl;
         //reset displacements at the start of each walk
         dx=0;
         dy=0;
@@ -3145,7 +3145,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
 
         int ii;
 
-        std::cout<<"before break"<<std::endl;
+        // std::cout<<"before break"<<std::endl;
 
         //Initialize starting particle
         if (possibleStarts==0)
@@ -3202,7 +3202,7 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
         idt1=-1;
         idt2=-1;
 
-        std::cout<<"after break"<<std::endl;
+        // std::cout<<"after break"<<std::endl;
 
         //Once we choose starting point, random walk through for steps
         for (unsigned int n=0;n<steps;n++)
@@ -3384,10 +3384,10 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
                 // outfile_avg2.close();
                 }
             }//end loop over steps
-        std::cout<<"after steps"<<std::endl;
+        // std::cout<<"after steps"<<std::endl;
         // std::cout<<idt0+1<<' '<<idt1+1<<' '<<idt2+1<<std::endl;
         } // end loop over runs
-    std::cout<<"after runs"<<std::endl;
+    // std::cout<<"after runs"<<std::endl;
 
     //Average every dt steps and output files
     double tt=0;
