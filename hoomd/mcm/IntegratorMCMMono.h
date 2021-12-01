@@ -2868,13 +2868,13 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
         dt2=1;
         }
 
-    double ravg0[nbins[0]]={0};
-    double ravg1[nbins[1]]={0};
-    double ravg2[nbins[2]]={0};
+    double ravg0[nbins[0]];
+    double ravg1[nbins[1]];
+    double ravg2[nbins[2]];
 
-    double ravg0P[nbins[0]]={0};
-    double ravg1P[nbins[1]]={0};
-    double ravg2P[nbins[2]]={0};
+    double ravg0P[nbins[0]];
+    double ravg1P[nbins[1]];
+    double ravg2P[nbins[2]];
 
     for (int ii=0;ii<nbins[0];ii++)
         {
