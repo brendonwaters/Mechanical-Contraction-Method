@@ -2876,6 +2876,22 @@ void IntegratorMCMMono<Shape>::diffuseConductivity(Scalar contactFactor)
     double ravg1P[nbins[1]]={0};
     double ravg2P[nbins[2]]={0};
 
+    for (int ii=0;ii<nbins[0];ii++)
+        {
+        ravg0[ii]=0;
+        ravg0P[ii]=0;
+        }
+    for (int ii=0;ii<nbins[1];ii++)
+        {
+        ravg1[ii]=0;
+        ravg1P[ii]=0;
+        }
+    for (int ii=0;ii<nbins[2];ii++)
+        {
+        ravg2[ii]=0;
+        ravg2P[ii]=0;
+        }
+
     double sigma=0;
 
     std::vector<int> neighbors;
