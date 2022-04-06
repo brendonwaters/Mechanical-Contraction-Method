@@ -1,4 +1,62 @@
 <<<<<<< HEAD
+=======
+# Mechanical-Contraction-Method
+Particle simulation package based on HOOMD-Blue
+
+The Mechanical-Contraction-Method (MCM) is a method for creating dense random packings of spherocylinder particles. By taking an intial random configuration of particles at low densities and compressing them while iteratively removing overlaps between neighboring particles the MCM algorithm rapidly increases the density of the system while retaining its initial entropy. 
+
+Compiling Hoomd with MCM From Source:
+
+$ cd Mechanical-Contraction-Method
+$ mkdir build
+$ cd build
+
+Set the SOFTWARE_ROOT environment variable:
+$ export SOFTWARE_ROOT=path/to/Mechanical-Contraction-Method/build
+
+Initialize the cmake scripts:
+$ cmake ../ -DCMAKE_INSTALL_PREFIX=${SOFTWARE_ROOT}/lib/python
+
+Use ccmake GUI to set which modules you want to compile (optional) :
+
+$ ccmake . 
+
+And finally:
+$ make install
+
+If you get an error about python not being able to import hoomd, make sure you're running using the same version of python you compiled against. If not, specify your compilation python in the cmake command with -DPYTHON_EXECUTABLE=/usr/bin/python3 or wherever your python is.
+
+Running the simulation:
+
+Initialize hoomd jobscript as usual, to invoke the MCM integrator using similar syntax to HPMC:
+
+length=5
+cap_radius=1
+
+MCM=hoomd.mcm.integrate.convex_spheropolyhedron(d=0.1, a=0.1,seed=12345)
+MCM.shape_param.set('A', vertices=[(0.0,0.0,-length/2.0),(0.0,0.0,length/2.0)],sweep_radius=cap_radius)
+
+hoomd.run(100)
+
+Citation for the MCM algorithm: 
+
+S. R. Williams and A. P. Philipse, Random packings of
+spheres and spherocylinders simulated by 
+mechanical contraction, 
+Phys. Rev. E 67, 051301 (2003).
+
+This implementation of the MCM created by Brendon Waters in part for this work:
+
+Shiva Pokhrel, Brendon Waters, Solveig Felton, Zhi-Feng Huang, and Boris Nadgorny. 
+Percolation in metal-insulator composites of randomly packed 
+spherocylindrical nanoparticles. Phys. Rev. B, 103:134110, Apr 2021. 
+doi: 10.1103/PhysRevB.103.134110. 
+URL https://link.aps.org/doi/10.1103/PhysRevB.103.
+134110. 
+https://arxiv.org/abs/2011.08124
+
+
+
 # HOOMD-blue
 
 HOOMD-blue is a general purpose particle simulation toolkit. It performs hard particle Monte Carlo simulations
@@ -97,9 +155,4 @@ See [ChangeLog.md](ChangeLog.md).
 ## Contributing to HOOMD-blue.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-=======
-# Mechanical-Contraction-Method
-Particle simulation package based on HOOMD-Blue
-test
 >>>>>>> master
