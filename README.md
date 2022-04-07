@@ -51,8 +51,7 @@ Shiva Pokhrel, Brendon Waters, Solveig Felton, Zhi-Feng Huang, and Boris Nadgorn
 Percolation in metal-insulator composites of randomly packed 
 spherocylindrical nanoparticles. Phys. Rev. B, 103:134110, Apr 2021. 
 doi: 10.1103/PhysRevB.103.134110. 
-URL https://link.aps.org/doi/10.1103/PhysRevB.103.
-134110. 
+URL https://link.aps.org/doi/10.1103/PhysRevB.103.134110
 https://arxiv.org/abs/2011.08124
 
 
